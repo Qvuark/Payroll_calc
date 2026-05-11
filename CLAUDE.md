@@ -21,7 +21,7 @@
 
 ## Current Status
 
-- [ ] Phase 1 — Entities + DbContext + migrations + seed
+- [x] Phase 1 — Entities + DbContext + migrations + seed
 - [ ] Phase 2 — Reference data CRUD (departments, positions, tariff_grades, system_params, work_calendar)
 - [ ] Phase 3 — Employee cards (all 4 classes + all blocks + Excel import)
 - [ ] Phase 4 — Timesheets (manual entry + Excel import)

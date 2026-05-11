@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7E955AE7-9062-42E2-9264-8DA91B515948}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayrollCalc.API", "src\PayrollCalc.API\PayrollCalc.API.csproj", "{FAB3C35F-5662-4905-8D43-72A28A1A060F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayrollCalc.Core", "src\PayrollCalc.Core\PayrollCalc.Core.csproj", "{51442CEE-9E16-4132-AA3D-6CEC41CB3FF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayrollCalc.Infrastructure", "src\PayrollCalc.Infrastructure\PayrollCalc.Infrastructure.csproj", "{F2224821-E441-4148-82D2-E0677B29A075}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayrollCalc.Calculation", "src\PayrollCalc.Calculation\PayrollCalc.Calculation.csproj", "{18772C30-B9FC-4B98-9DCF-493D62A067FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayrollCalc.Documents", "src\PayrollCalc.Documents\PayrollCalc.Documents.csproj", "{BEAAC014-29EA-4AF8-899F-C129EC029D8C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{210A5D79-4544-48EB-8D38-5BCD1843F85B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayrollCalc.Tests", "tests\PayrollCalc.Tests\PayrollCalc.Tests.csproj", "{C6A4B059-7E31-4122-9AB4-55F725035A26}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FAB3C35F-5662-4905-8D43-72A28A1A060F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAB3C35F-5662-4905-8D43-72A28A1A060F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAB3C35F-5662-4905-8D43-72A28A1A060F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAB3C35F-5662-4905-8D43-72A28A1A060F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51442CEE-9E16-4132-AA3D-6CEC41CB3FF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51442CEE-9E16-4132-AA3D-6CEC41CB3FF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51442CEE-9E16-4132-AA3D-6CEC41CB3FF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51442CEE-9E16-4132-AA3D-6CEC41CB3FF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2224821-E441-4148-82D2-E0677B29A075}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2224821-E441-4148-82D2-E0677B29A075}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2224821-E441-4148-82D2-E0677B29A075}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2224821-E441-4148-82D2-E0677B29A075}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18772C30-B9FC-4B98-9DCF-493D62A067FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18772C30-B9FC-4B98-9DCF-493D62A067FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18772C30-B9FC-4B98-9DCF-493D62A067FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18772C30-B9FC-4B98-9DCF-493D62A067FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEAAC014-29EA-4AF8-899F-C129EC029D8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEAAC014-29EA-4AF8-899F-C129EC029D8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEAAC014-29EA-4AF8-899F-C129EC029D8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEAAC014-29EA-4AF8-899F-C129EC029D8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6A4B059-7E31-4122-9AB4-55F725035A26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6A4B059-7E31-4122-9AB4-55F725035A26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6A4B059-7E31-4122-9AB4-55F725035A26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6A4B059-7E31-4122-9AB4-55F725035A26}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FAB3C35F-5662-4905-8D43-72A28A1A060F} = {7E955AE7-9062-42E2-9264-8DA91B515948}
+		{51442CEE-9E16-4132-AA3D-6CEC41CB3FF1} = {7E955AE7-9062-42E2-9264-8DA91B515948}
+		{F2224821-E441-4148-82D2-E0677B29A075} = {7E955AE7-9062-42E2-9264-8DA91B515948}
+		{18772C30-B9FC-4B98-9DCF-493D62A067FB} = {7E955AE7-9062-42E2-9264-8DA91B515948}
+		{BEAAC014-29EA-4AF8-899F-C129EC029D8C} = {7E955AE7-9062-42E2-9264-8DA91B515948}
+		{C6A4B059-7E31-4122-9AB4-55F725035A26} = {210A5D79-4544-48EB-8D38-5BCD1843F85B}
+	EndGlobalSection
+EndGlobal

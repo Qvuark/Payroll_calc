@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PayrollCalc.Core\PayrollCalc.Core.csproj" />
+    <ProjectReference Include="..\PayrollCalc.Infrastructure\PayrollCalc.Infrastructure.csproj" />
+    <ProjectReference Include="..\PayrollCalc.Calculation\PayrollCalc.Calculation.csproj" />
+    <ProjectReference Include="..\PayrollCalc.Documents\PayrollCalc.Documents.csproj" />
+  </ItemGroup>
+
+</Project>

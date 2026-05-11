@@ -1,0 +1,40 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+*.suo
+
+# EF migrations snapshot temp
+# (migrations themselves ARE committed)
+
+# Local config — never commit
+.env
+.env.local
+src/**/appsettings.Development.json
+src/**/appsettings.Local.json
+
+# Rider / IntelliJ
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+client/dist/
+client/.vite/
+
+# Electron build output
+electron/dist/
+electron/out/
+
+# Logs
+logs/
+*.log
+
+# Publish output
+publish/

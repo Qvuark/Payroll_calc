@@ -73,3 +73,8 @@ ASP.NET Core 8 · EF Core + Npgsql · PostgreSQL 16 (Docker) · ClosedXML · Exc
 DB: `Host=localhost;Database=payrollcalc;Username=payroll;Password=payroll123`
 
 ## If domain logic is unclear — read the vault, don't invent.
+
+## Working Style
+
+- Never ask Roman to paste or show code — read files directly with the Read tool
+- Always explain what a concept is and why it's needed BEFORE giving an implementation task

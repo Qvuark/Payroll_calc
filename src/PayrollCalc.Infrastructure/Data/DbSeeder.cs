@@ -53,11 +53,31 @@ public static class DbSeeder
 
         var date = new DateOnly(2026, 1, 1);
         context.TariffGrades.AddRange(
+            new TariffGrade { Grade = 1,  MonthlyRate = 3470.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 2,  MonthlyRate = 3782.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 3,  MonthlyRate = 4095.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 4,  MonthlyRate = 4407.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 5,  MonthlyRate = 4719.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 6,  MonthlyRate = 5032.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 7,  MonthlyRate = 5344.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 8,  MonthlyRate = 5691.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 9,  MonthlyRate = 6003.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 10, MonthlyRate = 6315.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 11, MonthlyRate = 6836.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 12, MonthlyRate = 7356.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 13, MonthlyRate = 7877.00m,  EffectiveDate = date },
             new TariffGrade { Grade = 14, MonthlyRate = 8397.00m,  EffectiveDate = date },
-            new TariffGrade { Grade = 16, MonthlyRate = 9889.50m,  EffectiveDate = date },
+            new TariffGrade { Grade = 15, MonthlyRate = 8953.00m,  EffectiveDate = date },
+            new TariffGrade { Grade = 16, MonthlyRate = 9681.00m,  EffectiveDate = date },
             new TariffGrade { Grade = 17, MonthlyRate = 10410.00m, EffectiveDate = date },
-            new TariffGrade { Grade = 99, MonthlyRate = 6773.00m,  EffectiveDate = date },
-            new TariffGrade { Grade = 98, MonthlyRate = 6836.00m,  EffectiveDate = date }
+            new TariffGrade { Grade = 18, MonthlyRate = 11139.00m, EffectiveDate = date },
+            new TariffGrade { Grade = 19, MonthlyRate = 11867.00m, EffectiveDate = date },
+            new TariffGrade { Grade = 20, MonthlyRate = 12631.00m, EffectiveDate = date },
+            new TariffGrade { Grade = 21, MonthlyRate = 13360.00m, EffectiveDate = date },
+            new TariffGrade { Grade = 22, MonthlyRate = 14088.00m, EffectiveDate = date },
+            new TariffGrade { Grade = 23, MonthlyRate = 14817.00m, EffectiveDate = date },
+            new TariffGrade { Grade = 24, MonthlyRate = 15129.00m, EffectiveDate = date },
+            new TariffGrade { Grade = 25, MonthlyRate = 15650.00m, EffectiveDate = date }
         );
         await context.SaveChangesAsync();
     }
@@ -89,12 +109,12 @@ public static class DbSeeder
         if (context.NotebookRates.Any()) return;
 
         context.NotebookRates.AddRange(
-            new NotebookRate { SubjectKeyword = "іноземна",   Pct = 0.10m },
-            new NotebookRate { SubjectKeyword = "математика",  Pct = 0.15m },
-            new NotebookRate { SubjectKeyword = "початкова",   Pct = 0.15m },
-            new NotebookRate { SubjectKeyword = "інформатика", Pct = 0.15m },
-            new NotebookRate { SubjectKeyword = "укр",         Pct = 0.20m },
-            new NotebookRate { SubjectKeyword = "зарубіжна",   Pct = 0.20m }
+            new NotebookRate { SubjectKeyword = "іноземна",      Pct = 0.10m },
+            new NotebookRate { SubjectKeyword = "математика",    Pct = 0.15m },
+            new NotebookRate { SubjectKeyword = "початкова",     Pct = 0.15m },
+            new NotebookRate { SubjectKeyword = "інформатика",   Pct = 0.15m },
+            new NotebookRate { SubjectKeyword = "укр",           Pct = 0.20m },
+            new NotebookRate { SubjectKeyword = "зарубіжна",     Pct = 0.20m }
         );
         await context.SaveChangesAsync();
     }

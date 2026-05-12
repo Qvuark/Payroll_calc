@@ -26,6 +26,11 @@
 - [ ] Phase 3 — Employee cards (all 4 classes + all blocks + Excel import)
 - [ ] Phase 4 — Timesheets (manual entry + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator + unit tests)
+  - ⚠️ Before starting: verify ALL seed data with accountant, clear DB, re-run seeder
+    - TariffGrades: all 25 grades correct? (seeder updated 2026-05-12, based on real table)
+    - SystemParams: all 24 keys correct? (vz_rate=0.05, bonus_1749=0.40, mzp=8647...)
+    - WorkCalendar 2026: 249 days total, verify with official holiday list
+    - Run: `DELETE FROM "TariffGrades"; DELETE FROM "SystemParams";` then restart app
 - [ ] Phase 6 — Excel export (payroll summary + payslips)
 - [ ] Phase 7 — React UI (Claude vibe-codes)
 - [ ] Phase 8 — Electron wrapper + .exe packaging

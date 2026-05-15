@@ -22,8 +22,10 @@
 ## Current Status
 
 - [x] Phase 1 — Entities + DbContext + migrations + seed
-- [ ] Phase 2 — Reference data CRUD (departments, positions, tariff_grades, system_params, work_calendar)
+- [x] Phase 2 — Reference data CRUD (departments, positions, tariff_grades, system_params, work_calendar)
 - [ ] Phase 3 — Employee cards (all 4 classes + all blocks + Excel import)
+  - ⚠️ **Перед Excel import — пройти аудит:** `/Users/dev/DEV/brain/PayrollCalc_vault/audit_2026-05-15.md`
+  - План: 9 виправлень критичних/важливих перед фіналом Phase 3 (CRUD написаний, але є баги — connection string, unique constraints, decimal precision, cascade delete, PATCH→PUT тощо)
 - [ ] Phase 4 — Timesheets (manual entry + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator + unit tests)
   - ⚠️ Before starting: verify ALL seed data with accountant, clear DB, re-run seeder

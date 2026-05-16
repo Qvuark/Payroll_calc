@@ -53,7 +53,8 @@ public class DepartmentsController : ControllerBase
         {
             return NotFound();
         }
-
+        if (await _db.Positions.AnyAsync(p => p.DepartmentId == id))
+            return Conflict("Неможливо видалити підрозділ — є посади, які до нього прив'язані.");
         _db.Departments.Remove(department);
         await _db.SaveChangesAsync();
         return NoContent();

@@ -5,15 +5,15 @@ namespace PayrollCalc.Core.DTOs.Employee.Requests;
 
 public class UpdateEmployeeRequest
 {
-    [MaxLength(200)] public string? FullName { get; set; }
-    [MaxLength(200)] public string? Education { get; set; }
-    public WorkerClass? WorkerClass { get; set; }
-    public int? PositionId { get; set; }
-    public int? TitleTypeId { get; set; }
-    public int? PedExperienceYears { get; set; }
-    public EmployeeStatus? Status { get; set; }
+    [Required, MaxLength(200)] public string FullName { get; set; } = string.Empty; 
+    [Required, MaxLength(200)] public string Education { get; set; } = string.Empty;
+    [Required]public WorkerClass WorkerClass { get; set; }
+    [Required] public int PositionId { get; set; }
+    [Required] public int TitleTypeId { get; set; }
+    [Required] public int PedExperienceYears { get; set; }
+    [Required] public EmployeeStatus Status { get; set; }
 
-    public EmployeeBaseRequest? Base { get; set; }
+    [Required] public EmployeeBaseRequest Base { get; set; } = null!;
     public EmployeeWorkloadRequest? Workload { get; set; }
     public EmployeeAllowancesRequest? Allowances { get; set; }
     public EmployeeAdminRequest? Admin { get; set; }

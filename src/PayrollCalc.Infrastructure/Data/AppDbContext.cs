@@ -53,6 +53,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<EmployeeWorkload>().HasOne(emp => emp.Employee).WithOne(emp => emp.Workload).HasForeignKey<EmployeeWorkload>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<EmployeeAllowances>().HasOne(emp => emp.Employee).WithOne(emp => emp.Allowances).HasForeignKey<EmployeeAllowances>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<EmployeeGpd>().HasOne(emp => emp.Employee).WithOne(emp => emp.Gpd).HasForeignKey<EmployeeGpd>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Position>().HasOne(p => p.Department).WithMany().HasForeignKey(p => p.DepartmentId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Employee>().HasOne(e => e.Position).WithMany().HasForeignKey(e => e.PositionId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Employee>().HasOne(e => e.TitleType).WithMany().HasForeignKey(e => e.TitleTypeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<EmployeeNonPedagogical>().HasOne(emp => emp.Employee).WithOne(emp => emp.NonPedagogical).HasForeignKey<EmployeeNonPedagogical>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<EmployeeBase>().HasOne(emp => emp.Employee).WithOne(emp => emp.Base).HasForeignKey<EmployeeBase>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<EmployeeAdmin>().HasOne(emp => emp.Employee).WithOne(emp => emp.Admin).HasForeignKey<EmployeeAdmin>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
@@ -62,5 +65,15 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TrainingLeave>().HasOne(emp => emp.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Calculation>().HasOne(emp => emp.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<CalculationPeriod>().HasOne(emp => emp.Calculation).WithMany(c => c.Periods).HasForeignKey(emp => emp.CalculationId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Employee>().HasIndex(e => e.TabNumber).IsUnique();
+        modelBuilder.Entity<SystemParam>().HasIndex(e => e.Key).IsUnique();
+        modelBuilder.Entity<TariffGrade>().HasIndex(e => e.Grade).IsUnique();
+        modelBuilder.Entity<WorkCalendar>().HasIndex(e => new { e.Year, e.Month }).IsUnique();
+        modelBuilder.Entity<Timesheet>().HasIndex(e => new { e.EmployeeId, e.Year, e.Month }).IsUnique();
+        modelBuilder.Entity<Calculation>().HasIndex(e => new { e.EmployeeId, e.Year, e.Month }).IsUnique();
+    }
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
     }
 }

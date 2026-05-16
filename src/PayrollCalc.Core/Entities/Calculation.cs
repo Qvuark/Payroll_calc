@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using PayrollCalc.Core.Entities.Enums;
 
 namespace PayrollCalc.Core.Entities;
@@ -26,7 +27,7 @@ public class Calculation
     public decimal NetSalary { get; set; } = decimal.Zero;
     public decimal Esv { get; set; } = decimal.Zero;
     public CalculationStatus Status { get; set; } = CalculationStatus.Draft;
-    public string ParamsSnapshot { get; set; } = string.Empty;
-    public DateTime CalculatedAt { get; set; } = DateTime.MinValue;
+    [Column(TypeName = "jsonb")] public string ParamsSnapshot { get; set; } = "{}";
+    public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
     public List<CalculationPeriod> Periods { get; set; } = [];
 }

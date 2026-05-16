@@ -24,8 +24,15 @@
 - [x] Phase 1 — Entities + DbContext + migrations + seed
 - [x] Phase 2 — Reference data CRUD (departments, positions, tariff_grades, system_params, work_calendar)
 - [ ] Phase 3 — Employee cards (all 4 classes + all blocks + Excel import)
-  - ⚠️ **Перед Excel import — пройти аудит:** `/Users/dev/DEV/brain/PayrollCalc_vault/audit_2026-05-15.md`
-  - План: 9 виправлень критичних/важливих перед фіналом Phase 3 (CRUD написаний, але є баги — connection string, unique constraints, decimal precision, cascade delete, PATCH→PUT тощо)
+  - [x] CRUD: GET/POST/PUT/DELETE для працівників + 7 блоків (Base, Workload, Admin, Allowances, Gpd, Pkr, NonPedagogical)
+  - [x] Audit 2026-05-15 — закритий 2026-05-16 (PUT-семантика з Upsert helpers, unique constraints, decimal precision, jsonb для ParamsSnapshot, OnDelete.Restrict, WorkerClass consistency, NotebookRateId nullable, фільтр WorkCalendar по року, дефолти entity)
+  - [x] Smoke test пройдено (curl): happy path, дублі, class mismatch, перемикання блоків через PUT, soft delete, captable Department.
+  - [ ] **Excel import тарифікації** — лишилось. Файл `POST /api/employees/import/tarification [FromForm IFormFile]`
+    - План: `/Users/dev/DEV/brain/PayrollCalc_vault/phase3_employee_cards_plan.md` (секція "4. Excel import tarification")
+    - Пакети: `ExcelDataReader` + `ExcelDataReader.DataSet` (уже в csproj)
+    - Повертати `{ imported, skipped, errors[] }`
+    - ⚠️ Перед стартом: запитати у Романа структуру реального Excel файлу тарифікації (колонки, заголовки, формат TabNumber/ПІБ/посади). Без зразка не вгадувати.
+  - Відкладено (потрібен бухгалтер): тип шкідливості (HasUnfavorable bool → enum/%), % дир-залежних окладів (chief_accountant_pct, vice_principal_pct тощо), структура нічних і дезінфектантів
 - [ ] Phase 4 — Timesheets (manual entry + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator + unit tests)
   - ⚠️ Before starting: verify ALL seed data with accountant, clear DB, re-run seeder
@@ -36,6 +43,9 @@
 - [ ] Phase 6 — Excel export (payroll summary + payslips)
 - [ ] Phase 7 — React UI (Claude vibe-codes)
 - [ ] Phase 8 — Electron wrapper + .exe packaging
+- [ ] Phase 9 — Бекапи БД (автоматичні + ручні)
+  - Деталі: `/Users/dev/DEV/brain/PayrollCalc_vault/doc_20_backups.md`
+  - Розглянути зв'язок з власним пет-проектом DbBackuper (universal tool) у personal_vault
 
 ## How to Start a Session
 

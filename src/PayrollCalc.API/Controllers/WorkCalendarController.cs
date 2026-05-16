@@ -17,9 +17,11 @@ public class WorkCalendarController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WorkCalendar>>> Get()
+    public async Task<ActionResult<IEnumerable<WorkCalendar>>> Get([FromQuery] int? year = null)
     {
+        var targetYear = year ?? DateTime.UtcNow.Year;
         return await _context.WorkCalendars
+            .Where(wc => wc.Year == targetYear)
             .OrderBy(wc => wc.Month)
             .ToListAsync();
     }

@@ -1,6 +1,197 @@
 @PayrollCalc.API_HostAddress = http://localhost:5196
 
-GET {{PayrollCalc.API_HostAddress}}/weatherforecast/
+###
+# 0. Seed-перевірка: довідники
+GET {{PayrollCalc.API_HostAddress}}/api/departments
 Accept: application/json
 
 ###
+GET {{PayrollCalc.API_HostAddress}}/api/positions
+Accept: application/json
+
+###
+# 0.1 Додаємо другу позицію класу MOP (для тесту WorkerClass mismatch)
+POST {{PayrollCalc.API_HostAddress}}/api/positions
+Content-Type: application/json
+
+{
+  "name": "Прибиральниця",
+  "departmentId": 1,
+  "workerClass": 4
+}
+
+###
+# 1. WorkCalendar GET без параметра — повертає поточний рік (2026)
+GET {{PayrollCalc.API_HostAddress}}/api/workcalendar
+Accept: application/json
+
+###
+# 1.1 WorkCalendar з явним year=2026
+GET {{PayrollCalc.API_HostAddress}}/api/workcalendar?year=2026
+Accept: application/json
+
+###
+# 1.2 WorkCalendar з неіснуючим роком — порожній масив
+GET {{PayrollCalc.API_HostAddress}}/api/workcalendar?year=2027
+Accept: application/json
+
+###
+# 2. POST happy path: вчитель класу Pedagogical на Position #1 (class=1)
+POST {{PayrollCalc.API_HostAddress}}/api/employees
+Content-Type: application/json
+
+{
+  "tabNumber": "T-001",
+  "fullName": "Іваненко І.І.",
+  "hireDate": "2020-09-01",
+  "education": "Магістр",
+  "pedExperienceYears": 8,
+  "workerClass": 1,
+  "positionId": 1,
+  "titleTypeId": 1,
+  "base": {
+    "tariffGradeId": 1,
+    "rateCount": 1.0
+  },
+  "workload": {
+    "hours1To4": 18,
+    "notebookRateId": 2
+  }
+}
+
+###
+# 3. POST дубль TabNumber → 409 Conflict
+POST {{PayrollCalc.API_HostAddress}}/api/employees
+Content-Type: application/json
+
+{
+  "tabNumber": "T-001",
+  "fullName": "Іваненко-дубль",
+  "hireDate": "2020-09-01",
+  "education": "Магістр",
+  "pedExperienceYears": 5,
+  "workerClass": 1,
+  "positionId": 1,
+  "titleTypeId": 1,
+  "base": { "tariffGradeId": 1, "rateCount": 1.0 }
+}
+
+###
+# 4. POST class mismatch: WorkerClass=1 (Pedagogical) на Position #2 (MOP) → 400
+POST {{PayrollCalc.API_HostAddress}}/api/employees
+Content-Type: application/json
+
+{
+  "tabNumber": "T-002",
+  "fullName": "Прибиральниця-вчитель (bug)",
+  "hireDate": "2024-01-15",
+  "education": "Середня",
+  "pedExperienceYears": 0,
+  "workerClass": 1,
+  "positionId": 2,
+  "titleTypeId": 1,
+  "base": { "tariffGradeId": 4, "rateCount": 1.0 }
+}
+
+###
+# 5. POST happy path: МОП на Position #2 (class=4)
+POST {{PayrollCalc.API_HostAddress}}/api/employees
+Content-Type: application/json
+
+{
+  "tabNumber": "T-003",
+  "fullName": "Петренко П.П.",
+  "hireDate": "2023-03-01",
+  "education": "Середня",
+  "pedExperienceYears": 0,
+  "workerClass": 4,
+  "positionId": 2,
+  "base": { "tariffGradeId": 4, "rateCount": 1.0 },
+  "nonPedagogical": {
+    "hasDisinfectants": true,
+    "hasNightShifts": false
+  }
+}
+
+###
+# 6. GET вчителя (id=1 з кроку 2)
+GET {{PayrollCalc.API_HostAddress}}/api/employees/1
+Accept: application/json
+
+###
+# 7. PUT: оновити поля, ДОДАТИ Admin блок (нема), ВИДАЛИТИ Workload
+# Зміни: WorkerClass 1 → 2 (AdminPedagogical), додаємо Admin, прибираємо Workload
+# Спочатку треба нову Position класу AdminPedagogical (class=2). Зробимо її:
+POST {{PayrollCalc.API_HostAddress}}/api/positions
+Content-Type: application/json
+
+{
+  "name": "Завуч",
+  "departmentId": 1,
+  "workerClass": 2
+}
+
+###
+# 7.1 PUT employee id=1: переводимо у завуча
+PUT {{PayrollCalc.API_HostAddress}}/api/employees/1
+Content-Type: application/json
+
+{
+  "fullName": "Іваненко І.І. (завуч)",
+  "education": "Магістр + аспірантура",
+  "workerClass": 2,
+  "positionId": 3,
+  "titleTypeId": 2,
+  "pedExperienceYears": 9,
+  "status": 0,
+  "base": { "tariffGradeId": 2, "rateCount": 1.0 },
+  "admin": {
+    "directorPct": 0.95,
+    "adminRateCount": 0.5,
+    "pedRateCount": 0.5
+  }
+}
+
+###
+# 7.2 GET id=1 — переконатись: admin є, workload зник, fullName змінилось
+GET {{PayrollCalc.API_HostAddress}}/api/employees/1
+Accept: application/json
+
+###
+# 8. PUT: видаляємо Admin (Admin: null) → блок має зникнути з БД
+PUT {{PayrollCalc.API_HostAddress}}/api/employees/1
+Content-Type: application/json
+
+{
+  "fullName": "Іваненко І.І. (знову вчитель)",
+  "education": "Магістр + аспірантура",
+  "workerClass": 1,
+  "positionId": 1,
+  "titleTypeId": 2,
+  "pedExperienceYears": 9,
+  "status": 0,
+  "base": { "tariffGradeId": 1, "rateCount": 1.0 },
+  "workload": {
+    "hours1To4": 20,
+    "notebookRateId": 2
+  },
+  "admin": null
+}
+
+###
+# 8.1 GET id=1 — admin: null, workload є
+GET {{PayrollCalc.API_HostAddress}}/api/employees/1
+Accept: application/json
+
+###
+# 9. DELETE Department #1 — є прив'язана Position → 409 Conflict
+DELETE {{PayrollCalc.API_HostAddress}}/api/departments/1
+
+###
+# 10. DELETE Employee #1 (soft delete: Status → Dismissed)
+DELETE {{PayrollCalc.API_HostAddress}}/api/employees/1
+
+###
+# 10.1 GET all — id=1 не повертається (бо Dismissed відфільтрований)
+GET {{PayrollCalc.API_HostAddress}}/api/employees
+Accept: application/json

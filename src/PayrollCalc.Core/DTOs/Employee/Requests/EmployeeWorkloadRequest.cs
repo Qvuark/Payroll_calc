@@ -15,7 +15,7 @@ public class EmployeeWorkloadRequest
     [Range(0, 60)] public decimal NotebookHours10To11 { get; set; } = decimal.Zero;
     [Range(0, 60)] public decimal InclusiveHours1To4 { get; set; } = decimal.Zero;
     [Range(0, 60)] public decimal InclusiveHours5To9 { get; set; } = decimal.Zero;
-    [Range(1, int.MaxValue)] public int NotebookRateId { get; set; } = default(int);
+    public int? NotebookRateId { get; set; }
     public static EmployeeWorkload FromRequest(EmployeeWorkloadRequest request)
     {
         return new EmployeeWorkload

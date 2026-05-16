@@ -7,7 +7,7 @@ public class EmployeeBaseDto
 {
     public int EmployeeId { get; set; }
     public int TariffGradeId { get; set; }
-    public decimal RateCount { get; set; } = decimal.Zero;
+    public decimal RateCount { get; set; } = 1.0m;
     public static EmployeeBaseDto FromEntity(EmployeeBase e)
     {
         return new EmployeeBaseDto()

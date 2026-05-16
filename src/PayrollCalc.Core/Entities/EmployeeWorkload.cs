@@ -15,6 +15,6 @@ public class EmployeeWorkload
     public decimal NotebookHours10To11 { get; set; } = decimal.Zero;
     public decimal InclusiveHours1To4 { get; set; } = decimal.Zero;
     public decimal InclusiveHours5To9 { get; set; } = decimal.Zero;
-    public int NotebookRateId { get; set; }
+    public int? NotebookRateId { get; set; }
     public NotebookRate? NotebookRate { get; set; }
 }

@@ -27,11 +27,17 @@
   - [x] CRUD: GET/POST/PUT/DELETE для працівників + 7 блоків (Base, Workload, Admin, Allowances, Gpd, Pkr, NonPedagogical)
   - [x] Audit 2026-05-15 — закритий 2026-05-16 (PUT-семантика з Upsert helpers, unique constraints, decimal precision, jsonb для ParamsSnapshot, OnDelete.Restrict, WorkerClass consistency, NotebookRateId nullable, фільтр WorkCalendar по року, дефолти entity)
   - [x] Smoke test пройдено (curl): happy path, дублі, class mismatch, перемикання блоків через PUT, soft delete, captable Department.
-  - [ ] **Excel import тарифікації** — лишилось. Файл `POST /api/employees/import/tarification [FromForm IFormFile]`
-    - План: `/Users/dev/DEV/brain/PayrollCalc_vault/phase3_employee_cards_plan.md` (секція "4. Excel import tarification")
+  - [ ] **Excel парсери (2 шт)** — стратегія "много мелких парсеров" зафіксована 2026-05-17
+    - Головний док: `/Users/dev/DEV/brain/PayrollCalc_vault/parsers_strategy.md`
     - Пакети: `ExcelDataReader` + `ExcelDataReader.DataSet` (уже в csproj)
-    - Повертати `{ imported, skipped, errors[] }`
-    - ⚠️ Перед стартом: запитати у Романа структуру реального Excel файлу тарифікації (колонки, заголовки, формат TabNumber/ПІБ/посади). Без зразка не вгадувати.
+    - [ ] **Парсер #1: тарифікація Class 1+2** — `POST /api/employees/import/tarification [FromForm IFormFile]`
+      - Структура файлу (97 cols, парні рядки): `excel_tarification_structure.md` у vault
+      - Маппінг колонок → блоки повністю описано
+    - [ ] **Парсер #2: спецперсонал Class 3+4** — `POST /api/employees/import/specstaff [FromForm IFormFile]`
+      - НАШ шаблон 15-18 cols: `excel_specstaff_structure.md` у vault
+      - Створити `docs/templates/specstaff_template.xlsx` (мати у репо для бухгалтера)
+    - Спільна інфраструктура `PayrollCalc.Infrastructure/Excel/`: `ExcelReaderBase`, `ParserResult`, `DecimalParser`, `HeaderValidator`
+    - Returns: `{ imported, updated, skipped, errors[] }`. Одна EF транзакція на пачку.
   - Відкладено (потрібен бухгалтер): тип шкідливості (HasUnfavorable bool → enum/%), % дир-залежних окладів (chief_accountant_pct, vice_principal_pct тощо), структура нічних і дезінфектантів
 - [ ] Phase 4 — Timesheets (manual entry + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator + unit tests)
@@ -95,3 +101,35 @@ DB: `Host=localhost;Database=payrollcalc;Username=payroll;Password=payroll123`
 
 - Never ask Roman to paste or show code — read files directly with the Read tool
 - Always explain what a concept is and why it's needed BEFORE giving an implementation task
+
+## Code Comments (Roman is learning production style)
+
+Roman is building the habit of writing comments. Prompt and review.
+
+**Comment types:**
+
+| Type | When | Example |
+|---|---|---|
+| `///` XML doc | All `public` classes/methods/non-obvious properties | Method summary + params + returns |
+| `//` why-comment | Non-obvious decision, business rule, workaround | `// VZ = 5%, not 1.5% — постанова КМУ 1163` |
+| `// TODO:` | Open question + link/note | `// TODO: clarify with accountant — see questions_for_accountant.md` |
+
+**Rules:**
+- NO comments that restate code (`// increment counter` over `counter++`)
+- YES comments for WHY when non-obvious (>1 sec to grok)
+- Public API in `Common/`, `Documents/`, `Core/`, `Infrastructure/` → XML docs required
+- Private methods → no XML, just `//` for tricky parts
+- Self-explanatory DTO properties (`Imported`, `Updated`) → no XML
+- Domain magic numbers (VZ=0.05, MZP=8647) → comment with source (постанова/закон)
+
+**Mentor behavior:**
+- After Roman writes a class/method, point out where comments belong
+- Show example XML doc inline if needed
+- Don't add comments for him — let him write, review
+
+**XML doc syntax:**
+```csharp
+/// <summary>One-two sentences, capital + period.</summary>
+/// <param name="value">Description.</param>
+/// <returns>What it returns.</returns>
+```

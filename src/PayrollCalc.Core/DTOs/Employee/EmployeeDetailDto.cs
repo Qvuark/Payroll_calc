@@ -35,7 +35,6 @@ public class EmployeeDetailDto
             DismissalDate = e.DismissalDate,
             Education= e.Education,
             PedExperienceYears = e.PedExperienceYears,
-            WorkerClass = e.WorkerClass,
             Status = e.Status,
             PositionId = e.PositionId,
             PositionName=e.Position?.Name??string.Empty,

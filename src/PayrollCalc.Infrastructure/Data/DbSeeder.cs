@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using PayrollCalc.Core.Entities;
+using PayrollCalc.Core.Entities.Enums;
 
 namespace PayrollCalc.Infrastructure.Data;
 
@@ -11,6 +13,8 @@ public static class DbSeeder
         await SeedWorkCalendar(context);
         await SeedTitleTypes(context);
         await SeedNotebookRates(context);
+        await SeedDepartments(context);
+        await SeedPositions(context);
     }
 
     private static async Task SeedSystemParams(AppDbContext context)
@@ -115,6 +119,83 @@ public static class DbSeeder
             new NotebookRate { SubjectKeyword = "інформатика",   Pct = 0.15m },
             new NotebookRate { SubjectKeyword = "укр",           Pct = 0.20m },
             new NotebookRate { SubjectKeyword = "зарубіжна",     Pct = 0.20m }
+        );
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedDepartments(AppDbContext context)
+    {
+        if (context.Departments.Any()) return;
+
+        context.Departments.AddRange(
+            new Department { Name = "Адміністрація" },
+            new Department { Name = "Педагогічний персонал" },
+            new Department { Name = "Спеціалісти" },
+            new Department { Name = "Господарська служба" }
+        );
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedPositions(AppDbContext context)
+    {
+        if (context.Positions.Any()) return;
+
+        // отримуємо Id департаментів — щоб не хардкодити числа які залежать від порядку вставки
+        var admin       = await context.Departments.SingleAsync(d => d.Name == "Адміністрація");
+        var pedagogical = await context.Departments.SingleAsync(d => d.Name == "Педагогічний персонал");
+        var specialists = await context.Departments.SingleAsync(d => d.Name == "Спеціалісти");
+        var economic    = await context.Departments.SingleAsync(d => d.Name == "Господарська служба");
+
+        context.Positions.AddRange(
+            // Class 1 — Педагогічні (вчителі, погодинна оплата)
+            new Position { Name = "Вчитель", DepartmentId = pedagogical.Id, WorkerClass = WorkerClass.Pedagogical,
+                ExcelAliases = new() { "вч.", "вчитель" } },
+
+            // Class 2 — Адмін-педагогічні (фіксований оклад + можливе навантаження)
+            new Position { Name = "Директор", DepartmentId = admin.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "директор" } },
+            new Position { Name = "Заступник директора з НВР", DepartmentId = admin.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "заст.директора", "заст.дир.", "заст.директора з НВР" } },
+            new Position { Name = "Практичний психолог", DepartmentId = pedagogical.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "практ.психолог", "пс.методист", "психолог" } },
+            new Position { Name = "Педагог-організатор", DepartmentId = pedagogical.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "пед.організатор", "пед-організатор", "організатор" } },
+            new Position { Name = "Соціальний педагог", DepartmentId = pedagogical.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "соц.педагог", "соцпедагог" } },
+            new Position { Name = "Керівник гуртка", DepartmentId = pedagogical.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "кер.гуртка", "керівник гуртка" } },
+            new Position { Name = "Асистент вчителя", DepartmentId = pedagogical.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "асистент вчителя", "ас.вчителя" } },
+            new Position { Name = "Вихователь", DepartmentId = pedagogical.Id, WorkerClass = WorkerClass.AdminPedagogical,
+                ExcelAliases = new() { "вихователь" } },
+
+            // Class 3 — Спеціалісти (фіксований оклад, без підвищення №1749)
+            new Position { Name = "Головний бухгалтер", DepartmentId = specialists.Id, WorkerClass = WorkerClass.Specialist,
+                ExcelAliases = new() { "гол.бухгалтер", "гол. бухг." } },
+            new Position { Name = "Бухгалтер", DepartmentId = specialists.Id, WorkerClass = WorkerClass.Specialist,
+                ExcelAliases = new() { "бухгалтер" } },
+            new Position { Name = "Завідувач бібліотеки", DepartmentId = specialists.Id, WorkerClass = WorkerClass.Specialist,
+                ExcelAliases = new() { "зав.бібліотеки", "завбібліотеки", "бібліотекар" } },
+            new Position { Name = "Заступник директора з господарської роботи", DepartmentId = admin.Id, WorkerClass = WorkerClass.Specialist,
+                ExcelAliases = new() { "заст.дир. з ГР", "завгосп" } },
+            new Position { Name = "Сестра медична", DepartmentId = specialists.Id, WorkerClass = WorkerClass.Specialist,
+                ExcelAliases = new() { "сестра медична", "медсестра" } },
+            new Position { Name = "Секретар-друкарка", DepartmentId = specialists.Id, WorkerClass = WorkerClass.Specialist,
+                ExcelAliases = new() { "секретар", "секретар-друкарка" } },
+            new Position { Name = "Лаборант", DepartmentId = specialists.Id, WorkerClass = WorkerClass.Specialist,
+                ExcelAliases = new() { "лаборант" } },
+
+            // Class 4 — МОП (молодший обслуговуючий персонал)
+            new Position { Name = "Робітник з обслуговування будівель", DepartmentId = economic.Id, WorkerClass = WorkerClass.MOP,
+                ExcelAliases = new() { "робітник", "робітник з ремонту", "робітник з обсл." } },
+            new Position { Name = "Прибиральник службових приміщень", DepartmentId = economic.Id, WorkerClass = WorkerClass.MOP,
+                ExcelAliases = new() { "прибиральник", "приб.службових" } },
+            new Position { Name = "Сторож", DepartmentId = economic.Id, WorkerClass = WorkerClass.MOP,
+                ExcelAliases = new() { "сторож" } },
+            new Position { Name = "Гардеробник", DepartmentId = economic.Id, WorkerClass = WorkerClass.MOP,
+                ExcelAliases = new() { "гардеробник" } },
+            new Position { Name = "Двірник", DepartmentId = economic.Id, WorkerClass = WorkerClass.MOP,
+                ExcelAliases = new() { "двірник" } }
         );
         await context.SaveChangesAsync();
     }

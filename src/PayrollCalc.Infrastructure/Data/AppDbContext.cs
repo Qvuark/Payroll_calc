@@ -54,6 +54,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<EmployeeAllowances>().HasOne(emp => emp.Employee).WithOne(emp => emp.Allowances).HasForeignKey<EmployeeAllowances>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<EmployeeGpd>().HasOne(emp => emp.Employee).WithOne(emp => emp.Gpd).HasForeignKey<EmployeeGpd>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Position>().HasOne(p => p.Department).WithMany().HasForeignKey(p => p.DepartmentId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Position>().Property(p => p.ExcelAliases).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
         modelBuilder.Entity<Employee>().HasOne(e => e.Position).WithMany().HasForeignKey(e => e.PositionId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Employee>().HasOne(e => e.TitleType).WithMany().HasForeignKey(e => e.TitleTypeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<EmployeeNonPedagogical>().HasOne(emp => emp.Employee).WithOne(emp => emp.NonPedagogical).HasForeignKey<EmployeeNonPedagogical>(x => x.EmployeeId).OnDelete(DeleteBehavior.Cascade);

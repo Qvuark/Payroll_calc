@@ -7,7 +7,6 @@ public class UpdateEmployeeRequest
 {
     [Required, MaxLength(200)] public string FullName { get; set; } = string.Empty; 
     [Required, MaxLength(200)] public string Education { get; set; } = string.Empty;
-    [Required]public WorkerClass WorkerClass { get; set; }
     [Required] public int PositionId { get; set; }
     [Required] public int TitleTypeId { get; set; }
     [Required] public int PedExperienceYears { get; set; }

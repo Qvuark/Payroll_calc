@@ -18,7 +18,6 @@ public class EmployeeSummaryDto
             Id = e.Id,
             TabNumber = e.TabNumber,
             FullName = e.FullName,
-            WorkerClass = e.WorkerClass,
             Status = e.Status,
             PositionName = e.Position?.Name ?? string.Empty,
             DepartmentName = e.Position?.Department?.Name ?? string.Empty

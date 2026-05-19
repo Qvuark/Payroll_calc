@@ -8,5 +8,9 @@ public class Position
     public string Name { get; set; } = string.Empty;
     public int DepartmentId { get; set; }
     public WorkerClass WorkerClass { get; set; }
+    /// <summary>
+    /// Скорочення з Excel-файлів які мапляться на цю позицію (jsonb).
+    /// </summary>
+    public List<string> ExcelAliases { get; set; } = new();
     public Department? Department { get; set; }
 }

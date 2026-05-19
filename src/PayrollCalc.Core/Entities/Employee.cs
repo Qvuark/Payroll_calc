@@ -11,7 +11,6 @@ public class Employee
     public DateOnly? DismissalDate { get; set; }
     public string? Education { get; set; }
     public int PedExperienceYears { get; set; } = 0;
-    public WorkerClass WorkerClass { get; set; }
     public EmployeeStatus Status { get; set; }
     public int PositionId { get; set; }
     public Position? Position { get; set; }

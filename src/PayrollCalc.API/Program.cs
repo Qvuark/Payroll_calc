@@ -1,11 +1,18 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using PayrollCalc.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// EnableDynamicJson — обов'язково для List<string> у jsonb колонці (Position.ExcelAliases).
+// Npgsql 8+ вимагає явний opt-in для dynamic JSON сериалізації.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var dataSource = new NpgsqlDataSourceBuilder(connectionString)
+    .EnableDynamicJson()
+    .Build();
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(dataSource));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

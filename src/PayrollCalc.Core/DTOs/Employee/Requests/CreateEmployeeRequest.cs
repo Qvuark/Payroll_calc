@@ -7,7 +7,6 @@ public class CreateEmployeeRequest
   [Required][MaxLength(50)]  public string TabNumber { get; set; } = string.Empty;
   [Required][MaxLength(200)] public string FullName { get; set; } = string.Empty;
   [Required] public DateOnly HireDate { get; set; }
-  [Required] public WorkerClass WorkerClass { get; set; }
   [Required] public int PositionId { get; set; }
   public string? Education { get; set; }
   public int PedExperienceYears { get; set; } = 0;

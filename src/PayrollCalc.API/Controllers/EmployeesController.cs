@@ -55,8 +55,6 @@ public class EmployeesController : ControllerBase
         var position = await _db.Positions.FindAsync(employeeRequest.PositionId);
         if(position is null)
             return BadRequest("Position not found");
-        if (employeeRequest.WorkerClass != position.WorkerClass)
-            return BadRequest($"Клас працівника ({employeeRequest.WorkerClass}) не співпадає з класом посади «{position.Name}» ({position.WorkerClass}).");
         TitleType? titleType = null;
         if(employeeRequest.TitleTypeId.HasValue)
         {
@@ -65,7 +63,7 @@ public class EmployeesController : ControllerBase
                 return BadRequest("Title type not found");
         }
         var errors = EmployeeValidator.ValidateBlocks(
-            employeeRequest.WorkerClass,
+            position.WorkerClass,
             hasWorkload: employeeRequest.Workload != null,
             hasAdmin: employeeRequest.Admin != null,
             hasAllowances: employeeRequest.Allowances != null,
@@ -80,7 +78,6 @@ public class EmployeesController : ControllerBase
             HireDate= employeeRequest.HireDate,
             Education= employeeRequest.Education,
             PedExperienceYears = employeeRequest.PedExperienceYears,
-            WorkerClass = employeeRequest.WorkerClass,
             Status = EmployeeStatus.Active,
             PositionId = employeeRequest.PositionId,
             TitleTypeId = employeeRequest.TitleTypeId,
@@ -108,8 +105,6 @@ public class EmployeesController : ControllerBase
         var position = await _db.Positions.FindAsync(employeeRequest.PositionId);
         if(position is null)
             return BadRequest("Position not found");
-        if (employeeRequest.WorkerClass != position.WorkerClass)
-            return BadRequest($"Клас працівника ({employeeRequest.WorkerClass}) не співпадає з класом посади «{position.Name}» ({position.WorkerClass}).");
         var employee = await _db.Employees
         .Include(e => e.Base)
         .Include(e => e.Workload)
@@ -122,7 +117,7 @@ public class EmployeesController : ControllerBase
         if(employee is null)
             return NotFound();
         var errors = EmployeeValidator.ValidateBlocks(
-          employeeRequest.WorkerClass,
+          position.WorkerClass,
           hasWorkload: employeeRequest.Workload != null,
           hasAdmin: employeeRequest.Admin != null,
           hasAllowances: employeeRequest.Allowances != null,
@@ -131,7 +126,6 @@ public class EmployeesController : ControllerBase
           return BadRequest(errors);
         employee.FullName = employeeRequest.FullName;
         employee.PedExperienceYears = employeeRequest.PedExperienceYears;
-        employee.WorkerClass = employeeRequest.WorkerClass;
         employee.Status = employeeRequest.Status;
         employee.PositionId = employeeRequest.PositionId;
         employee.TitleTypeId = employeeRequest.TitleTypeId;

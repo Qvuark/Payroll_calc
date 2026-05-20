@@ -1,9 +1,13 @@
 namespace PayrollCalc.Core.Entities;
 
+/// <summary>
+/// Навантаження вчителя на ставці: години по класах (1-4, 5-9, 10-11),
+/// індивідуальні, перевірка зошитів, інклюзивні. Тільки для Class 1 (вчителі).
+/// </summary>
 public class EmployeeWorkload
 {
-    public int EmployeeId { get; set; }
-    public Employee? Employee { get; set; }
+    public int EmployeePositionId { get; set; }
+    public EmployeePosition? EmployeePosition { get; set; }
     public decimal Hours1To4 { get; set; } = decimal.Zero;
     public decimal IndividualHours1To4 { get; set; } = decimal.Zero;
     public decimal Hours5To9 { get; set; } = decimal.Zero;
@@ -15,6 +19,9 @@ public class EmployeeWorkload
     public decimal NotebookHours10To11 { get; set; } = decimal.Zero;
     public decimal InclusiveHours1To4 { get; set; } = decimal.Zero;
     public decimal InclusiveHours5To9 { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Розряд для перевірки зошитів (свій тариф, не співпадає з основним розрядом ставки).
+    /// </summary>
     public int? NotebookRateId { get; set; }
     public NotebookRate? NotebookRate { get; set; }
 }

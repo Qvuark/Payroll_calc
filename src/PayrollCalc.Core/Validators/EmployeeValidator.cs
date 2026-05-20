@@ -1,8 +1,31 @@
-namespace PayrollCalc.Core.Validators;
 using PayrollCalc.Core.Entities.Enums;
+
+namespace PayrollCalc.Core.Validators;
+
+/// <summary>
+/// Валідатор бізнес-правил для блоків EmployeePosition. Перевіряє чи дозволено
+/// певний блок (Workload/Admin/Gpd/Pkr/NonPedagogical) для даного WorkerClass посади.
+/// </summary>
 public static class EmployeeValidator
 {
-    public static List<string>? ValidateBlocks(WorkerClass workerClass, bool hasWorkload, bool hasAdmin, bool hasAllowances, bool hasNonPedagogical)
+    /// <summary>
+    /// Перевіряє чи відповідають передані блоки правилам WorkerClass посади.
+    /// Викликається у контролері перед додаванням/оновленням ставки або її блоків.
+    /// </summary>
+    /// <param name="workerClass">Клас посади (Pedagogical / AdminPedagogical / Specialist / MOP).</param>
+    /// <param name="hasWorkload">Чи переданий блок навантаження.</param>
+    /// <param name="hasAdmin">Чи переданий адмін-блок.</param>
+    /// <param name="hasNonPedagogical">Чи переданий непедагогічний блок.</param>
+    /// <param name="hasGpd">Чи переданий блок ГПД.</param>
+    /// <param name="hasPkr">Чи переданий блок ПКР.</param>
+    /// <returns>Список помилок або null якщо помилок немає.</returns>
+    public static List<string>? ValidateBlocks(
+        WorkerClass workerClass,
+        bool hasWorkload,
+        bool hasAdmin,
+        bool hasNonPedagogical,
+        bool hasGpd,
+        bool hasPkr)
     {
         var errors = new List<string>();
         switch (workerClass)
@@ -22,18 +45,23 @@ public static class EmployeeValidator
                     errors.Add("Спеціалісти не можуть мати навчальне навантаження.");
                 if (hasAdmin)
                     errors.Add("Спеціалісти не можуть мати адміністративний блок.");
-                if (hasAllowances)
-                    errors.Add("Спеціалісти не можуть мати доплати.");
+                if (hasGpd)
+                    errors.Add("Спеціалісти не можуть мати ГПД.");
+                if (hasPkr)
+                    errors.Add("Спеціалісти не можуть мати ПКР.");
                 break;
             case WorkerClass.MOP:
                 if (hasWorkload)
-                    errors.Add("МНП не може мати навчальне навантаження.");
+                    errors.Add("МОП не може мати навчальне навантаження.");
                 if (hasAdmin)
-                    errors.Add("МНП не може мати адміністративний блок.");
-                if (hasAllowances)
-                    errors.Add("МНП не може мати доплати.");
+                    errors.Add("МОП не може мати адміністративний блок.");
+                if (hasGpd)
+                    errors.Add("МОП не може мати ГПД.");
+                if (hasPkr)
+                    errors.Add("МОП не може мати ПКР.");
                 break;
         }
         return errors.Count > 0 ? errors : null;
     }
+
 }

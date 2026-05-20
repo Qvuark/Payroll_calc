@@ -1,7 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using PayrollCalc.Core.Entities;
+
 namespace PayrollCalc.Core.DTOs.Employee.Requests;
 
+/// <summary>
+/// Блок навантаження вчителя (Class 1). Години на тиждень за віковими групами,
+/// індивідуальне навчання, перевірка зошитів та інклюзивні години.
+/// </summary>
 public class EmployeeWorkloadRequest
 {
     [Range(0, 60)] public decimal Hours1To4 { get; set; } = decimal.Zero;
@@ -15,7 +20,17 @@ public class EmployeeWorkloadRequest
     [Range(0, 60)] public decimal NotebookHours10To11 { get; set; } = decimal.Zero;
     [Range(0, 60)] public decimal InclusiveHours1To4 { get; set; } = decimal.Zero;
     [Range(0, 60)] public decimal InclusiveHours5To9 { get; set; } = decimal.Zero;
+    /// <summary>
+    /// FK на NotebookRate — тариф за перевірку зошитів (різний для предметів).
+    /// Null якщо вчитель зошитів не перевіряє.
+    /// </summary>
     public int? NotebookRateId { get; set; }
+
+    /// <summary>
+    /// Маппінг Request → entity. EmployeePositionId виставляє контролер.
+    /// </summary>
+    /// <param name="request">Дані запиту.</param>
+    /// <returns>Новий EmployeeWorkload, готовий до Add у DbContext.</returns>
     public static EmployeeWorkload FromRequest(EmployeeWorkloadRequest request)
     {
         return new EmployeeWorkload

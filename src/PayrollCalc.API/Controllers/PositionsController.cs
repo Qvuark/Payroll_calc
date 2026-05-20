@@ -62,7 +62,7 @@ public class PositionsController : ControllerBase
         if (position == null)
             return NotFound();
 
-        if (await _context.Employees.AnyAsync(e => e.PositionId == id))
+        if (await _context.EmployeePositions.AnyAsync(e => e.PositionId == id))
             return BadRequest("Cannot delete position that is assigned to employees.");
 
         _context.Positions.Remove(position);

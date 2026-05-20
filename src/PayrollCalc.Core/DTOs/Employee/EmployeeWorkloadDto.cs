@@ -4,7 +4,7 @@ namespace PayrollCalc.Core.DTOs.Employee;
 
 public class EmployeeWorkloadDto
 {
-    public int EmployeeId { get; set; }
+    public int EmployeePositionId { get; set; }
     public decimal Hours1To4 { get; set; } = decimal.Zero;
     public decimal IndividualHours1To4 { get; set; } = decimal.Zero;
     public decimal Hours5To9 { get; set; } = decimal.Zero;
@@ -21,7 +21,7 @@ public class EmployeeWorkloadDto
     {
         return new EmployeeWorkloadDto()
         {
-            EmployeeId = e.EmployeeId,
+            EmployeePositionId = e.EmployeePositionId,
             Hours1To4 = e.Hours1To4,
             IndividualHours1To4 = e.IndividualHours1To4,
             Hours5To9 = e.Hours5To9,

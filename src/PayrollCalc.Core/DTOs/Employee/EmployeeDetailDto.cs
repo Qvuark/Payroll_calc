@@ -1,54 +1,68 @@
 using PayrollCalc.Core.Entities.Enums;
-using PayrollCalc.Core.Entities;
-namespace PayrollCalc.Core.DTOs.Employee;
 using EmployeeEntity = PayrollCalc.Core.Entities.Employee;
+
+namespace PayrollCalc.Core.DTOs.Employee;
+
+/// <summary>
+/// Повна картка працівника (GET /api/employees/{id}).
+/// Persona-поля + список усіх ставок з вкладеними блоками навантаження/доплат.
+/// </summary>
 public class EmployeeDetailDto
 {
     public int Id { get; set; }
     public string TabNumber { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
+    /// <summary>
+    /// ІПН — 10 цифр. Друкується на розрахунковому листі.
+    /// </summary>
+    public string? TaxId { get; set; }
     public DateOnly HireDate { get; set; }
     public DateOnly? DismissalDate { get; set; }
     public string? Education { get; set; }
+    /// <summary>
+    /// Загальний педагогічний стаж на старт розрахункового року.
+    /// </summary>
     public int PedExperienceYears { get; set; }
-    public WorkerClass WorkerClass { get; set; }
     public EmployeeStatus Status { get; set; }
-    public int PositionId { get; set; }
-    public string PositionName { get; set; } = string.Empty;
+    /// <summary>
+    /// Відсоток податкової соц.пільги. Null якщо пільги немає.
+    /// </summary>
+    public decimal? SocialBenefitPct { get; set; }
+    /// <summary>
+    /// Надбавка "За складність/напруженість" (5% від кожної активної ставки).
+    /// </summary>
+    public bool HasComplexityBonus { get; set; } = false;
     public int? TitleTypeId { get; set; }
     public string? TitleTypeName { get; set; }
-    public EmployeeBaseDto? Base { get; set; }
-    public EmployeeWorkloadDto? Workload { get; set; }
-    public EmployeeAllowancesDto? Allowances { get; set; }
-    public EmployeeAdminDto? Admin { get; set; }
-    public EmployeeGpdDto? Gpd { get; set; }
-    public EmployeePkrDto? Pkr { get; set; }
-    public EmployeeNonPedagogicalDto? NonPedagogical { get; set; }
-    static public EmployeeDetailDto FromEntity(EmployeeEntity e)
+    /// <summary>
+    /// Усі ставки працівника (активні та звільнені). Кожна несе власні блоки.
+    /// </summary>
+    public List<EmployeePositionDto> Positions { get; set; } = [];
+
+    /// <summary>
+    /// Маппінг entity → DTO. Потребує Include на TitleType + Positions з усіма дочірніми
+    /// (Position, Department, TariffGrade, Workload, Admin, Gpd, Pkr, NonPedagogical).
+    /// </summary>
+    /// <param name="e">Entity працівника з усіма завантаженими навігаціями.</param>
+    /// <returns>Повний DTO для картки.</returns>
+    public static EmployeeDetailDto FromEntity(EmployeeEntity e)
     {
-        var dto = new EmployeeDetailDto()
+        return new EmployeeDetailDto
         {
-            Id=e.Id,
+            Id = e.Id,
             TabNumber = e.TabNumber,
             FullName = e.FullName,
-            HireDate= e.HireDate,
+            TaxId = e.TaxId,
+            HireDate = e.HireDate,
             DismissalDate = e.DismissalDate,
-            Education= e.Education,
+            Education = e.Education,
             PedExperienceYears = e.PedExperienceYears,
             Status = e.Status,
-            PositionId = e.PositionId,
-            PositionName=e.Position?.Name??string.Empty,
+            SocialBenefitPct = e.SocialBenefitPct,
+            HasComplexityBonus = e.HasComplexityBonus,
             TitleTypeId = e.TitleTypeId,
-            TitleTypeName=e.TitleType?.Name??string.Empty,
-            Base=e.Base!=null?EmployeeBaseDto.FromEntity(e.Base):null,
-            Admin=e.Admin!=null?EmployeeAdminDto.FromEntity(e.Admin):null,
-            Allowances=e.Allowances!=null?EmployeeAllowancesDto.FromEntity(e.Allowances):null,
-            Gpd=e.Gpd!=null?EmployeeGpdDto.FromEntity(e.Gpd):null,
-            Pkr=e.Pkr!=null?EmployeePkrDto.FromEntity(e.Pkr):null,
-            Workload=e.Workload!=null?EmployeeWorkloadDto.FromEntity(e.Workload):null,
-            NonPedagogical=e.NonPedagogical!=null?EmployeeNonPedagogicalDto.FromEntity(e.NonPedagogical):null,
+            TitleTypeName = e.TitleType?.Name,
+            Positions = e.Positions.Select(EmployeePositionDto.FromEntity).ToList()
         };
-        return dto;
     }
-    
 }

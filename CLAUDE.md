@@ -27,6 +27,22 @@
   - [x] CRUD: GET/POST/PUT/DELETE для працівників + 7 блоків (Base, Workload, Admin, Allowances, Gpd, Pkr, NonPedagogical)
   - [x] Audit 2026-05-15 — закритий 2026-05-16 (PUT-семантика з Upsert helpers, unique constraints, decimal precision, jsonb для ParamsSnapshot, OnDelete.Restrict, WorkerClass consistency, NotebookRateId nullable, фільтр WorkCalendar по року, дефолти entity)
   - [x] Smoke test пройдено (curl): happy path, дублі, class mismatch, перемикання блоків через PUT, soft delete, captable Department.
+  - [x] Phase 3.5a — Domain Inventory: 4 Departments, 21 Positions, `Position.ExcelAliases` jsonb, drop `Employee.WorkerClass` (commit 1a3abe0).
+  - [x] **Phase 3.6 — Multi-position refactor + payslip-критичні поля** ✅ ЗАКРИТО 2026-05-21 (commit pending)
+    - Точка входу: `/Users/dev/DEV/brain/PayrollCalc_vault/_what_to_do_now.md`
+    - Причина: один працівник може мати **N ставок** (директор + вчитель). На реальному розрахунковому листі: "Тарифний розряд 17 та 14" = дві ставки на одній картці.
+    - Нова entity `EmployeePosition` (Id, EmployeeId, PositionId, TariffGradeId, Stavki decimal, IsPrimary bool, HireDate, DismissalDate?, **HasMilitaryRecord bool?**)
+    - Перенести з Employee → EmployeePosition: `Workload`, `Admin`, `Gpd`, `Pkr`, `NonPedagogical`
+    - `Base` розчиняється: `TariffGradeId` на EmployeePosition, `MonthlyRate` = `TariffGrade.Amount × Stavki`
+    - На Employee лишаються: TabNumber, FullName, Education, PedExperienceYears, TitleTypeId, Allowances, HireDate, DismissalDate, Status
+    - **3 нові поля (виявлено на розрахунковому листі):**
+      - `Employee.TaxId string(10)` — ІПН, друкується на платіжці
+      - `Employee.SocialBenefitPct decimal?` — соц.пільга, впливає на ПДФО
+      - `EmployeePosition.HasMilitaryRecord bool?` — військ.облік 5% (формула в `_BRAIN.md`)
+    - Migration `Phase3_6_MultiPosition` + reset DB + re-seed
+    - CRUD: див. `_what_to_do_now.md` Крок 3
+    - Smoke test: 1 людина = 2 позиції з різними блоками
+    - Відкриті питання — `questions_for_accountant.md` 🔴 СЕЙЧАС секція (10 шт)
   - [ ] **Excel парсери (2 шт)** — стратегія "много мелких парсеров" зафіксована 2026-05-17
     - Головний док: `/Users/dev/DEV/brain/PayrollCalc_vault/parsers_strategy.md`
     - Пакети: `ExcelDataReader` + `ExcelDataReader.DataSet` (уже в csproj)
@@ -48,6 +64,7 @@
     - Run: `DELETE FROM "TariffGrades"; DELETE FROM "SystemParams";` then restart app
 - [ ] Phase 6 — Excel export (payroll summary + payslips)
 - [ ] Phase 7 — React UI (Claude vibe-codes)
+  - **Валідація розряду в UI:** при додаванні/редагуванні ставки disable розрядів які не дозволені для WorkerClass посади. Source: [[tariff_grade_ranges]]. Не дати двірнику поставити розряд 17. Активне використання `ValidateGradeForClass` з бекенду + клієнтський guard.
 - [ ] Phase 8 — Electron wrapper + .exe packaging
 - [ ] Phase 9 — Бекапи БД (автоматичні + ручні)
   - Деталі: `/Users/dev/DEV/brain/PayrollCalc_vault/doc_20_backups.md`
@@ -55,16 +72,19 @@
 
 ## How to Start a Session
 
-1. Read this file — find the first `[ ]`
-2. Read the phase roadmap: `/Users/dev/DEV/brain/PayrollCalc_vault/doc_13_roadmap.md`
+1. Read **`/Users/dev/DEV/brain/PayrollCalc_vault/_what_to_do_now.md`** — короткий чеклист, точка входу
+2. Read this file — find the first `[ ]`
 3. For domain questions — read from vault:
-   - `/Users/dev/DEV/brain/PayrollCalc_vault/_BRAIN.md` — read first
+   - `/Users/dev/DEV/brain/PayrollCalc_vault/_BRAIN.md` — повний контекст
+   - `/Users/dev/DEV/brain/PayrollCalc_vault/doc_13_roadmap.md` — phase roadmap
    - `/Users/dev/DEV/brain/PayrollCalc_vault/09_DB_Schema.md` — full DB schema
    - `/Users/dev/DEV/brain/PayrollCalc_vault/worker_classes.md` — 4 worker classes
    - `/Users/dev/DEV/brain/PayrollCalc_vault/fields_pipeline.md` — all formulas
+   - `/Users/dev/DEV/brain/PayrollCalc_vault/payslip_and_summary_structure.md` — output structure
    - `/Users/dev/DEV/brain/PayrollCalc_vault/doc_19_ui_spec.md` — UI spec
+4. Open questions → `/Users/dev/DEV/brain/PayrollCalc_vault/questions_for_accountant.md`
 
-After a phase is done: mark `[x]` here, remind user to commit.
+After a phase is done: mark `[x]` here, update `_what_to_do_now.md`, remind user to commit.
 
 ## ⚠️ Critical Rules
 
@@ -126,10 +146,46 @@ Roman is building the habit of writing comments. Prompt and review.
 - After Roman writes a class/method, point out where comments belong
 - Show example XML doc inline if needed
 - Don't add comments for him — let him write, review
+- **ВАЖЛИВО:** Roman забуває коментувати — нагадувати після КОЖНОГО написаного класу/методу. Якщо Roman явно просить "сам докоментуй" — додавати XML docs самостійно за встановленим стилем (3-line format, на public API).
 
 **XML doc syntax:**
+
+Roman предпочитает 3-строчный формат — открывающий тег, текст, закрывающий тег на разных строках. НЕ inline. Это правило для всех XML docs в проекте.
+
 ```csharp
-/// <summary>One-two sentences, capital + period.</summary>
+/// <summary>
+/// One-two sentences, capital + period.
+/// </summary>
 /// <param name="value">Description.</param>
 /// <returns>What it returns.</returns>
+```
+
+Inline-форма `/// <summary>...</summary>` — НЕ использовать, даже если текст короткий.
+
+**Code spacing — НЕ добавлять пустые строки между полями entity / properties класса.**
+
+ИИ-генерация любит ставить пустые строки между группами свойств (FK+nav парами, скаляры, навигации) для "визуальной группировки". Roman это не любит — палится как AI-код. Пиши плотно, одной стеной полей. Пустые строки только:
+- между using-блоком и namespace
+- между namespace и class
+- между class summary и class declaration
+- между методами
+
+ПРИМЕР НЕПРАВИЛЬНО:
+```csharp
+public int Id { get; set; }
+
+public int EmployeeId { get; set; }
+public Employee? Employee { get; set; }
+
+public int PositionId { get; set; }
+public Position? Position { get; set; }
+```
+
+ПРИМЕР ПРАВИЛЬНО:
+```csharp
+public int Id { get; set; }
+public int EmployeeId { get; set; }
+public Employee? Employee { get; set; }
+public int PositionId { get; set; }
+public Position? Position { get; set; }
 ```

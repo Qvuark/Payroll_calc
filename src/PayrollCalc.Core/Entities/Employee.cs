@@ -2,25 +2,50 @@ using PayrollCalc.Core.Entities.Enums;
 
 namespace PayrollCalc.Core.Entities;
 
+/// <summary>
+/// Працівник школи. Persona-level дані (ПІБ, ІПН, стаж, звання, статус).
+/// Кожен працівник має одну або більше ставок (EmployeePosition) — на них
+/// висять тарифний розряд, навантаження та блоки надбавок.
+/// </summary>
 public class Employee
 {
     public int Id { get; set; }
     public string TabNumber { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
+    /// <summary>
+    /// ІПН — 10 цифр. Друкується на розрахунковому листі.
+    /// Null якщо не задано (бухгалтер вводить вручну).
+    /// </summary>
+    public string? TaxId { get; set; }
     public DateOnly HireDate { get; set; } = DateOnly.MinValue;
     public DateOnly? DismissalDate { get; set; }
     public string? Education { get; set; }
+    /// <summary>
+    /// Загальний педагогічний стаж у роках на початок розрахункового року.
+    /// Використовується для derive TenurePct (надбавка за вислугу).
+    /// Застосовується тільки до ставок Class 1 та 2.
+    /// </summary>
     public int PedExperienceYears { get; set; } = 0;
+    /// <summary>
+    /// Відсоток податкової соц.пільги. Впливає на базу ПДФО.
+    /// Null якщо пільги немає. Вводиться вручну.
+    /// </summary>
+    public decimal? SocialBenefitPct { get; set; }
+    /// <summary>
+    /// Чи нараховується надбавка "За складність/напруженість" (5% від кожної активної ставки).
+    /// Виставляється бухгалтером по наказу.
+    /// </summary>
+    public bool HasComplexityBonus { get; set; } = false;
     public EmployeeStatus Status { get; set; }
-    public int PositionId { get; set; }
-    public Position? Position { get; set; }
+    /// <summary>
+    /// Звання працівника (per-person). Застосовується до ставок Class 1 та 2,
+    /// які юридично приймають title-надбавку. Class 3 та 4 ігнорують навіть якщо запис є.
+    /// </summary>
     public int? TitleTypeId { get; set; }
     public TitleType? TitleType { get; set; }
-    public EmployeeBase? Base { get; set; }
-    public EmployeeGpd? Gpd { get; set; }
-    public EmployeeWorkload? Workload { get; set; }
-    public EmployeeAdmin? Admin { get; set; }
-    public EmployeeAllowances? Allowances { get; set; }
-    public EmployeePkr? Pkr { get; set; }
-    public EmployeeNonPedagogical? NonPedagogical { get; set; }
+    /// <summary>
+    /// Усі ставки працівника (директор + вчитель + ...). Несуть тарифний розряд,
+    /// навантаження та per-position блоки надбавок.
+    /// </summary>
+    public ICollection<EmployeePosition> Positions { get; set; } = [];
 }

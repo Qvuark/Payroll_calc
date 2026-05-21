@@ -1,7 +1,7 @@
 using PayrollCalc.Core.Entities;
 using PayrollCalc.Core.Entities.Enums;
 
-namespace PayrollCalc.Core.DTOs.Employee;
+namespace PayrollCalc.Core.DTOs.Employees;
 
 /// <summary>
 /// Одна ставка працівника. Включає інформацію про посаду, тариф,

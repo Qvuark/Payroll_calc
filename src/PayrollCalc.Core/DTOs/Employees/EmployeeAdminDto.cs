@@ -1,9 +1,13 @@
 using PayrollCalc.Core.Entities;
 using PayrollCalc.Core.Entities.Enums;
 
-namespace PayrollCalc.Core.DTOs.Employee;
+namespace PayrollCalc.Core.DTOs.Employees;
 
-
+/// <summary>
+/// Адмін-блок ставки (керівні відсотки + надбавки за класне керівництво,
+/// завідування кабінетом/спортзалом/тиром, сайт, позакласну роботу).
+/// Дозволено тільки для Class 2 (AdminPedagogical).
+/// </summary>
 public class EmployeeAdminDto
 {
     public int EmployeePositionId { get; set; }
@@ -20,6 +24,11 @@ public class EmployeeAdminDto
     public bool HasExtracurricular { get; set; } = false;
     public bool HasWebsite { get; set; } = false;
 
+    /// <summary>
+    /// Маппінг entity → DTO. Plain field-by-field, без обчислень.
+    /// </summary>
+    /// <param name="e">Entity адмін-блока.</param>
+    /// <returns>DTO для відповіді API.</returns>
     public static EmployeeAdminDto FromEntity(EmployeeAdmin e)
     {
         return new EmployeeAdminDto()

@@ -189,3 +189,24 @@ public Employee? Employee { get; set; }
 public int PositionId { get; set; }
 public Position? Position { get; set; }
 ```
+
+## Testing (Roma is learning from scratch)
+
+Full reference: `/Users/dev/DEV/brain/PayrollCalc_vault/testing_principles.md` (F.I.R.S.T, AAA, Test Pyramid, mocking rules, stack, plan by phase).
+
+**Stack**: xUnit + Moq + FluentAssertions + WebApplicationFactory + Testcontainers.PostgreSQL (when integration).
+
+**Approach**: test-after (test in same commit-session as code), NOT TDD yet.
+
+**Mentor behavior**:
+- After pure function (validator, formula, parser) → suggest unit test with edge cases.
+- After controller endpoint → suggest integration test via `WebApplicationFactory`.
+- After bug discovery → write regression test FIRST, then fix.
+- Don't write tests for Roma — give skeleton, he writes, review.
+- Exception: if Roma asks "напиши за меня" or it's mechanical refactor of existing tests.
+
+**Phase plan**:
+- Phase 3.7 parser → unit tests on `TarificationParser`, `DecimalParser`, `HeaderValidator` with DataTable fixtures.
+- Phase 5 calculation → 5-10 unit tests per formula (VZ, PDFO, ESV, надбавки) + snapshot tests.
+- Phase 6 export → 1 integration test, open Excel, check key cells.
+- CI later: GitHub Actions `dotnet test` on each push.

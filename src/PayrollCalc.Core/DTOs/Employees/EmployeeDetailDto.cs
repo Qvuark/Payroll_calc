@@ -1,7 +1,7 @@
 using PayrollCalc.Core.Entities.Enums;
 using EmployeeEntity = PayrollCalc.Core.Entities.Employee;
 
-namespace PayrollCalc.Core.DTOs.Employee;
+namespace PayrollCalc.Core.DTOs.Employees;
 
 /// <summary>
 /// Повна картка працівника (GET /api/employees/{id}).

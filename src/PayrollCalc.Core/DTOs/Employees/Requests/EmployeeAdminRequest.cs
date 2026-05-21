@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using PayrollCalc.Core.Entities;
 using PayrollCalc.Core.Entities.Enums;
 
-namespace PayrollCalc.Core.DTOs.Employee.Requests;
+namespace PayrollCalc.Core.DTOs.Employees.Requests;
 
 /// <summary>
 /// Блок адмін-надбавок ставки. Несе керівні відсотки (директор/заступник) та надбавки

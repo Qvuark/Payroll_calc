@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using PayrollCalc.Core.Entities.Enums;
+using Employee = PayrollCalc.Core.Entities.Employee;
 
-namespace PayrollCalc.Core.DTOs.Employee.Requests;
+namespace PayrollCalc.Core.DTOs.Employees.Requests;
 
 /// <summary>
 /// Запит на створення нового працівника. Persona-only.
@@ -37,4 +39,27 @@ public class CreateEmployeeRequest
     /// </summary>
     public bool HasComplexityBonus { get; set; } = false;
     public int? TitleTypeId { get; set; }
+
+    /// <summary>
+    /// Маппінг Request → entity Employee. Status за замовчуванням Active —
+    /// зміна статусу можлива тільки через PUT (server-controlled state).
+    /// </summary>
+    /// <param name="r">Дані запиту.</param>
+    /// <returns>Новий Employee зі Status=Active, готовий до Add у DbContext.</returns>
+    public static Employee FromRequest(CreateEmployeeRequest r)
+    {
+        return new Employee
+        {
+            TabNumber = r.TabNumber,
+            FullName = r.FullName,
+            TaxId = r.TaxId,
+            HireDate = r.HireDate,
+            Education = r.Education,
+            PedExperienceYears = r.PedExperienceYears,
+            SocialBenefitPct = r.SocialBenefitPct,
+            HasComplexityBonus = r.HasComplexityBonus,
+            TitleTypeId = r.TitleTypeId,
+            Status = EmployeeStatus.Active
+        };
+    }
 }

@@ -1,6 +1,10 @@
 using PayrollCalc.Core.Entities;
-namespace PayrollCalc.Core.DTOs.Employee;
+namespace PayrollCalc.Core.DTOs.Employees;
 
+/// <summary>
+/// Непедагогічні надбавки ставки: наставництво, завідування бібліотекою,
+/// підручники, нічні зміни, дезінфектанти. Дозволено для Class 3 (Specialist) і Class 4 (MOP).
+/// </summary>
 public class EmployeeNonPedagogicalDto
 {
     public int EmployeePositionId { get; set; }
@@ -12,6 +16,12 @@ public class EmployeeNonPedagogicalDto
     public decimal LibraryMgmtAmount { get; set; } = decimal.Zero;
     public bool HasTextbooks { get; set; } = false;
     public decimal TextbooksAmount { get; set; } = decimal.Zero;
+
+    /// <summary>
+    /// Маппінг entity → DTO. Plain field-by-field.
+    /// </summary>
+    /// <param name="e">Entity непедагогічного блока.</param>
+    /// <returns>DTO для відповіді API.</returns>
     public static EmployeeNonPedagogicalDto FromEntity(EmployeeNonPedagogical e)
     {
         return new EmployeeNonPedagogicalDto()

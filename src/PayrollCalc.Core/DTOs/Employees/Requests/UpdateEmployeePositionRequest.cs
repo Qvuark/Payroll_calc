@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PayrollCalc.Core.DTOs.Employee.Requests;
+namespace PayrollCalc.Core.DTOs.Employees.Requests;
 
 /// <summary>
 /// Запит на редагування існуючої ставки. PositionId і HireDate не міняються —

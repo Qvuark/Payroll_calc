@@ -1,37 +1,72 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using PayrollCalc.API.Middleware;
 using PayrollCalc.Infrastructure.Data;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+// Bootstrap logger — пише в консоль до того як HostBuilder побудує DI.
+// Потрібен щоб не втратити помилки startup (битий appsettings, тощо).
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-builder.Services.AddControllers();
-
-// EnableDynamicJson — обов'язково для List<string> у jsonb колонці (Position.ExcelAliases).
-// Npgsql 8+ вимагає явний opt-in для dynamic JSON сериалізації.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var dataSource = new NpgsqlDataSourceBuilder(connectionString)
-    .EnableDynamicJson()
-    .Build();
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(dataSource));
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(db);
-}
+    Log.Information("Starting PayrollCalc.API");
 
-if (app.Environment.IsDevelopment())
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Підключаємо Serilog до Host. ReadFrom.Configuration — читає секцію
+    // "Serilog" з appsettings.json (sinks, levels, enrichers).
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services));
+
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    builder.Services.AddProblemDetails();
+    builder.Services.AddControllers();
+
+    // EnableDynamicJson — обов'язково для List<string> у jsonb колонці (Position.ExcelAliases).
+    // Npgsql 8+ вимагає явний opt-in для dynamic JSON сериалізації.
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var dataSource = new NpgsqlDataSourceBuilder(connectionString)
+        .EnableDynamicJson()
+        .Build();
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(dataSource));
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    var app = builder.Build();
+
+    // Логує кожен HTTP request одним рядком (method, path, status, elapsed).
+    // Замінює дефолтне ASP.NET request-logging, яке зашумлює лог.
+    app.UseSerilogRequestLogging();
+    app.UseExceptionHandler();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+        await DbSeeder.SeedAsync(db);
+    }
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    Log.Fatal(ex, "PayrollCalc.API terminated unexpectedly");
 }
-
-app.UseHttpsRedirection();
-app.MapControllers();
-
-app.Run();
+finally
+{
+    // Flush буферів Serilog перед виходом — щоб останні логи дійшли до файлу.
+    Log.CloseAndFlush();
+}

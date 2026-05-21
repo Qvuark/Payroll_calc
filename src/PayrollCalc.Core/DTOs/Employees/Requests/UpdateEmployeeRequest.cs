@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using PayrollCalc.Core.Entities.Enums;
 
-namespace PayrollCalc.Core.DTOs.Employee.Requests;
+namespace PayrollCalc.Core.DTOs.Employees.Requests;
 
 /// <summary>
 /// Запит на редагування персональних даних працівника.

@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PayrollCalc.Core.DTOs.Employee.Requests;
-using PayrollCalc.Core.Entities;
+using PayrollCalc.Core.DTOs.Employees.Requests;
 using PayrollCalc.Infrastructure.Data;
 using PayrollCalc.Core.Entities.Enums;
-using PayrollCalc.Core.DTOs.Employee;
+using PayrollCalc.Core.DTOs.Employees;
 namespace PayrollCalc.API.Controllers;
 
 /// <summary>
@@ -24,7 +23,7 @@ public class EmployeesController(AppDbContext context) : ControllerBase
     public async Task<ActionResult<IEnumerable<EmployeeSummaryDto>>> GetAll()
     {
         var employees = await context.Employees
-            .Include(e => e.Positions).ThenInclude(p => p.Position).ThenInclude(p => p.Department)
+            .Include(e => e.Positions).ThenInclude(p => p.Position).ThenInclude(p => p!.Department)
             .Include(e => e.Positions).ThenInclude(p => p.TariffGrade)
             .Where(e => e.Status != EmployeeStatus.Dismissed)
             .ToListAsync();
@@ -48,7 +47,7 @@ public class EmployeesController(AppDbContext context) : ControllerBase
             .Include(e => e.Positions).ThenInclude(p => p.NonPedagogical)
             .Include(e => e.TitleType)
             .FirstOrDefaultAsync(e => e.Id == id);
-        if(employee == null)
+        if (employee == null)
             return NotFound();
         return Ok(EmployeeDetailDto.FromEntity(employee));
     }
@@ -69,19 +68,7 @@ public class EmployeesController(AppDbContext context) : ControllerBase
             if (titleType == null)
                 return BadRequest("Title type not found.");
         }
-        var employee = new Employee()
-        {
-            TabNumber = request.TabNumber,
-            FullName = request.FullName,
-            TaxId = request.TaxId,
-            HireDate = request.HireDate,
-            Education = request.Education,
-            PedExperienceYears = request.PedExperienceYears,
-            SocialBenefitPct = request.SocialBenefitPct,
-            HasComplexityBonus = request.HasComplexityBonus,
-            TitleTypeId = request.TitleTypeId,
-            Status = EmployeeStatus.Active
-        };
+        var employee = CreateEmployeeRequest.FromRequest(request);
         context.Employees.Add(employee);
         await context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = employee.Id }, EmployeeDetailDto.FromEntity(employee));
@@ -111,8 +98,8 @@ public class EmployeesController(AppDbContext context) : ControllerBase
             .Include(e => e.Positions).ThenInclude(p => p.Pkr)
             .Include(e => e.Positions).ThenInclude(p => p.NonPedagogical)
             .Include(e => e.TitleType)
-            .FirstOrDefaultAsync(e=> e.Id==id);
-        if(employee == null)
+            .FirstOrDefaultAsync(e => e.Id == id);
+        if (employee == null)
             return NotFound();
         if (request.Status == EmployeeStatus.Dismissed && request.DismissalDate == null)
             return BadRequest("DismissalDate обов'язкова при статусі Dismissed.");
@@ -140,8 +127,8 @@ public class EmployeesController(AppDbContext context) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        var employee = await context.Employees.FirstOrDefaultAsync(e=> e.Id==id);
-        if(employee == null)
+        var employee = await context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+        if (employee == null)
             return NotFound();
         employee.Status = EmployeeStatus.Dismissed;
         employee.DismissalDate = DateOnly.FromDateTime(DateTime.Now);

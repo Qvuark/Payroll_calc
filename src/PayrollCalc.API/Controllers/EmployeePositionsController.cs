@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PayrollCalc.Core.DTOs.Employee;
-using PayrollCalc.Core.DTOs.Employee.Requests;
+using PayrollCalc.Core.DTOs.Employees;
+using PayrollCalc.Core.DTOs.Employees.Requests;
 using PayrollCalc.Core.Entities;
 using PayrollCalc.Core.Entities.Enums;
 using PayrollCalc.Core.Validators;

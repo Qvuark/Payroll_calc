@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using PayrollCalc.Core.Entities;
 
-namespace PayrollCalc.Core.DTOs.Employee.Requests;
+namespace PayrollCalc.Core.DTOs.Employees.Requests;
 
 /// <summary>
 /// Блок непедагогічних надбавок ставки. Включає фіксовані гривневі суми

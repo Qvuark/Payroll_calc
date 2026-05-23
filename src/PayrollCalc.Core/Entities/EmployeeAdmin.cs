@@ -12,18 +12,6 @@ public class EmployeeAdmin
     public int EmployeePositionId { get; set; }
     public EmployeePosition? EmployeePosition { get; set; }
     /// <summary>
-    /// Відсоток директорства від окладу (1.0 = 100%). Тільки для директора.
-    /// </summary>
-    public decimal DirectorPct { get; set; } = decimal.Zero;
-    /// <summary>
-    /// Кількість адмін-ставок (для заступника директора).
-    /// </summary>
-    public decimal AdminRateCount { get; set; } = decimal.Zero;
-    /// <summary>
-    /// Кількість педагогічних ставок (для заступника директора, який паралельно викладає).
-    /// </summary>
-    public decimal PedRateCount { get; set; } = decimal.Zero;
-    /// <summary>
     /// Чи є класне керівництво на цій ставці.
     /// </summary>
     public bool HasClassMgmt { get; set; } = false;

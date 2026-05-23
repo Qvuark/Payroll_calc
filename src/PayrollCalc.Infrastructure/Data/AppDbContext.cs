@@ -46,7 +46,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Timesheet>().HasKey(x => x.Id);
         modelBuilder.Entity<SystemParam>().HasKey(x => x.Id);
         modelBuilder.Entity<WorkCalendar>().HasKey(x => x.Id);
-        
+
         modelBuilder.Entity<EmployeePosition>().HasOne(ep => ep.Employee).WithMany(e => e.Positions).HasForeignKey(ep => ep.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<EmployeePosition>().HasOne(ep => ep.Position).WithMany().HasForeignKey(ep => ep.PositionId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<EmployeePosition>().HasOne(ep => ep.TariffGrade).WithMany().HasForeignKey(ep => ep.TariffGradeId).OnDelete(DeleteBehavior.Restrict);
@@ -68,7 +68,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Position>().HasOne(p => p.Department).WithMany().HasForeignKey(p => p.DepartmentId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Position>().Property(p => p.ExcelAliases).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
         modelBuilder.Entity<Employee>().HasOne(e => e.TitleType).WithMany().HasForeignKey(e => e.TitleTypeId).OnDelete(DeleteBehavior.SetNull);
-        modelBuilder.Entity<Employee>().Property(e => e.TaxId).HasMaxLength(10);
+        modelBuilder.Entity<Employee>().Property(e => e.TaxId).HasMaxLength(10).IsRequired();
 
         // Інші Employee-залежні сутності (без змін у Phase 3.6 — прив'язані до Employee, не до EmployeePosition)
         modelBuilder.Entity<SickLeave>().HasOne(s => s.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);
@@ -78,7 +78,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<CalculationPeriod>().HasOne(cp => cp.Calculation).WithMany(c => c.Periods).HasForeignKey(cp => cp.CalculationId).OnDelete(DeleteBehavior.Cascade);
 
         // Унікальні індекси
-        modelBuilder.Entity<Employee>().HasIndex(e => e.TabNumber).IsUnique();
+        modelBuilder.Entity<Employee>().HasIndex(e => e.TaxId).IsUnique();
         modelBuilder.Entity<SystemParam>().HasIndex(e => e.Key).IsUnique();
         modelBuilder.Entity<TariffGrade>().HasIndex(e => e.Grade).IsUnique();
         modelBuilder.Entity<WorkCalendar>().HasIndex(e => new { e.Year, e.Month }).IsUnique();

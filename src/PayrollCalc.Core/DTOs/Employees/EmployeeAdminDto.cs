@@ -11,9 +11,6 @@ namespace PayrollCalc.Core.DTOs.Employees;
 public class EmployeeAdminDto
 {
     public int EmployeePositionId { get; set; }
-    public decimal DirectorPct { get; set; } = decimal.Zero;
-    public decimal AdminRateCount { get; set; } = decimal.Zero;
-    public decimal PedRateCount { get; set; } = decimal.Zero;
     public bool HasClassMgmt { get; set; } = false;
     public ClassGradeGroup? ClassGradeGroup { get; set; }
     public bool HasCabinet { get; set; } = false;
@@ -34,9 +31,6 @@ public class EmployeeAdminDto
         return new EmployeeAdminDto()
         {
             EmployeePositionId = e.EmployeePositionId,
-            DirectorPct = e.DirectorPct,
-            AdminRateCount = e.AdminRateCount,
-            PedRateCount = e.PedRateCount,
             HasClassMgmt = e.HasClassMgmt,
             ClassGradeGroup = e.ClassGradeGroup,
             HasCabinet = e.HasCabinet,

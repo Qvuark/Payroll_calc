@@ -35,6 +35,14 @@ public class CreateEmployeePositionRequest
     /// Шкідливі умови праці (постанова КМУ №1298). Конкретний відсоток уточнюється з бухгалтером.
     /// </summary>
     public bool HasUnfavorable { get; set; } = false;
+    /// <summary>
+    /// Ставка надбавки за складність/напруженість роботи.
+    /// </summary>
+    [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
+    /// <summary>
+    /// Ставка надбавки за престижність праці.
+    /// </summary>
+    [Range(0.05, 0.2)] public decimal? PrestigeBonusPct { get; set; }
 
     /// <summary>
     /// Маппінг Request → entity. EmployeeId передається окремо бо він приходить з URL.
@@ -54,7 +62,9 @@ public class CreateEmployeePositionRequest
             EffectiveFrom = r.HireDate,
             IsPrimary = r.IsPrimary,
             HasMilitaryRecord = r.HasMilitaryRecord,
-            HasUnfavorable = r.HasUnfavorable
+            HasUnfavorable = r.HasUnfavorable,
+            ComplexityBonusPct = r.ComplexityBonusPct,
+            PrestigeBonusPct = r.PrestigeBonusPct
         };
     }
 }

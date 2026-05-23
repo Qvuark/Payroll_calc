@@ -20,6 +20,7 @@ public class EmployeeWorkloadDto
     public decimal NotebookHours10To11 { get; set; } = decimal.Zero;
     public decimal InclusiveHours1To4 { get; set; } = decimal.Zero;
     public decimal InclusiveHours5To9 { get; set; } = decimal.Zero;
+    public decimal InclusiveHours10To11 { get; set; } = decimal.Zero;
     /// <summary>
     /// FK на NotebookRate — окремий розряд для оплати перевірки зошитів (не основний розряд ставки).
     /// </summary>
@@ -46,6 +47,7 @@ public class EmployeeWorkloadDto
             NotebookHours10To11 = e.NotebookHours10To11,
             InclusiveHours1To4 = e.InclusiveHours1To4,
             InclusiveHours5To9 = e.InclusiveHours5To9,
+            InclusiveHours10To11 = e.InclusiveHours10To11,
             NotebookRateId = e.NotebookRateId
         };
     }

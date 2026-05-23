@@ -43,6 +43,14 @@ public class EmployeePositionDto
     /// Шкідливі умови праці на цій ставці. Формула/відсоток уточнюється з бухгалтером.
     /// </summary>
     public bool HasUnfavorable { get; set; }
+    ///<summary>
+    /// Відсоток надбавки за складність/напруженість роботи.
+    /// </summary>
+    public decimal? ComplexityBonusPct { get; set; }
+    /// <summary>
+    /// Відсоток надбавки за престижність праці.
+    /// </summary>
+    public decimal? PrestigeBonusPct { get; set; }
     public EmployeeWorkloadDto? Workload { get; set; }
     public EmployeeAdminDto? Admin { get; set; }
     public EmployeeGpdDto? Gpd { get; set; }
@@ -75,6 +83,8 @@ public class EmployeePositionDto
             EffectiveFrom = e.EffectiveFrom,
             HasMilitaryRecord = e.HasMilitaryRecord,
             HasUnfavorable = e.HasUnfavorable,
+            ComplexityBonusPct = e.ComplexityBonusPct,
+            PrestigeBonusPct = e.PrestigeBonusPct,
             Workload = e.Workload != null ? EmployeeWorkloadDto.FromEntity(e.Workload) : null,
             Admin = e.Admin != null ? EmployeeAdminDto.FromEntity(e.Admin) : null,
             Gpd = e.Gpd != null ? EmployeeGpdDto.FromEntity(e.Gpd) : null,

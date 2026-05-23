@@ -37,6 +37,17 @@ public class EmployeePosition
     /// Формула/відсоток відкладено до уточнення у бухгалтера.
     /// </summary>
     public bool HasUnfavorable { get; set; }
+    /// <summary>
+    /// Надбавка за складність/напруженість. Раньше була HasComplexityBonus bool на Employee. Мама: 5-50%, decimal, по
+    /// наказу, на конкретну ставку. Уехала с Employee на EmployeePosition (приказ на ставку, не на человека). Доступна для
+    /// всіх класів в теорії.
+    /// </summary>
+    public decimal? ComplexityBonusPct { get; set; }
+    /// <summary>
+    /// Престижність педагогічної праці. Нове поле.  
+    /// Тільки для Class 1 (учителя). 5-20% по приказу.
+    /// </summary>
+    public decimal? PrestigeBonusPct { get; set; }
     public EmployeeWorkload? Workload { get; set; }
     public EmployeeAdmin? Admin { get; set; }
     public EmployeeGpd? Gpd { get; set; }

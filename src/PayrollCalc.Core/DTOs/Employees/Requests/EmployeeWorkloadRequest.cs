@@ -20,6 +20,7 @@ public class EmployeeWorkloadRequest
     [Range(0, 60)] public decimal NotebookHours10To11 { get; set; } = decimal.Zero;
     [Range(0, 60)] public decimal InclusiveHours1To4 { get; set; } = decimal.Zero;
     [Range(0, 60)] public decimal InclusiveHours5To9 { get; set; } = decimal.Zero;
+    [Range(0, 60)] public decimal InclusiveHours10To11 { get; set; } = decimal.Zero;
     /// <summary>
     /// FK на NotebookRate — тариф за перевірку зошитів (різний для предметів).
     /// Null якщо вчитель зошитів не перевіряє.
@@ -46,7 +47,8 @@ public class EmployeeWorkloadRequest
             NotebookHours10To11 = request.NotebookHours10To11,
             InclusiveHours1To4 = request.InclusiveHours1To4,
             InclusiveHours5To9 = request.InclusiveHours5To9,
-            NotebookRateId = request.NotebookRateId
+            NotebookRateId = request.NotebookRateId,
+            InclusiveHours10To11 = request.InclusiveHours10To11
         };
     }
 }

@@ -99,6 +99,8 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         position.DismissalDate = request.DismissalDate;
         position.HasMilitaryRecord = request.HasMilitaryRecord;
         position.HasUnfavorable = request.HasUnfavorable;
+        position.ComplexityBonusPct = request.ComplexityBonusPct;
+        position.PrestigeBonusPct = request.PrestigeBonusPct;
         await context.SaveChangesAsync();
         var saved = await LoadFullPositionAsync(posId);
         return Ok(EmployeePositionDto.FromEntity(saved!));
@@ -185,6 +187,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             position.Workload.NotebookHours10To11 = request.NotebookHours10To11;
             position.Workload.InclusiveHours1To4 = request.InclusiveHours1To4;
             position.Workload.InclusiveHours5To9 = request.InclusiveHours5To9;
+            position.Workload.InclusiveHours10To11 = request.InclusiveHours10To11;
             position.Workload.NotebookRateId = request.NotebookRateId;
         }
         await context.SaveChangesAsync();
@@ -225,9 +228,6 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         }
         else
         {
-            position.Admin.DirectorPct = request.DirectorPct;
-            position.Admin.AdminRateCount = request.AdminRateCount;
-            position.Admin.PedRateCount = request.PedRateCount;
             position.Admin.HasClassMgmt = request.HasClassMgmt;
             position.Admin.ClassGradeGroup = request.ClassGradeGroup;
             position.Admin.HasCabinet = request.HasCabinet;
@@ -237,6 +237,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             position.Admin.HasComputers = request.HasComputers;
             position.Admin.HasExtracurricular = request.HasExtracurricular;
             position.Admin.HasWebsite = request.HasWebsite;
+
         }
         await context.SaveChangesAsync();
         var saved = await LoadFullPositionAsync(posId);

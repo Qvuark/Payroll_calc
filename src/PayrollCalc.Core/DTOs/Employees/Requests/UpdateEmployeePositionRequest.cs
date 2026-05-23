@@ -22,4 +22,6 @@ public class UpdateEmployeePositionRequest
     public bool IsPrimary { get; set; }
     public bool HasMilitaryRecord { get; set; }
     public bool HasUnfavorable { get; set; }
+    [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
+    [Range(0.05, 0.2)] public decimal? PrestigeBonusPct { get; set; }
 }

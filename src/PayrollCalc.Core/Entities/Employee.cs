@@ -14,28 +14,27 @@ public class Employee
     public string FullName { get; set; } = string.Empty;
     /// <summary>
     /// ІПН — 10 цифр. Друкується на розрахунковому листі.
-    /// Null якщо не задано (бухгалтер вводить вручну).
     /// </summary>
-    public string? TaxId { get; set; }
+    public string TaxId { get; set; } = string.Empty;
     public DateOnly HireDate { get; set; } = DateOnly.MinValue;
     public DateOnly? DismissalDate { get; set; }
     public string? Education { get; set; }
     /// <summary>
     /// Загальний педагогічний стаж у роках на початок розрахункового року.
     /// Використовується для derive TenurePct (надбавка за вислугу).
-    /// Застосовується тільки до ставок Class 1 та 2.
+    /// Застосовується тільки до ставок Class 1.
     /// </summary>
     public int PedExperienceYears { get; set; } = 0;
+    /// <summary>
+    /// Загальний стаж роботи у роках на початок розрахункового року.
+    /// Використовується для derive SickLeaveBase (лікарняні).
+    /// </summary>
+    public int GeneralExperienceYears { get; set; } = 0;
     /// <summary>
     /// Відсоток податкової соц.пільги. Впливає на базу ПДФО.
     /// Null якщо пільги немає. Вводиться вручну.
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
-    /// <summary>
-    /// Чи нараховується надбавка "За складність/напруженість" (5% від кожної активної ставки).
-    /// Виставляється бухгалтером по наказу.
-    /// </summary>
-    public bool HasComplexityBonus { get; set; } = false;
     public EmployeeStatus Status { get; set; }
     /// <summary>
     /// Звання працівника (per-person). Застосовується до ставок Class 1 та 2,

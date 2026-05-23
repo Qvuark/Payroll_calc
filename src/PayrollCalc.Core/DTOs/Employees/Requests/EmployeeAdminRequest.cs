@@ -13,17 +13,8 @@ namespace PayrollCalc.Core.DTOs.Employees.Requests;
 public class EmployeeAdminRequest
 {
     /// <summary>
-    /// Відсоток директорства від окладу (1.0 = 100%). Тільки для директора.
+    /// Ставка надбавки за класне керівництво.
     /// </summary>
-    [Range(0.0, 1.0)] public decimal DirectorPct { get; set; }
-    /// <summary>
-    /// Кількість адмін-ставок (для заступника директора).
-    /// </summary>
-    [Range(0.0, 2.0)] public decimal AdminRateCount { get; set; }
-    /// <summary>
-    /// Кількість педагогічних ставок (для заступника, який паралельно викладає).
-    /// </summary>
-    [Range(0.0, 2.0)] public decimal PedRateCount { get; set; }
     public bool HasClassMgmt { get; set; } = false;
     /// <summary>
     /// Група класів для розрахунку класного керівництва (1-4 чи 5-11).
@@ -51,9 +42,6 @@ public class EmployeeAdminRequest
     {
         return new EmployeeAdmin
         {
-            DirectorPct = request.DirectorPct,
-            AdminRateCount = request.AdminRateCount,
-            PedRateCount = request.PedRateCount,
             HasClassMgmt = request.HasClassMgmt,
             HasCabinet = request.HasCabinet,
             ClassGradeGroup = request.ClassGradeGroup,

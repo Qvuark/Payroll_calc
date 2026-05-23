@@ -15,10 +15,14 @@ public class EmployeeDetailDto
     /// <summary>
     /// ІПН — 10 цифр. Друкується на розрахунковому листі.
     /// </summary>
-    public string? TaxId { get; set; }
+    public string TaxId { get; set; } = string.Empty;
     public DateOnly HireDate { get; set; }
     public DateOnly? DismissalDate { get; set; }
     public string? Education { get; set; }
+    /// <summary>
+    /// Загальний стаж роботи у роках на початок розрахункового року.
+    /// </summary>
+    public int GeneralExperienceYears { get; set; }
     /// <summary>
     /// Загальний педагогічний стаж на старт розрахункового року.
     /// </summary>
@@ -28,10 +32,6 @@ public class EmployeeDetailDto
     /// Відсоток податкової соц.пільги. Null якщо пільги немає.
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
-    /// <summary>
-    /// Надбавка "За складність/напруженість" (5% від кожної активної ставки).
-    /// </summary>
-    public bool HasComplexityBonus { get; set; } = false;
     public int? TitleTypeId { get; set; }
     public string? TitleTypeName { get; set; }
     /// <summary>
@@ -56,10 +56,10 @@ public class EmployeeDetailDto
             HireDate = e.HireDate,
             DismissalDate = e.DismissalDate,
             Education = e.Education,
+            GeneralExperienceYears = e.GeneralExperienceYears,
             PedExperienceYears = e.PedExperienceYears,
             Status = e.Status,
             SocialBenefitPct = e.SocialBenefitPct,
-            HasComplexityBonus = e.HasComplexityBonus,
             TitleTypeId = e.TitleTypeId,
             TitleTypeName = e.TitleType?.Name,
             Positions = e.Positions.Select(EmployeePositionDto.FromEntity).ToList()

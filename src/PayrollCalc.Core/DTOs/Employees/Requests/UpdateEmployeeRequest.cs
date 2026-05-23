@@ -10,15 +10,21 @@ namespace PayrollCalc.Core.DTOs.Employees.Requests;
 public class UpdateEmployeeRequest
 {
     [Required, MaxLength(200)] public string FullName { get; set; } = string.Empty;
-    [MaxLength(10)] public string? TaxId { get; set; }
+    [Required, StringLength(10, MinimumLength = 10)] public string TaxId { get; set; } = string.Empty;
     /// <summary>
     /// Заповнюється коли працівник звільняється з усіх ставок (повне звільнення).
     /// </summary>
     public DateOnly? DismissalDate { get; set; }
-    [MaxLength(200)]public string? Education { get; set; }
+    [MaxLength(200)] public string? Education { get; set; }
+    /// <summary>
+    /// Загальний стаж роботи у роках на початок розрахункового року.
+    /// </summary>
+    public int GeneralExperienceYears { get; set; } = 0;
+    /// <summary>
+    /// Загальний педагогічний стаж на старт розрахункового року.
+    /// </summary>
     public int PedExperienceYears { get; set; } = 0;
     public decimal? SocialBenefitPct { get; set; }
-    public bool HasComplexityBonus { get; set; } = false;
     public int? TitleTypeId { get; set; }
     [Required]
     public EmployeeStatus Status { get; set; }

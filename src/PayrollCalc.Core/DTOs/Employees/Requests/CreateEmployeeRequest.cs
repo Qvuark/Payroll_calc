@@ -10,22 +10,21 @@ namespace PayrollCalc.Core.DTOs.Employees.Requests;
 /// </summary>
 public class CreateEmployeeRequest
 {
-    [Required, MaxLength(50)]
-    public string TabNumber { get; set; } = string.Empty;
-    [Required, MaxLength(200)]
-    public string FullName { get; set; } = string.Empty;
+    [Required, MaxLength(50)] public string TabNumber { get; set; } = string.Empty;
+    [Required, MaxLength(200)] public string FullName { get; set; } = string.Empty;
     /// <summary>
     /// ІПН — 10 цифр. Друкується на розрахунковому листі.
     /// </summary>
-    [MaxLength(10)]
-    public string? TaxId { get; set; }
+    [Required, StringLength(10, MinimumLength = 10)] public string TaxId { get; set; } = string.Empty;
     /// <summary>
     /// Дата прийняття у школу (загальна, не на конкретну ставку).
     /// </summary>
-    [Required]
-    public DateOnly HireDate { get; set; }
-    [MaxLength(200)]
-    public string? Education { get; set; }
+    [Required] public DateOnly HireDate { get; set; }
+    [MaxLength(200)] public string? Education { get; set; }
+    /// <summary>
+    /// Загальний стаж роботи у роках на початок розрахункового року.
+    /// </summary>
+    public int GeneralExperienceYears { get; set; } = 0;
     /// <summary>
     /// Загальний педагогічний стаж на старт розрахункового року.
     /// </summary>
@@ -34,10 +33,6 @@ public class CreateEmployeeRequest
     /// Відсоток податкової соц.пільги. Null якщо пільги немає.
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
-    /// <summary>
-    /// Надбавка "За складність/напруженість" (5% від кожної активної ставки).
-    /// </summary>
-    public bool HasComplexityBonus { get; set; } = false;
     public int? TitleTypeId { get; set; }
 
     /// <summary>
@@ -56,8 +51,8 @@ public class CreateEmployeeRequest
             HireDate = r.HireDate,
             Education = r.Education,
             PedExperienceYears = r.PedExperienceYears,
+            GeneralExperienceYears = r.GeneralExperienceYears,
             SocialBenefitPct = r.SocialBenefitPct,
-            HasComplexityBonus = r.HasComplexityBonus,
             TitleTypeId = r.TitleTypeId,
             Status = EmployeeStatus.Active
         };

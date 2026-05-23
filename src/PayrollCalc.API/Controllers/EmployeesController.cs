@@ -60,8 +60,8 @@ public class EmployeesController(AppDbContext context) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<EmployeeDetailDto>> Create(CreateEmployeeRequest request)
     {
-        if (await context.Employees.AnyAsync(e => e.TabNumber == request.TabNumber))
-            return Conflict("Employee with this TabNumber already exists.");
+        if (await context.Employees.AnyAsync(e => e.TaxId == request.TaxId))
+            return Conflict($"Працівник з ІПН {request.TaxId} вже існує.");
         if (request.TitleTypeId.HasValue)
         {
             var titleType = await context.TitleTypes.FindAsync(request.TitleTypeId.Value);
@@ -105,15 +105,17 @@ public class EmployeesController(AppDbContext context) : ControllerBase
             return BadRequest("DismissalDate обов'язкова при статусі Dismissed.");
         if (request.Status != EmployeeStatus.Dismissed && request.DismissalDate != null)
             return BadRequest("DismissalDate має бути null при статусі не Dismissed.");
+        if (request.TaxId != employee.TaxId && await context.Employees.AnyAsync(e => e.TaxId == request.TaxId && e.Id != id))
+            return Conflict($"Працівник з ІПН {request.TaxId} вже існує.");
         employee.FullName = request.FullName;
         employee.TaxId = request.TaxId;
         employee.DismissalDate = request.DismissalDate;
         employee.Education = request.Education;
         employee.PedExperienceYears = request.PedExperienceYears;
         employee.SocialBenefitPct = request.SocialBenefitPct;
-        employee.HasComplexityBonus = request.HasComplexityBonus;
         employee.TitleTypeId = request.TitleTypeId;
         employee.Status = request.Status;
+        employee.GeneralExperienceYears = request.GeneralExperienceYears;
         await context.SaveChangesAsync();
         return Ok(EmployeeDetailDto.FromEntity(employee));
     }

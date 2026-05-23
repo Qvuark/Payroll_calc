@@ -28,33 +28,32 @@
   - [x] Audit 2026-05-15 — закритий 2026-05-16 (PUT-семантика з Upsert helpers, unique constraints, decimal precision, jsonb для ParamsSnapshot, OnDelete.Restrict, WorkerClass consistency, NotebookRateId nullable, фільтр WorkCalendar по року, дефолти entity)
   - [x] Smoke test пройдено (curl): happy path, дублі, class mismatch, перемикання блоків через PUT, soft delete, captable Department.
   - [x] Phase 3.5a — Domain Inventory: 4 Departments, 21 Positions, `Position.ExcelAliases` jsonb, drop `Employee.WorkerClass` (commit 1a3abe0).
-  - [x] **Phase 3.6 — Multi-position refactor + payslip-критичні поля** ✅ ЗАКРИТО 2026-05-21 (commit pending)
-    - Точка входу: `/Users/dev/DEV/brain/PayrollCalc_vault/_what_to_do_now.md`
-    - Причина: один працівник може мати **N ставок** (директор + вчитель). На реальному розрахунковому листі: "Тарифний розряд 17 та 14" = дві ставки на одній картці.
-    - Нова entity `EmployeePosition` (Id, EmployeeId, PositionId, TariffGradeId, Stavki decimal, IsPrimary bool, HireDate, DismissalDate?, **HasMilitaryRecord bool?**)
-    - Перенести з Employee → EmployeePosition: `Workload`, `Admin`, `Gpd`, `Pkr`, `NonPedagogical`
-    - `Base` розчиняється: `TariffGradeId` на EmployeePosition, `MonthlyRate` = `TariffGrade.Amount × Stavki`
-    - На Employee лишаються: TabNumber, FullName, Education, PedExperienceYears, TitleTypeId, Allowances, HireDate, DismissalDate, Status
-    - **3 нові поля (виявлено на розрахунковому листі):**
-      - `Employee.TaxId string(10)` — ІПН, друкується на платіжці
-      - `Employee.SocialBenefitPct decimal?` — соц.пільга, впливає на ПДФО
-      - `EmployeePosition.HasMilitaryRecord bool?` — військ.облік 5% (формула в `_BRAIN.md`)
-    - Migration `Phase3_6_MultiPosition` + reset DB + re-seed
-    - CRUD: див. `_what_to_do_now.md` Крок 3
-    - Smoke test: 1 людина = 2 позиції з різними блоками
-    - Відкриті питання — `questions_for_accountant.md` 🔴 СЕЙЧАС секція (10 шт)
-  - [ ] **Excel парсери (2 шт)** — стратегія "много мелких парсеров" зафіксована 2026-05-17
-    - Головний док: `/Users/dev/DEV/brain/PayrollCalc_vault/parsers_strategy.md`
-    - Пакети: `ExcelDataReader` + `ExcelDataReader.DataSet` (уже в csproj)
-    - [ ] **Парсер #1: тарифікація Class 1+2** — `POST /api/employees/import/tarification [FromForm IFormFile]`
-      - Структура файлу (97 cols, парні рядки): `excel_tarification_structure.md` у vault
-      - Маппінг колонок → блоки повністю описано
-    - [ ] **Парсер #2: спецперсонал Class 3+4** — `POST /api/employees/import/specstaff [FromForm IFormFile]`
-      - НАШ шаблон 15-18 cols: `excel_specstaff_structure.md` у vault
-      - Створити `docs/templates/specstaff_template.xlsx` (мати у репо для бухгалтера)
-    - Спільна інфраструктура `PayrollCalc.Infrastructure/Excel/`: `ExcelReaderBase`, `ParserResult`, `DecimalParser`, `HeaderValidator`
-    - Returns: `{ imported, updated, skipped, errors[] }`. Одна EF транзакція на пачку.
-  - Відкладено (потрібен бухгалтер): тип шкідливості (HasUnfavorable bool → enum/%), % дир-залежних окладів (chief_accountant_pct, vice_principal_pct тощо), структура нічних і дезінфектантів
+  - [x] **Phase 3.6 — Multi-position refactor + payslip-критичні поля** ✅ ЗАКРИТО 2026-05-21 (commit 170d331)
+    - Multi-position: один Employee → N EmployeePosition. Workload/Admin/Gpd/Pkr/NonPedagogical перенесені на EmployeePosition.
+    - 3 нові поля: `Employee.TaxId`, `Employee.SocialBenefitPct`, `EmployeePosition.HasMilitaryRecord`.
+  - [x] **Phase 3.6.5 — MomReview refactor** ✅ ЗАКРИТО 2026-05-23
+    - Причина: 14 відповідей мами 2026-05-22 → 7 модельних змін. Деталі — [[mom_answers_review_2026-05-22]].
+    - `Employee`: TaxId mandatory+unique, TabNumber drop unique (сумісник кейс), +GeneralExperienceYears, drop HasComplexityBonus.
+    - `EmployeePosition`: +ComplexityBonusPct decimal? (5-50%, всі класи), +PrestigeBonusPct decimal? (5-20%, Class 1).
+    - `EmployeeAdmin`: drop DirectorPct/AdminRateCount/PedRateCount (legacy, дублювало RateCount + WorkerClass).
+    - `EmployeeWorkload`: +InclusiveHours10To11.
+    - `TitleType`: +WorkerClass scope (Старший вчитель/C1/10%, Методист/C1/15%, Психолог-методист/C2/10%, Педагог-організатор/C2/10%).
+    - Migration `Phase3_6_5_MomReview` (incremental, не reset). Smoke test через curl: 8/8 пройшли (POST/GET/PUT, dup TaxId, сумісник, Class validation).
+    - Документація: дезінфектанти 10% (не 15%), нічна формула (`/norm_hours × night_hours × 40%`), ГПД 10-14, ПКР 10-12.
+  - [ ] **Phase 3.7 — Excel парсери (2 шт)** — Strategy B (split clean) зафіксована 2026-05-23
+    - Головні доки: [[parsers_implementation]] (план реалізації), [[template_schemas_draft]] (схема), [[parsers_design_options]] (варіанти з рекомендаціями).
+    - Пакети: `ExcelDataReader` + `ExcelDataReader.DataSet` (уже в csproj).
+    - **Стратегічне рішення 2026-05-21:** дроп парсера тарифікації (97 cols, парні рядки, крихкий). Власні шаблони (програма диктує входи).
+    - **Strategy B 2026-05-23:** педагогічна частина (хоч і у адмін-вчителя) лежить у teachers.xlsx, не-педагогічна у staff.xlsx.
+    - [ ] **Парсер #1: teachers.xlsx Class 1** — `POST /api/employees/import/teachers [FromForm IFormFile]`. 34 колонки: persona + Position=Вчитель + Subject + Workload (hours/notebooks/inclusive) + педагогічні надбавки (ClassMgmt/Cabinet/Gym/Shooting/Computers/Extracurricular/Website).
+    - [ ] **Парсер #2: staff.xlsx Class 2-4** — `POST /api/employees/import/staff [FromForm IFormFile]`. 24 колонки: persona + Position + GPD/PKR + NonPedagogical + Disinfectants/NightShifts. (DirectorPct/AdminRateCount/PedRateCount drop у Phase 3.6.5.)
+    - [ ] **Preflight endpoint** — `POST /api/employees/import/preflight (files[])` — dry-run cross-file перевірка IsPrimary.
+    - **Архітектурні рішення A1-A6 ✅ 2026-05-23:** MVP upsert + `EffectiveTo` поле в міграції / PUT persona / error при missing IsPrimary / group by TabNumber / `PositionStartDate` колонка / окремі endpoints per file.
+    - Спільна інфра `src/PayrollCalc.Documents/Import/Common/`: `ExcelReaderBase`, `BoolParser`, `DateParser`, `DecimalParser` ✅, `HeaderValidator` ✅, `ParserResult` ✅, `ParserError` ✅.
+    - **Міграції перед стартом:** `Phase3_7_AddEffectiveTo`, `Phase3_7_AddPositionStartDate`, `Phase3_7_AddIsHonored`, `Phase3_7_TitleTypeAliases`.
+    - Returns: `{ imported, updated, skipped, errors[], warnings[] }`. Одна EF транзакція на файл (all-or-nothing).
+  - Лишилось питати маму: Q15 (% звання соц.педагог), Class 3/4 діапазони розрядів (мама обіцяла таблицю).
+  - Відкладено: тип шкідливості (HasUnfavorable bool → enum/%) — Phase 5.
 - [ ] Phase 4 — Timesheets (manual entry + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator + unit tests)
   - ⚠️ Before starting: verify ALL seed data with accountant, clear DB, re-run seeder
@@ -206,7 +205,7 @@ Full reference: `/Users/dev/DEV/brain/PayrollCalc_vault/testing_principles.md` (
 - Exception: if Roma asks "напиши за меня" or it's mechanical refactor of existing tests.
 
 **Phase plan**:
-- Phase 3.7 parser → unit tests on `TarificationParser`, `DecimalParser`, `HeaderValidator` with DataTable fixtures.
+- Phase 3.7 parsers → unit tests on `TeachersParser`, `StaffParser`, `DecimalParser`, `BoolParser`, `DateParser`, `HeaderValidator` with xlsx fixtures. Integration tests on `TeachersImporter`, `StaffImporter` via Testcontainers.PostgreSQL.
 - Phase 5 calculation → 5-10 unit tests per formula (VZ, PDFO, ESV, надбавки) + snapshot tests.
 - Phase 6 export → 1 integration test, open Excel, check key cells.
 - CI later: GitHub Actions `dotnet test` on each push.

@@ -103,10 +103,34 @@ public static class DbSeeder
             return;
 
         context.TitleTypes.AddRange(
-          new TitleType { Name = "Старший вчитель", WorkerClass = WorkerClass.Pedagogical, Pct = 0.10m },
-          new TitleType { Name = "Вчитель-методист", WorkerClass = WorkerClass.Pedagogical, Pct = 0.15m },
-          new TitleType { Name = "Психолог-методист", WorkerClass = WorkerClass.AdminPedagogical, Pct = 0.10m },
-          new TitleType { Name = "Педагог-організатор", WorkerClass = WorkerClass.AdminPedagogical, Pct = 0.10m }
+          new TitleType
+          {
+              Name = "Старший вчитель",
+              WorkerClass = WorkerClass.Pedagogical,
+              Pct = 0.10m,
+              ExcelAliases = ["ст.вчитель", "ст. вчитель", "ст вчитель", "старший вч.", "ст. вч."]
+          },
+          new TitleType
+          {
+              Name = "Вчитель-методист",
+              WorkerClass = WorkerClass.Pedagogical,
+              Pct = 0.15m,
+              ExcelAliases = ["методист", "вч.методист", "вч. методист", "вчитель-методист"]
+          },
+          new TitleType
+          {
+              Name = "Психолог-методист",
+              WorkerClass = WorkerClass.AdminPedagogical,
+              Pct = 0.10m,
+              ExcelAliases = ["психолог-методист", "псих.методист", "псих-методист"]
+          },
+          new TitleType
+          {
+              Name = "Педагог-організатор",
+              WorkerClass = WorkerClass.AdminPedagogical,
+              Pct = 0.10m,
+              ExcelAliases = ["педагог-організатор", "пед.організатор", "організатор", "пед-організатор"]
+          }
           );
         await context.SaveChangesAsync();
     }

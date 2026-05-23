@@ -43,6 +43,17 @@ public class Employee
     public int? TitleTypeId { get; set; }
     public TitleType? TitleType { get; set; }
     /// <summary>
+    /// Прапор "Заслужений вчитель/працівник освіти" (звання президентського указу).
+    /// Additive до TitleType — людина може бути одночасно методистом і заслуженим.
+    /// </summary>
+    public bool IsHonored { get; set; }
+    /// <summary>
+    /// Абсолютна сума надбавки за звання "Заслужений" (не %).
+    /// Мама зберігає у тарифікації фіксовану суму, бо база не завжди = оклад.
+    /// Застосовується тільки для Class 1 і Class 2. Null якщо IsHonored=false.
+    /// </summary>
+    public decimal? HonoredAmount { get; set; }
+    /// <summary>
     /// Усі ставки працівника (директор + вчитель + ...). Несуть тарифний розряд,
     /// навантаження та per-position блоки надбавок.
     /// </summary>

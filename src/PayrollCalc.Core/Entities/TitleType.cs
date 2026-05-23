@@ -17,4 +17,10 @@ public class TitleType
     /// Відсоток надбавки за звання. Використовується для derive BonusAmount в разі якщо звання встановлено.
     /// </summary>
     public decimal Pct { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Скорочення з Excel-файлів які мапляться на це звання (jsonb-колонка у PG).
+    /// Приклад: для "Старший вчитель" — ["ст.вчитель", "ст. вчитель", "старший вч."].
+    /// Той самий pattern що Position.ExcelAliases.
+    /// </summary>
+    public List<string> ExcelAliases { get; set; } = [];
 }

@@ -25,9 +25,20 @@ public class EmployeePosition
     public DateOnly HireDate { get; set; }
     public DateOnly? DismissalDate { get; set; }
     /// <summary>
+    /// Дата прийняття на цю конкретну посаду (не на школу). Парситься з xlsx-колонки "Дата на посаді".
+    /// EffectiveFrom = PositionStartDate ?? HireDate (fallback на загальну дату прийому при null).
+    /// </summary>
+    public DateOnly? PositionStartDate { get; set; }
+    /// <summary>
     /// Дата з якої запис чинний. У MVP дорівнює HireDate; у Phase 2.7 використовується для versioning історії змін ставки.
     /// </summary>
     public DateOnly EffectiveFrom { get; set; }
+    /// <summary>
+    /// Дата закриття чинності запису для versioning. У MVP завжди null.
+    /// У Phase 7+ використовується для зберігання історії змін ставки без втрати старих даних
+    /// (не плутати з DismissalDate — це різні концепти: запис vs звільнення з посади).
+    /// </summary>
+    public DateOnly? EffectiveTo { get; set; }
     /// <summary>
     /// Чи перебуває на військовому обліку на цій ставці (надбавка 5% за наказом).
     /// </summary>

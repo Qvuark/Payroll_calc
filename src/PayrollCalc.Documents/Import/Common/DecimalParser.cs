@@ -41,10 +41,11 @@ public static class DecimalParser
         var str = value.ToString();
         if(string.IsNullOrWhiteSpace(str))
             return false;
-        // Спочатку Invariant (точка як крапка). Якщо не вийшло — Current
-        // (кома на uk-UA).
-        if(decimal.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed)
-            || decimal.TryParse(str, NumberStyles.Any, CultureInfo.CurrentCulture, out parsed))
+        // Float — тільки знак + крапка/кома як decimal, БЕЗ thousand separator.
+        // Інакше "3,14" на Invariant парситься як 314 (кома = розділювач тисяч).
+        // Спочатку Invariant (крапка-decimal), потім CurrentCulture (uk-UA: кома-decimal).
+        if(decimal.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
+            || decimal.TryParse(str, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
         {
             result = Math.Round(parsed, 2, MidpointRounding.AwayFromZero);
             return true;

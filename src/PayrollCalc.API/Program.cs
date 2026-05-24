@@ -3,19 +3,19 @@ using Npgsql;
 using PayrollCalc.API.Middleware;
 using PayrollCalc.Infrastructure.Data;
 using Serilog;
-
+using System.Text;
 // Bootstrap logger — пише в консоль до того як HostBuilder побудує DI.
 // Потрібен щоб не втратити помилки startup (битий appsettings, тощо).
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
-
 try
 {
     Log.Information("Starting PayrollCalc.API");
-
+    // Регіструємо Windows codepages (cp1251 тощо) для legacy .xls/.xlsx файлів.
+    // .NET Core знає лише UTF / ASCII / ISO-8859-1 з коробки.
+    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     var builder = WebApplication.CreateBuilder(args);
-
     // Підключаємо Serilog до Host. ReadFrom.Configuration — читає секцію
     // "Serilog" з appsettings.json (sinks, levels, enrichers).
     builder.Host.UseSerilog((context, services, configuration) => configuration

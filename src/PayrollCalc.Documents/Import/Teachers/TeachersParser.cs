@@ -35,7 +35,7 @@ public class TeachersParser
             sheet, _map.HeaderRowIndex, new Dictionary<int, string>(_map.ExpectedHeaders));
         if (headerErrors.Count > 0)
             return (rows, headerErrors);
-
+        //
         if (sheet.Rows.Count <= _map.FirstDataRowIndex)
         {
             errors.Add(new ParserError(
@@ -72,13 +72,13 @@ public class TeachersParser
         if (string.IsNullOrWhiteSpace(tabRaw) && string.IsNullOrWhiteSpace(nameRaw))
             return null;
         // ─── Mandatory fields ───
-        var tabNumber = GetMandatoryString(row, TeachersColumnMap.ColTabNumber, "TabNumber", rowNumber, errors);
-        var fullName = GetMandatoryString(row, TeachersColumnMap.ColFullName, "FullName", rowNumber, errors);
-        var taxId = GetMandatoryString(row, TeachersColumnMap.ColTaxId, "TaxId", rowNumber, errors);
-        var hireDate = GetMandatoryDate(row, TeachersColumnMap.ColHireDate, "HireDate", rowNumber, errors);
-        var position = GetMandatoryString(row, TeachersColumnMap.ColPosition, "Position", rowNumber, errors);
-        var stavki = GetMandatoryDecimal(row, TeachersColumnMap.ColStavki, "Stavki", rowNumber, errors);
-        var tariffGrade = GetMandatoryInt(row, TeachersColumnMap.ColTariffGrade, "TariffGrade", rowNumber, errors);
+        var tabNumber = ExcelFieldReader.GetMandatoryString(row, TeachersColumnMap.ColTabNumber, "TabNumber", rowNumber, errors);
+        var fullName = ExcelFieldReader.GetMandatoryString(row, TeachersColumnMap.ColFullName, "FullName", rowNumber, errors);
+        var taxId = ExcelFieldReader.GetMandatoryString(row, TeachersColumnMap.ColTaxId, "TaxId", rowNumber, errors);
+        var hireDate = ExcelFieldReader.GetMandatoryDate(row, TeachersColumnMap.ColHireDate, "HireDate", rowNumber, errors);
+        var position = ExcelFieldReader.GetMandatoryString(row, TeachersColumnMap.ColPosition, "Position", rowNumber, errors);
+        var stavki = ExcelFieldReader.GetMandatoryDecimal(row, TeachersColumnMap.ColStavki, "Stavki", rowNumber, errors);
+        var tariffGrade = ExcelFieldReader.GetMandatoryInt(row, TeachersColumnMap.ColTariffGrade, "TariffGrade", rowNumber, errors);
         // ─── TaxId format check (10 цифр) ───
         if (taxId is not null && (taxId.Length != 10 || !taxId.All(char.IsDigit)))
         {
@@ -90,45 +90,45 @@ public class TeachersParser
             || position is null || stavki is null || tariffGrade is null)
             return null;
         // ─── Optional fields ───
-        var education = GetOptionalString(row, TeachersColumnMap.ColEducation);
-        var titleType = GetOptionalString(row, TeachersColumnMap.ColTitleType);
-        var subject = GetOptionalString(row, TeachersColumnMap.ColSubject);
-        var classMgmt = GetOptionalString(row, TeachersColumnMap.ColClassMgmt);
-        var cabinetType = GetOptionalString(row, TeachersColumnMap.ColCabinetType);
+        var education = ExcelFieldReader.GetOptionalString(row, TeachersColumnMap.ColEducation);
+        var titleType = ExcelFieldReader.GetOptionalString(row, TeachersColumnMap.ColTitleType);
+        var subject = ExcelFieldReader.GetOptionalString(row, TeachersColumnMap.ColSubject);
+        var classMgmt = ExcelFieldReader.GetOptionalString(row, TeachersColumnMap.ColClassMgmt);
+        var cabinetType = ExcelFieldReader.GetOptionalString(row, TeachersColumnMap.ColCabinetType);
 
-        var positionStartDate = GetOptionalDate(row, TeachersColumnMap.ColPositionStartDate, "PositionStartDate", rowNumber, errors);
+        var positionStartDate = ExcelFieldReader.GetOptionalDate(row, TeachersColumnMap.ColPositionStartDate, "PositionStartDate", rowNumber, errors);
 
-        var honoredAmount = GetOptionalDecimal(row, TeachersColumnMap.ColHonoredAmount, "HonoredAmount", rowNumber, errors);
-        var socialBenefitPct = GetOptionalDecimal(row, TeachersColumnMap.ColSocialBenefitPct, "SocialBenefitPct", rowNumber, errors);
-        var complexityPct = GetOptionalDecimal(row, TeachersColumnMap.ColComplexityPct, "ComplexityPct", rowNumber, errors);
-        var prestigePct = GetOptionalDecimal(row, TeachersColumnMap.ColPrestigePct, "PrestigePct", rowNumber, errors);
+        var honoredAmount = ExcelFieldReader.GetOptionalDecimal(row, TeachersColumnMap.ColHonoredAmount, "HonoredAmount", rowNumber, errors);
+        var socialBenefitPct = ExcelFieldReader.GetOptionalDecimal(row, TeachersColumnMap.ColSocialBenefitPct, "SocialBenefitPct", rowNumber, errors);
+        var complexityPct = ExcelFieldReader.GetOptionalDecimal(row, TeachersColumnMap.ColComplexityPct, "ComplexityPct", rowNumber, errors);
+        var prestigePct = ExcelFieldReader.GetOptionalDecimal(row, TeachersColumnMap.ColPrestigePct, "PrestigePct", rowNumber, errors);
 
-        var pedExpYears = GetOptionalInt(row, TeachersColumnMap.ColPedExpYears, "PedExpYears", rowNumber, errors);
-        var generalExpYears = GetOptionalInt(row, TeachersColumnMap.ColGeneralExpYears, "GeneralExpYears", rowNumber, errors);
+        var pedExpYears = ExcelFieldReader.GetOptionalInt(row, TeachersColumnMap.ColPedExpYears, "PedExpYears", rowNumber, errors);
+        var generalExpYears = ExcelFieldReader.GetOptionalInt(row, TeachersColumnMap.ColGeneralExpYears, "GeneralExpYears", rowNumber, errors);
 
-        var isHonored = GetOptionalBool(row, TeachersColumnMap.ColIsHonored);
-        var isPrimary = GetOptionalBool(row, TeachersColumnMap.ColIsPrimary);
-        var hasMilitary = GetOptionalBool(row, TeachersColumnMap.ColHasMilitary);
-        var hasUnfavorable = GetOptionalBool(row, TeachersColumnMap.ColHasUnfavorable);
-        var gym = GetOptionalBool(row, TeachersColumnMap.ColGym);
-        var shooting = GetOptionalBool(row, TeachersColumnMap.ColShooting);
-        var computers = GetOptionalBool(row, TeachersColumnMap.ColComputers);
-        var extracurricular = GetOptionalBool(row, TeachersColumnMap.ColExtracurricular);
-        var website = GetOptionalBool(row, TeachersColumnMap.ColWebsite);
+        var isHonored = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColIsHonored);
+        var isPrimary = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColIsPrimary);
+        var hasMilitary = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColHasMilitary);
+        var hasUnfavorable = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColHasUnfavorable);
+        var gym = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColGym);
+        var shooting = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColShooting);
+        var computers = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColComputers);
+        var extracurricular = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColExtracurricular);
+        var website = ExcelFieldReader.GetOptionalBool(row, TeachersColumnMap.ColWebsite);
 
         // ─── Hours (decimal, default 0) ───
-        var hours1To4 = GetOptionalHours(row, TeachersColumnMap.ColHours1To4, "Hours1To4", rowNumber, errors);
-        var ind1To4 = GetOptionalHours(row, TeachersColumnMap.ColIndividualHours1To4, "IndividualHours1To4", rowNumber, errors);
-        var hours5To9 = GetOptionalHours(row, TeachersColumnMap.ColHours5To9, "Hours5To9", rowNumber, errors);
-        var ind5To9 = GetOptionalHours(row, TeachersColumnMap.ColIndividualHours5To9, "IndividualHours5To9", rowNumber, errors);
-        var hours10To11 = GetOptionalHours(row, TeachersColumnMap.ColHours10To11, "Hours10To11", rowNumber, errors);
-        var ind10To11 = GetOptionalHours(row, TeachersColumnMap.ColIndividualHours10To11, "IndividualHours10To11", rowNumber, errors);
-        var notebook1To4 = GetOptionalHours(row, TeachersColumnMap.ColNotebookHours1To4, "NotebookHours1To4", rowNumber, errors);
-        var notebook5To9 = GetOptionalHours(row, TeachersColumnMap.ColNotebookHours5To9, "NotebookHours5To9", rowNumber, errors);
-        var notebook10To11 = GetOptionalHours(row, TeachersColumnMap.ColNotebookHours10To11, "NotebookHours10To11", rowNumber, errors);
-        var inclusive1To4 = GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours1To4, "InclusiveHours1To4", rowNumber, errors);
-        var inclusive5To9 = GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours5To9, "InclusiveHours5To9", rowNumber, errors);
-        var inclusive10To11 = GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours10To11, "InclusiveHours10To11", rowNumber, errors);
+        var hours1To4 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColHours1To4, "Hours1To4", rowNumber, errors);
+        var ind1To4 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColIndividualHours1To4, "IndividualHours1To4", rowNumber, errors);
+        var hours5To9 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColHours5To9, "Hours5To9", rowNumber, errors);
+        var ind5To9 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColIndividualHours5To9, "IndividualHours5To9", rowNumber, errors);
+        var hours10To11 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColHours10To11, "Hours10To11", rowNumber, errors);
+        var ind10To11 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColIndividualHours10To11, "IndividualHours10To11", rowNumber, errors);
+        var notebook1To4 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColNotebookHours1To4, "NotebookHours1To4", rowNumber, errors);
+        var notebook5To9 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColNotebookHours5To9, "NotebookHours5To9", rowNumber, errors);
+        var notebook10To11 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColNotebookHours10To11, "NotebookHours10To11", rowNumber, errors);
+        var inclusive1To4 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours1To4, "InclusiveHours1To4", rowNumber, errors);
+        var inclusive5To9 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours5To9, "InclusiveHours5To9", rowNumber, errors);
+        var inclusive10To11 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours10To11, "InclusiveHours10To11", rowNumber, errors);
 
         return new TeachersRowDto
         {
@@ -174,106 +174,5 @@ public class TeachersParser
             Extracurricular = extracurricular,
             Website = website,
         };
-    }
-    // ─── Mandatory helpers ───
-    // Контракт: пусто АБО кривий формат → error + return null.
-    // Caller перевіряє null у early-return, без mandatory DTO нема сенсу будувати.
-    private static string? GetMandatoryString(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        var val = row[col]?.ToString()?.Trim();
-        if (string.IsNullOrWhiteSpace(val))
-        {
-            errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' обов'язкове"));
-            return null;
-        }
-        return val;
-    }
-    private static DateOnly? GetMandatoryDate(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        // row[col] віддаємо сирим — DateParser сам розбере DateTime/double/string,
-        // ToString() з'їв би type info і ламав би Excel serial dates.
-        if (DateParser.TryParse(row[col], out var date))
-            return date;
-        errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' обов'язкове або має бути датою"));
-        return null;
-    }
-    private static decimal? GetMandatoryDecimal(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        if (DecimalParser.TryParse(row[col], out var dec))
-            return dec;
-        errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' обов'язкове або має бути числом"));
-        return null;
-    }
-    private static int? GetMandatoryInt(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        var raw = row[col]?.ToString()?.Trim();
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' обов'язкове"));
-            return null;
-        }
-        if (int.TryParse(raw, out var i))
-            return i;
-        errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' має бути цілим числом"));
-        return null;
-    }
-    // ─── Optional helpers ───
-    // Різниця: пусто = null/default (без error), кривий формат = error + null/default.
-    private static string? GetOptionalString(DataRow row, int col)
-    {
-        var val = row[col]?.ToString()?.Trim();
-        return string.IsNullOrWhiteSpace(val) ? null : val;
-    }
-    private static DateOnly? GetOptionalDate(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        var raw = row[col];
-        if (raw is null || raw is DBNull || string.IsNullOrWhiteSpace(raw.ToString()))
-            return null;
-        if (DateParser.TryParse(raw, out var d))
-            return d;
-        errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' має бути датою"));
-        return null;
-    }
-    private static decimal? GetOptionalDecimal(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        var raw = row[col];
-        if (raw is null || raw is DBNull || string.IsNullOrWhiteSpace(raw.ToString()))
-            return null;
-        if (DecimalParser.TryParse(raw, out var dec))
-            return dec;
-        errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' має бути числом"));
-        return null;
-    }
-    private static int? GetOptionalInt(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        var raw = row[col]?.ToString()?.Trim();
-        if (string.IsNullOrWhiteSpace(raw))
-            return null;
-        if (int.TryParse(raw, out var i))
-            return i;
-        errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' має бути цілим числом"));
-        return null;
-    }
-    private static bool GetOptionalBool(DataRow row, int col)
-    {
-        // BoolParser.TryParse повертає false на null/пусто/невідоме значення.
-        // Для bool поля default false — ок, мама не пометила = не активно.
-        BoolParser.TryParse(row[col], out var b);
-        return b;
-    }
-    /// <summary>
-    /// Окремо від GetOptionalDecimal: повертає не <c>decimal?</c>, а <c>decimal</c>
-    /// з дефолтом 0m. Hours-поля в DTO non-nullable, бо 0 годин = валідне значення
-    /// (а не "не вказано"), і калькулятор передбачає decimal не decimal?.
-    /// </summary>
-    private static decimal GetOptionalHours(DataRow row, int col, string fieldName, int rowNumber, List<ParserError> errors)
-    {
-        var raw = row[col];
-        if (raw is null || raw is DBNull || string.IsNullOrWhiteSpace(raw.ToString()))
-            return 0m;
-        if (DecimalParser.TryParse(raw, out var dec))
-            return dec;
-        errors.Add(new ParserError(rowNumber, fieldName, $"Поле '{fieldName}' має бути числом"));
-        return 0m;
     }
 }

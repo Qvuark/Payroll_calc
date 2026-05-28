@@ -1,5 +1,6 @@
 using PayrollCalc.Documents.Export;
 using PayrollCalc.Documents.Import.Staff;
+using PayrollCalc.Documents.Import.Teachers;
 
 namespace PayrollCalc.API.Application.Import;
 
@@ -10,16 +11,19 @@ namespace PayrollCalc.API.Application.Import;
 public static class ImportServiceCollectionExtensions
 {
     /// <summary>
-    /// Реєструє парсери, генератор шаблонів та upserter'и/importer'и Staff-потоку.
-    /// При додаванні Teachers / GPD пайплайнів — продовжувати цей метод (одна точка входу для bootstrap).
+    /// Реєструє парсери, генератор шаблонів та upserter'и/importer'и Staff і Teachers потоків.
+    /// При додаванні нових пайплайнів (Timesheet, GPD) — продовжувати цей метод (одна точка входу для bootstrap).
     /// </summary>
     public static IServiceCollection AddImportServices(this IServiceCollection services)
     {
         services.AddSingleton<StaffParser>();
+        services.AddSingleton<TeachersParser>();
         services.AddSingleton<TemplateGenerator>();
         services.AddScoped<EmployeeUpserter>();
         services.AddScoped<PositionUpserter>();
+        services.AddScoped<TeachersPositionUpserter>();
         services.AddScoped<StaffImporter>();
+        services.AddScoped<TeachersImporter>();
         return services;
     }
 }

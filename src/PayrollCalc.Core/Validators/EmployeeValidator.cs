@@ -31,8 +31,9 @@ public static class EmployeeValidator
         switch (workerClass)
         {
             case WorkerClass.Pedagogical:
-                if (hasAdmin)
-                    errors.Add("Педагогічний персонал не може мати адміністративний блок.");
+                // Admin блок тепер містить лише педагогічні обов'язки (ClassMgmt, Cabinet, Gym, Shooting, Computers,
+                // Extracurricular, Website) — DirectorPct/AdminRateCount/PedRateCount були дропнуті у Phase 3.6.5.
+                // Тому Pedagogical (вчителі) можуть мати Admin блок: класне керівництво — норма для Class 1.
                 if (hasNonPedagogical)
                     errors.Add("Педагогічний персонал не може мати непедагогічний блок.");
                 break;

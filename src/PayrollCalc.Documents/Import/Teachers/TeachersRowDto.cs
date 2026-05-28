@@ -1,3 +1,5 @@
+using PayrollCalc.Documents.Import.Common;
+
 namespace PayrollCalc.Documents.Import.Teachers;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace PayrollCalc.Documents.Import.Teachers;
 /// Кілька рядків з одним TaxId = мульти-позиція (group by TaxId робить Importer).
 /// Маппінг string→enum/Id (TitleType, Position, ClassMgmt, CabinetType) теж в Importer.
 /// </summary>
-public record TeachersRowDto
+public record TeachersRowDto : IPersonaRow
 {
     /// <summary>1-based номер рядка у файлі — для error-reporting мамі.</summary>
     public int RowIndex { get; init; }

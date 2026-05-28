@@ -46,6 +46,11 @@ public class PositionUpserter
             return (null, false);
         }
 
+        // Resolve TitleType per WorkerClass scope. Робиться тут (не в EmployeeUpserter), бо
+        // WorkerClass береться з посади. null/whitespace → без помилки, не знайдено → ParserError + null.
+        employee.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
+            _db, staffRow.TitleType, position.WorkerClass, staffRow.RowIndex, errors, ct);
+
         // Update path: знайти існуючу EP + одразу підтягти блоки через .Include() —
         // інакше при upsert нижче EF не побачить старого блока і вставить дублікат.
         // Insert path (Id=0 → нова Employee): ep = null, блоки створюються з нуля.

@@ -1,5 +1,5 @@
 using PayrollCalc.Core.Entities;
-using PayrollCalc.Documents.Import.Staff;
+using PayrollCalc.Documents.Import.Common;
 using PayrollCalc.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using PayrollCalc.Core.Entities.Enums;
@@ -20,39 +20,39 @@ public class EmployeeUpserter
     /// Повертає сутність + прапор WasCreated (true=insert, false=update) — Importer лічить статистику.
     /// </summary>
     public async Task<(Employee Entity, bool WasCreated)> UpsertAsync(
-        StaffRowDto staffRow,
+        IPersonaRow row,
         CancellationToken ct = default)
     {
-        var employee = await _db.Employees.FirstOrDefaultAsync(p => p.TaxId == staffRow.TaxId, ct);
+        var employee = await _db.Employees.FirstOrDefaultAsync(p => p.TaxId == row.TaxId, ct);
         if (employee is null)
         {
             employee = new Employee
             {
-                TabNumber = staffRow.TabNumber!,
-                FullName = staffRow.FullName!,
-                TaxId = staffRow.TaxId!,
-                HireDate = staffRow.HireDate!.Value,
-                Education = staffRow.Education,
-                PedExperienceYears = staffRow.PedExperienceYears ?? 0,
-                GeneralExperienceYears = staffRow.GeneralExperienceYears ?? 0,
-                SocialBenefitPct = staffRow.SocialBenefitPct,
-                IsHonored = staffRow.IsHonored,
-                HonoredAmount = staffRow.HonoredAmount,
+                TabNumber = row.TabNumber!,
+                FullName = row.FullName!,
+                TaxId = row.TaxId!,
+                HireDate = row.HireDate!.Value,
+                Education = row.Education,
+                PedExperienceYears = row.PedExperienceYears ?? 0,
+                GeneralExperienceYears = row.GeneralExperienceYears ?? 0,
+                SocialBenefitPct = row.SocialBenefitPct,
+                IsHonored = row.IsHonored,
+                HonoredAmount = row.HonoredAmount,
                 Status = EmployeeStatus.Active,
             };
             _db.Employees.Add(employee);
             return (employee, WasCreated: true);
         }
 
-        employee.TabNumber = staffRow.TabNumber!;
-        employee.FullName = staffRow.FullName!;
-        employee.HireDate = staffRow.HireDate!.Value;
-        employee.Education = staffRow.Education;
-        employee.PedExperienceYears = staffRow.PedExperienceYears ?? 0;
-        employee.GeneralExperienceYears = staffRow.GeneralExperienceYears ?? 0;
-        employee.SocialBenefitPct = staffRow.SocialBenefitPct;
-        employee.IsHonored = staffRow.IsHonored;
-        employee.HonoredAmount = staffRow.HonoredAmount;
+        employee.TabNumber = row.TabNumber!;
+        employee.FullName = row.FullName!;
+        employee.HireDate = row.HireDate!.Value;
+        employee.Education = row.Education;
+        employee.PedExperienceYears = row.PedExperienceYears ?? 0;
+        employee.GeneralExperienceYears = row.GeneralExperienceYears ?? 0;
+        employee.SocialBenefitPct = row.SocialBenefitPct;
+        employee.IsHonored = row.IsHonored;
+        employee.HonoredAmount = row.HonoredAmount;
         return (employee, WasCreated: false);
     }
 }

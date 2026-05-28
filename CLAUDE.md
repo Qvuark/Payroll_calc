@@ -18,9 +18,8 @@
 - [x] Phase 3.6 — Multi-position refactor (1 Employee → N EmployeePosition) + TaxId/SocialBenefitPct/HasMilitaryRecord
 - [x] Phase 3.6.5 — MomReview (TaxId mandatory, ComplexityBonusPct/PrestigeBonusPct, TitleType WorkerClass scope, EmployeeAdmin cleanup, InclusiveHours10To11). 7 модельних змін, smoke 8/8.
 - [x] Phase 3.7 prep — IsHonored, EffectiveTo, PositionStartDate, TitleType aliases (commit c03393b)
-- [ ] **Phase 3.7 — Excel parsers + import endpoints ← ЗАРАЗ**
-  - ✅ Teachers parser + StaffParser + ExcelFieldReader + TemplateGenerator + Importer pipeline + 6 integration tests (commit `21f4466`).
-  - ⏳ ImportController + DI у Program.cs + Swagger smoke = ~1 година. Деталі — `_what_to_do_now.md`.
+- [x] **Phase 3.7 Staff lane** — парсер + Importer + ImportController + DI extension + smoke (commit `d99f06f`)
+- [ ] **Phase 3.7 Teachers lane ← ЗАРАЗ** — TeachersParser готовий (commit `8867fbc`), треба Importer + Controller endpoint
   - 📚 Теорія integration-тестів (Testcontainers, fixtures, EF tracker) — переглянути після Phase 5: `[[integration_tests_walkthrough]]`.
 - [ ] Phase 4 — Timesheets (manual + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator)

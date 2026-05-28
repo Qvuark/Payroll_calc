@@ -18,6 +18,10 @@ public sealed class PostgresFixture : IAsyncLifetime
         .WithUsername("test")
         .WithPassword("test")
         .Build();
+    // Один NpgsqlDataSource на весь life-cycle fixture'и. Інакше CreateContext() будував би
+    // новий DataSource на кожний виклик → EF реєструє новий internal IServiceProvider →
+    // після 20 інстансів кидає ManyServiceProvidersCreatedWarning як помилку.
+    private NpgsqlDataSource? _dataSource;
 
     /// <summary>
     /// Connection string на запущений контейнер. Порт рандомний — Testcontainers
@@ -27,35 +31,38 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     /// <summary>
     /// Викликається xUnit'ом ОДИН раз перед усіма тестами класу.
-    /// Стартує контейнер, накатує EF-міграції, сіє довідники (Positions, TariffGrades, etc).
+    /// Стартує контейнер, будує спільний DataSource, накатує EF-міграції, сіє довідники.
     /// </summary>
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
+        _dataSource = new NpgsqlDataSourceBuilder(ConnectionString)
+            .EnableDynamicJson()
+            .Build();
         await using var db = CreateContext();
         await db.Database.MigrateAsync();
         await DbSeeder.SeedAsync(db);
     }
 
     /// <summary>
-    /// Викликається xUnit'ом ОДИН раз після всіх тестів класу. Зупиняє контейнер.
+    /// Викликається xUnit'ом ОДИН раз після всіх тестів класу. Зупиняє контейнер + DataSource.
     /// Disposable pattern — гарантовано викликається навіть якщо тести впали.
     /// </summary>
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    public async Task DisposeAsync()
+    {
+        if (_dataSource is not null) await _dataSource.DisposeAsync();
+        await _container.DisposeAsync();
+    }
 
     /// <summary>
-    /// Створює свіжий AppDbContext на цей контейнер. У тестах роби using/await using
-    /// щоб з'єднання закривались — Postgres має ліміт connection pool.
-    /// EnableDynamicJson — обов'язково для List&lt;string&gt; у jsonb (Position.ExcelAliases, TitleType.ExcelAliases),
-    /// дзеркалить конфіг Program.cs.
+    /// Створює свіжий AppDbContext на спільному DataSource. У тестах роби using/await using
+    /// щоб з'єднання поверталися у pool. EnableDynamicJson обов'язковий для List&lt;string&gt;
+    /// у jsonb (Position.ExcelAliases, TitleType.ExcelAliases) — дзеркалить Program.cs.
     /// </summary>
     public AppDbContext CreateContext()
     {
-        var dataSource = new NpgsqlDataSourceBuilder(ConnectionString)
-            .EnableDynamicJson()
-            .Build();
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(dataSource)
+            .UseNpgsql(_dataSource!)
             .Options;
         return new AppDbContext(options);
     }

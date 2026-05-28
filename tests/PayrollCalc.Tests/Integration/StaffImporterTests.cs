@@ -251,6 +251,216 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
     }
 
     /// <summary>
+    /// Class 2 "Вихователь" з ГПД-блоком: GpdGrade=12, GpdHours=20. Очікуємо що EmployeePosition
+    /// створено + ep.Gpd створено з власним TariffGradeId (відрізняється від ep.TariffGradeId).
+    /// </summary>
+    [Fact]
+    public async Task Imports_gpd_block_for_class2_position()
+    {
+        await using var writeDb = _fx.CreateContext();
+        var importer = BuildImporter(writeDb);
+
+        var row = StaffXlsxBuilder.ValidRow();
+        row[StaffColumnMap.ColPosition] = "Вихователь";
+        row[StaffColumnMap.ColTariffGrade] = 11;
+        row[StaffColumnMap.ColGpdGrade] = 12;
+        row[StaffColumnMap.ColGpdHours] = 20.0;
+
+        await using var xlsx = StaffXlsxBuilder.Build(row);
+        var report = await importer.ImportAsync(xlsx);
+
+        report.Created.Should().Be(1);
+        report.Errors.Should().BeEmpty();
+
+        await using var readDb = _fx.CreateContext();
+        var ep = await readDb.EmployeePositions
+            .Include(p => p.Gpd).ThenInclude(g => g!.TariffGrade)
+            .Include(p => p.TariffGrade)
+            .SingleAsync();
+        ep.Gpd.Should().NotBeNull();
+        ep.Gpd!.GpdHours.Should().Be(20.0m);
+        ep.Gpd.TariffGrade!.Grade.Should().Be(12);
+        ep.TariffGrade!.Grade.Should().Be(11);
+    }
+
+    /// <summary>
+    /// Class 2 з ПКР-блоком. Симетрично GPD: своя пара (PkrGrade, PkrHours), окремий TariffGradeId.
+    /// </summary>
+    [Fact]
+    public async Task Imports_pkr_block_for_class2_position()
+    {
+        await using var writeDb = _fx.CreateContext();
+        var importer = BuildImporter(writeDb);
+
+        var row = StaffXlsxBuilder.ValidRow();
+        row[StaffColumnMap.ColPosition] = "Вихователь";
+        row[StaffColumnMap.ColTariffGrade] = 11;
+        row[StaffColumnMap.ColPkrGrade] = 10;
+        row[StaffColumnMap.ColPkrHours] = 15.0;
+
+        await using var xlsx = StaffXlsxBuilder.Build(row);
+        var report = await importer.ImportAsync(xlsx);
+
+        report.Created.Should().Be(1);
+        report.Errors.Should().BeEmpty();
+
+        await using var readDb = _fx.CreateContext();
+        var ep = await readDb.EmployeePositions
+            .Include(p => p.Pkr).ThenInclude(g => g!.TariffGrade)
+            .SingleAsync();
+        ep.Pkr.Should().NotBeNull();
+        ep.Pkr!.PkrHours.Should().Be(15.0m);
+        ep.Pkr.TariffGrade!.Grade.Should().Be(10);
+    }
+
+    /// <summary>
+    /// Class 3 "Бухгалтер" + MentorAmount=500 → блок NonPedagogical створено, HasMentor=true.
+    /// Перевіряє що сумова надбавка (decimal?) проростає через парсер → upserter → БД.
+    /// </summary>
+    [Fact]
+    public async Task Imports_nonpedagogical_mentor_for_specialist()
+    {
+        await using var writeDb = _fx.CreateContext();
+        var importer = BuildImporter(writeDb);
+
+        var row = StaffXlsxBuilder.ValidRow();
+        row[StaffColumnMap.ColPosition] = "Бухгалтер";
+        row[StaffColumnMap.ColTariffGrade] = 12;
+        row[StaffColumnMap.ColMentorAmount] = 500.0;
+
+        await using var xlsx = StaffXlsxBuilder.Build(row);
+        var report = await importer.ImportAsync(xlsx);
+
+        report.Created.Should().Be(1);
+        report.Errors.Should().BeEmpty();
+
+        await using var readDb = _fx.CreateContext();
+        var ep = await readDb.EmployeePositions
+            .Include(p => p.NonPedagogical)
+            .SingleAsync();
+        ep.NonPedagogical.Should().NotBeNull();
+        ep.NonPedagogical!.HasMentor.Should().BeTrue();
+        ep.NonPedagogical.MentorAmount.Should().Be(500m);
+        ep.NonPedagogical.HasDisinfectants.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Class 4 "Прибиральник" + Disinfectants=true + NightShifts=true → NonPedagogical блок
+    /// з обома bool-флагами. Перевіряє МОП-доплати (без TariffGrade у блоці).
+    /// </summary>
+    [Fact]
+    public async Task Imports_nonpedagogical_disinfectants_and_nightshifts_for_mop()
+    {
+        await using var writeDb = _fx.CreateContext();
+        var importer = BuildImporter(writeDb);
+
+        var row = StaffXlsxBuilder.ValidRow();
+        row[StaffColumnMap.ColPosition] = "Прибиральник службових приміщень";
+        row[StaffColumnMap.ColTariffGrade] = 2;
+        row[StaffColumnMap.ColDisinfectants] = true;
+        row[StaffColumnMap.ColNightShifts] = true;
+
+        await using var xlsx = StaffXlsxBuilder.Build(row);
+        var report = await importer.ImportAsync(xlsx);
+
+        report.Created.Should().Be(1);
+        report.Errors.Should().BeEmpty();
+
+        await using var readDb = _fx.CreateContext();
+        var ep = await readDb.EmployeePositions
+            .Include(p => p.NonPedagogical)
+            .SingleAsync();
+        ep.NonPedagogical.Should().NotBeNull();
+        ep.NonPedagogical!.HasDisinfectants.Should().BeTrue();
+        ep.NonPedagogical.HasNightShifts.Should().BeTrue();
+        ep.NonPedagogical.HasMentor.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Class 4 "Сторож" + GpdHours=20 — несумісна комбінація (МОП не може мати ГПД).
+    /// ValidateBlocks повертає помилку, рядок пропускається, orphan guard зрубає Employee
+    /// (бо єдина позиція впала). У БД пусто, у звіті — помилка WorkerClass.
+    /// </summary>
+    [Fact]
+    public async Task Rejects_row_when_block_incompatible_with_worker_class()
+    {
+        await using var writeDb = _fx.CreateContext();
+        var importer = BuildImporter(writeDb);
+
+        var row = StaffXlsxBuilder.ValidRow();
+        row[StaffColumnMap.ColPosition] = "Сторож";
+        row[StaffColumnMap.ColTariffGrade] = 2;
+        row[StaffColumnMap.ColGpdGrade] = 10;
+        row[StaffColumnMap.ColGpdHours] = 20.0;
+
+        await using var xlsx = StaffXlsxBuilder.Build(row);
+        var report = await importer.ImportAsync(xlsx);
+
+        report.Created.Should().Be(0);
+        report.Skipped.Should().Be(1);
+        report.Errors.Should().Contain(e => e.Field == "WorkerClass" && e.Message.Contains("МОП"));
+
+        await using var readDb = _fx.CreateContext();
+        var employees = await readDb.Employees.ToListAsync();
+        employees.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Update path для блока: pre-seed Class 2 з ep.Gpd (10h). Повторний імпорт того ж TaxId+Position
+    /// з GpdHours=25 → блок ОНОВЛЕНО (count 1, не 2). Захист від EF-дублів через .Include() у upserter'і.
+    /// </summary>
+    [Fact]
+    public async Task Updates_existing_gpd_block_without_duplicating()
+    {
+        await using (var seedDb = _fx.CreateContext())
+        {
+            var pos = await seedDb.Positions.SingleAsync(p => p.Name == "Вихователь");
+            var mainGrade = await seedDb.TariffGrades.SingleAsync(t => t.Grade == 11);
+            var gpdGrade = await seedDb.TariffGrades.SingleAsync(t => t.Grade == 12);
+            var emp = new Employee
+            {
+                TabNumber = "S001",
+                FullName = "Сидоренко Анна Іванівна",
+                TaxId = "9876543210",
+                HireDate = new DateOnly(2020, 9, 1),
+                Status = EmployeeStatus.Active,
+            };
+            emp.Positions.Add(new EmployeePosition
+            {
+                Position = pos,
+                TariffGrade = mainGrade,
+                RateCount = 1.0m,
+                HireDate = new DateOnly(2020, 9, 1),
+                EffectiveFrom = new DateOnly(2020, 9, 1),
+                Gpd = new EmployeeGpd { TariffGrade = gpdGrade, GpdHours = 10m },
+            });
+            seedDb.Employees.Add(emp);
+            await seedDb.SaveChangesAsync();
+        }
+
+        await using var writeDb = _fx.CreateContext();
+        var importer = BuildImporter(writeDb);
+
+        var row = StaffXlsxBuilder.ValidRow();
+        row[StaffColumnMap.ColPosition] = "Вихователь";
+        row[StaffColumnMap.ColTariffGrade] = 11;
+        row[StaffColumnMap.ColGpdGrade] = 12;
+        row[StaffColumnMap.ColGpdHours] = 25.0;
+
+        await using var xlsx = StaffXlsxBuilder.Build(row);
+        var report = await importer.ImportAsync(xlsx);
+
+        report.Updated.Should().Be(1);
+        report.Created.Should().Be(0);
+        report.Errors.Should().BeEmpty();
+
+        await using var readDb = _fx.CreateContext();
+        var gpds = await readDb.Set<EmployeeGpd>().ToListAsync();
+        gpds.Should().HaveCount(1);
+        gpds[0].GpdHours.Should().Be(25m);
+    }
+
+    /// <summary>
     /// Маленький DRY-хелпер: збирає Importer з його залежностями на переданий DbContext.
     /// </summary>
     private static StaffImporter BuildImporter(Infrastructure.Data.AppDbContext db) =>

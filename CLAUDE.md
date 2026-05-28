@@ -18,10 +18,10 @@
 - [x] Phase 3.6 — Multi-position refactor (1 Employee → N EmployeePosition) + TaxId/SocialBenefitPct/HasMilitaryRecord
 - [x] Phase 3.6.5 — MomReview (TaxId mandatory, ComplexityBonusPct/PrestigeBonusPct, TitleType WorkerClass scope, EmployeeAdmin cleanup, InclusiveHours10To11). 7 модельних змін, smoke 8/8.
 - [x] Phase 3.7 prep — IsHonored, EffectiveTo, PositionStartDate, TitleType aliases (commit c03393b)
-- [ ] **Phase 3.7 — Excel parsers (teachers + staff + template generator) ← ЗАРАЗ**
-  - Архітектура: `[[parsers_architecture]]` (8 потоків + IExcelColumnMap + TemplateGenerator).
-  - Deep-план: `[[parsers_implementation]]`. Схема колонок: `[[template_schemas_draft]]`.
-  - Відкриті питання мамі: Q15 (% соц.педагог), Class 3/4 діапазони розрядів — не блокують код, валідатор отримає у Phase 7.
+- [ ] **Phase 3.7 — Excel parsers + import endpoints ← ЗАРАЗ**
+  - ✅ Teachers parser + StaffParser + ExcelFieldReader + TemplateGenerator + Importer pipeline + 6 integration tests (commit `21f4466`).
+  - ⏳ ImportController + DI у Program.cs + Swagger smoke = ~1 година. Деталі — `_what_to_do_now.md`.
+  - 📚 Теорія integration-тестів (Testcontainers, fixtures, EF tracker) — переглянути після Phase 5: `[[integration_tests_walkthrough]]`.
 - [ ] Phase 4 — Timesheets (manual + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator)
   - ⚠️ Перед стартом: clear DB, re-run seeder, verify TariffGrades / SystemParams / WorkCalendar з бухгалтером.

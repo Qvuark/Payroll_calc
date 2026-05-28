@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using PayrollCalc.API.Application.Import;
 using PayrollCalc.API.Middleware;
 using PayrollCalc.Infrastructure.Data;
 using Serilog;
@@ -33,6 +34,7 @@ try
         .EnableDynamicJson()
         .Build();
     builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(dataSource));
+    builder.Services.AddImportServices();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 

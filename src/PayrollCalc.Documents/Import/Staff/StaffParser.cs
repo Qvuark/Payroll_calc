@@ -53,7 +53,6 @@ public class StaffParser
         }
         return (dtos, errors);
     }
-
     /// <summary>
     /// Парсить одну строку Excel у StaffRowDto. Повертає null якщо
     /// рядок порожній або відсутні mandatory поля. Помилки додає у errors,

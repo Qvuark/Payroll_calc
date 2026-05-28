@@ -21,7 +21,8 @@
 - [x] **Phase 3.7 Staff lane** — парсер + Importer + ImportController + DI extension + smoke (commit `d99f06f`)
 - [x] **Phase 3.7 Teachers lane** — IPersonaRow + TitleTypeResolver + TeachersPositionUpserter + TeachersImporter + endpoint + 11 integration tests + smoke (119/119 green)
   - 📚 Теорія integration-тестів (Testcontainers, fixtures, EF tracker) — переглянути після Phase 5: `[[integration_tests_walkthrough]]`.
-- [ ] **Phase 4 ← ЗАРАЗ** — Timesheets (manual + Excel import)
+- [ ] **PRE-Phase 4** — audit findings (6 CRITICAL + 11 HIGH): `[[phase3_audit_findings]]` у vault.
+- [ ] **Phase 4 ← після audit** — Timesheets (manual + Excel import)
 - [ ] Phase 5 — Calculation logic (4 services + orchestrator)
   - ⚠️ Перед стартом: clear DB, re-run seeder, verify TariffGrades / SystemParams / WorkCalendar з бухгалтером.
 - [ ] Phase 6 — Excel export (відомість + розрахункові листи)

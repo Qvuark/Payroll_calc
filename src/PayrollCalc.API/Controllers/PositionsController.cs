@@ -46,7 +46,7 @@ public class PositionsController : ControllerBase
             return NotFound();
         var department = await _context.Departments.FirstOrDefaultAsync(d => d.Id == request.DepartmentId);
         if (department == null)
-            return BadRequest("Department not found.");
+            return BadRequest("Відділ не знайдено.");
         position.Name = request.Name;
         position.DepartmentId = request.DepartmentId;
         position.WorkerClass = request.WorkerClass;

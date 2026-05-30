@@ -45,7 +45,7 @@ public class EmployeesController(AppDbContext context) : ControllerBase
             .Include(e => e.Positions).ThenInclude(p => p.Gpd)
             .Include(e => e.Positions).ThenInclude(p => p.Pkr)
             .Include(e => e.Positions).ThenInclude(p => p.NonPedagogical)
-            .Include(e => e.TitleType)
+            .Include(e => e.Positions).ThenInclude(p => p.TitleType)
             .FirstOrDefaultAsync(e => e.Id == id);
         if (employee == null)
             return NotFound();
@@ -56,18 +56,12 @@ public class EmployeesController(AppDbContext context) : ControllerBase
     /// POST /api/employees/{id}/positions. Status за замовчуванням Active.
     /// </summary>
     /// <param name="request">Дані persona — обов'язково TabNumber і FullName.</param>
-    /// <returns>201 CreatedAtAction з EmployeeDetailDto, 409 при дублі TabNumber, 400 при невалідному TitleTypeId.</returns>
+    /// <returns>201 CreatedAtAction з EmployeeDetailDto, 409 при дублі ІПН.</returns>
     [HttpPost]
     public async Task<ActionResult<EmployeeDetailDto>> Create(CreateEmployeeRequest request)
     {
         if (await context.Employees.AnyAsync(e => e.TaxId == request.TaxId))
             return Conflict($"Працівник з ІПН {request.TaxId} вже існує.");
-        if (request.TitleTypeId.HasValue)
-        {
-            var titleType = await context.TitleTypes.FindAsync(request.TitleTypeId.Value);
-            if (titleType == null)
-                return BadRequest("Title type not found.");
-        }
         var employee = CreateEmployeeRequest.FromRequest(request);
         context.Employees.Add(employee);
         await context.SaveChangesAsync();
@@ -83,12 +77,6 @@ public class EmployeesController(AppDbContext context) : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<EmployeeDetailDto>> Update(int id, UpdateEmployeeRequest request)
     {
-        if (request.TitleTypeId.HasValue)
-        {
-            var titleType = await context.TitleTypes.FindAsync(request.TitleTypeId.Value);
-            if (titleType == null)
-                return BadRequest("Title type not found.");
-        }
         var employee = await context.Employees
             .Include(e => e.Positions).ThenInclude(p => p.Position).ThenInclude(p => p!.Department)
             .Include(e => e.Positions).ThenInclude(p => p.TariffGrade)
@@ -97,7 +85,7 @@ public class EmployeesController(AppDbContext context) : ControllerBase
             .Include(e => e.Positions).ThenInclude(p => p.Gpd)
             .Include(e => e.Positions).ThenInclude(p => p.Pkr)
             .Include(e => e.Positions).ThenInclude(p => p.NonPedagogical)
-            .Include(e => e.TitleType)
+            .Include(e => e.Positions).ThenInclude(p => p.TitleType)
             .FirstOrDefaultAsync(e => e.Id == id);
         if (employee == null)
             return NotFound();
@@ -107,15 +95,18 @@ public class EmployeesController(AppDbContext context) : ControllerBase
             return BadRequest("DismissalDate має бути null при статусі не Dismissed.");
         if (request.TaxId != employee.TaxId && await context.Employees.AnyAsync(e => e.TaxId == request.TaxId && e.Id != id))
             return Conflict($"Працівник з ІПН {request.TaxId} вже існує.");
+        if (!request.IsHonored && request.HonoredAmount != null)
+            return BadRequest("HonoredAmount має бути null коли IsHonored=false.");
         employee.FullName = request.FullName;
         employee.TaxId = request.TaxId;
         employee.DismissalDate = request.DismissalDate;
         employee.Education = request.Education;
         employee.PedExperienceYears = request.PedExperienceYears;
         employee.SocialBenefitPct = request.SocialBenefitPct;
-        employee.TitleTypeId = request.TitleTypeId;
         employee.Status = request.Status;
         employee.GeneralExperienceYears = request.GeneralExperienceYears;
+        employee.IsHonored = request.IsHonored;
+        employee.HonoredAmount = request.HonoredAmount;
         await context.SaveChangesAsync();
         return Ok(EmployeeDetailDto.FromEntity(employee));
     }
@@ -129,11 +120,22 @@ public class EmployeesController(AppDbContext context) : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        var employee = await context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+        var employee = await context.Employees
+            .Include(e => e.Positions)
+            .FirstOrDefaultAsync(e => e.Id == id);
         if (employee == null)
             return NotFound();
+        var today = DateOnly.FromDateTime(DateTime.Now);
         employee.Status = EmployeeStatus.Dismissed;
-        employee.DismissalDate = DateOnly.FromDateTime(DateTime.Now);
+        employee.DismissalDate = today;
+        // Каскадно звільняємо всі активні ставки. Інакше вони лишаються "висіти" активними:
+        // розрахунок Phase 5 нарахує зарплату звільненому, а унікальний індекс ставки
+        // (WHERE DismissalDate IS NULL) заблокує повторне прийняття людини на ту саму посаду.
+        foreach (var position in employee.Positions.Where(p => p.DismissalDate == null))
+        {
+            position.DismissalDate = today;
+            position.IsPrimary = false;
+        }
         await context.SaveChangesAsync();
         return NoContent();
     }

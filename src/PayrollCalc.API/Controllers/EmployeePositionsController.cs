@@ -40,6 +40,20 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         var tariffGrade = await context.TariffGrades.FindAsync(request.TariffGradeId);
         if (tariffGrade == null)
             return NotFound($"Тарифний розряд з id={request.TariffGradeId} не знайдений.");
+        if (!EmployeeValidator.ValidateGradeForClass(position.WorkerClass, tariffGrade.Grade))
+            return BadRequest($"Розряд {tariffGrade.Grade} не дозволено для класу '{position.WorkerClass}'.");
+        // Престижність — лише педагогам (Class 1).
+        if (request.PrestigeBonusPct.HasValue && position.WorkerClass != WorkerClass.Pedagogical)
+            return BadRequest($"Надбавку за престижність дозволено лише педагогам (Class 1), а не класу '{position.WorkerClass}'.");
+        // Звання прив'язане до ставки — WorkerClass звання має збігатися з посадою.
+        if (request.TitleTypeId.HasValue)
+        {
+            var titleType = await context.TitleTypes.FindAsync(request.TitleTypeId.Value);
+            if (titleType == null)
+                return BadRequest($"Звання з id={request.TitleTypeId} не знайдено.");
+            if (titleType.WorkerClass != position.WorkerClass)
+                return BadRequest($"Звання '{titleType.Name}' не дозволено для класу '{position.WorkerClass}'.");
+        }
         var duplicate = employee.Positions.Any(ep => ep.PositionId == position.Id && ep.DismissalDate == null);
         if (duplicate)
             return Conflict($"Працівник вже має активну ставку на посаді {position.Name}.");
@@ -52,7 +66,6 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         }
         var newPosition = CreateEmployeePositionRequest.FromRequest(request, employeeId);
         newPosition.IsPrimary = isPrimary;
-        newPosition.EffectiveFrom = request.HireDate;
         context.EmployeePositions.Add(newPosition);
         await context.SaveChangesAsync();
         var saved = await LoadFullPositionAsync(newPosition.Id);
@@ -86,12 +99,39 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         var tariffGrade = await context.TariffGrades.FindAsync(request.TariffGradeId);
         if (tariffGrade == null)
             return NotFound($"Тарифний розряд з id={request.TariffGradeId} не знайдений.");
+        // PositionId у апдейті не змінюється — WorkerClass беремо з посади поточної ставки.
+        var pos = await context.Positions.FindAsync(position.PositionId);
+        if (pos != null && !EmployeeValidator.ValidateGradeForClass(pos.WorkerClass, tariffGrade.Grade))
+            return BadRequest($"Розряд {tariffGrade.Grade} не дозволено для класу '{pos.WorkerClass}'.");
+        // Престижність — лише педагогам (Class 1).
+        if (request.PrestigeBonusPct.HasValue && pos != null && pos.WorkerClass != WorkerClass.Pedagogical)
+            return BadRequest($"Надбавку за престижність дозволено лише педагогам (Class 1), а не класу '{pos.WorkerClass}'.");
+        // Звання прив'язане до ставки — WorkerClass звання має збігатися з посадою.
+        if (request.TitleTypeId.HasValue)
+        {
+            var titleType = await context.TitleTypes.FindAsync(request.TitleTypeId.Value);
+            if (titleType == null)
+                return BadRequest($"Звання з id={request.TitleTypeId} не знайдено.");
+            if (pos != null && titleType.WorkerClass != pos.WorkerClass)
+                return BadRequest($"Звання '{titleType.Name}' не дозволено для класу '{pos.WorkerClass}'.");
+        }
         if (request.DismissalDate != null && request.IsPrimary)
             return BadRequest("Звільнена ставка не може бути головною.");
         if (request.IsPrimary && !position.IsPrimary)
         {
             foreach (var p in employee.Positions.Where(p => p.IsPrimary && p.DismissalDate == null && p.Id != posId))
                 p.IsPrimary = false;
+        }
+        // Гарантія "рівно одна головна ставка серед активних". Якщо ця ставка втрачає головну роль
+        // (зняли прапор або звільнили через апдейт) — мусимо передати роль іншій активній ставці.
+        var losesPrimary = position.IsPrimary && (!request.IsPrimary || request.DismissalDate != null);
+        if (losesPrimary)
+        {
+            var activeOthers = employee.Positions.Where(p => p.Id != posId && p.DismissalDate == null).ToList();
+            if (activeOthers.Count == 0)
+                return BadRequest("Не можна зняти головну ставку — це єдина активна ставка працівника.");
+            if (!activeOthers.Any(p => p.IsPrimary))
+                activeOthers.OrderBy(p => p.HireDate).First().IsPrimary = true;
         }
         position.TariffGradeId = request.TariffGradeId;
         position.RateCount = request.RateCount;
@@ -101,6 +141,9 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         position.HasUnfavorable = request.HasUnfavorable;
         position.ComplexityBonusPct = request.ComplexityBonusPct;
         position.PrestigeBonusPct = request.PrestigeBonusPct;
+        position.PositionStartDate = request.PositionStartDate;
+        position.EffectiveFrom = request.PositionStartDate ?? position.HireDate;
+        position.TitleTypeId = request.TitleTypeId;
         await context.SaveChangesAsync();
         var saved = await LoadFullPositionAsync(posId);
         return Ok(EmployeePositionDto.FromEntity(saved!));
@@ -196,8 +239,9 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
     }
 
     /// <summary>
-    /// Upsert адмін-блока (директорство, класне керівництво, завідування кабінетом тощо).
-    /// Тільки для Class 2 (адмін-педагогічний) — інші класи отримають 400.
+    /// Upsert блока педагогічних обов'язків (класне керівництво, кабінет, спортзал, тир тощо).
+    /// Тільки для Class 1 (вчителі) — інші класи отримають 400 (мама: ці надбавки лише в учителів).
+    /// Назва "admin" історична: після Phase 3.6.5 тут лише педагогічні обов'язки, не адмін-функції.
     /// </summary>
     /// <param name="employeeId">Id працівника з route.</param>
     /// <param name="posId">Id ставки з route.</param>
@@ -334,7 +378,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
 
     /// <summary>
     /// Upsert непедагогічного блока (фіксовані суми за наставництво, бібліотеку,
-    /// підручники + МОП-надбавки: нічні зміни, дезінфектанти). Тільки для Class 3 (Specialist).
+    /// підручники + МОП-надбавки: нічні зміни, дезінфектанти). Для Class 3 (Specialist) і Class 4 (МОП).
     /// </summary>
     /// <param name="employeeId">Id працівника з route.</param>
     /// <param name="posId">Id ставки з route.</param>
@@ -389,6 +433,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             .Include(p => p.Gpd)
             .Include(p => p.Pkr)
             .Include(p => p.NonPedagogical)
+            .Include(p => p.TitleType)
             .FirstOrDefaultAsync(p => p.Id == posId);
     }
 }

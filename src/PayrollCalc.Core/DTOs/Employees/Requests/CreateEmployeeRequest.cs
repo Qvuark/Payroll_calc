@@ -15,7 +15,7 @@ public class CreateEmployeeRequest
     /// <summary>
     /// ІПН — 10 цифр. Друкується на розрахунковому листі.
     /// </summary>
-    [Required, StringLength(10, MinimumLength = 10)] public string TaxId { get; set; } = string.Empty;
+    [Required, RegularExpression(@"^\d{10}$", ErrorMessage = "ІПН має містити рівно 10 цифр.")] public string TaxId { get; set; } = string.Empty;
     /// <summary>
     /// Дата прийняття у школу (загальна, не на конкретну ставку).
     /// </summary>
@@ -33,8 +33,14 @@ public class CreateEmployeeRequest
     /// Відсоток податкової соц.пільги. Null якщо пільги немає.
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
-    public int? TitleTypeId { get; set; }
-
+    /// <summary>
+    /// Заслужений вчитель/працівник освіти — фіксована надбавка.
+    /// </summary>
+    public bool IsHonored { get; set; }
+    /// <summary>
+    /// Сума надбавки за звання. Null коли IsHonored=false.
+    /// </summary>
+    public decimal? HonoredAmount { get; set; }
     /// <summary>
     /// Маппінг Request → entity Employee. Status за замовчуванням Active —
     /// зміна статусу можлива тільки через PUT (server-controlled state).
@@ -53,7 +59,8 @@ public class CreateEmployeeRequest
             PedExperienceYears = r.PedExperienceYears,
             GeneralExperienceYears = r.GeneralExperienceYears,
             SocialBenefitPct = r.SocialBenefitPct,
-            TitleTypeId = r.TitleTypeId,
+            IsHonored = r.IsHonored,
+            HonoredAmount = r.HonoredAmount,
             Status = EmployeeStatus.Active
         };
     }

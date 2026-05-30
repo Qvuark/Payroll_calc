@@ -15,6 +15,12 @@ public class EmployeePosition
     public int TariffGradeId { get; set; }
     public TariffGrade? TariffGrade { get; set; }
     /// <summary>
+    /// Звання на цій ставці: scope = WorkerClass посади. Прив'язане до ставки, а не до людини,
+    /// бо директор-вчитель має різні звання на різних посадах (вчитель-методист vs психолог-методист).
+    /// </summary>
+    public int? TitleTypeId { get; set; }
+    public TitleType? TitleType { get; set; }
+    /// <summary>
     /// Кількість ставок цієї посади (0.5 = півставки, 1.0 = ставка, 1.5 = півтори).
     /// </summary>
     public decimal RateCount { get; set; }

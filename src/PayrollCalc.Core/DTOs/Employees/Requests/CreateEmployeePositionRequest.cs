@@ -43,7 +43,14 @@ public class CreateEmployeePositionRequest
     /// Ставка надбавки за престижність праці.
     /// </summary>
     [Range(0.05, 0.2)] public decimal? PrestigeBonusPct { get; set; }
-
+    /// <summary>
+    /// Дата початку роботи на цій посаді. Якщо не задано — використовується Employee.HireDate.
+    /// </summary>
+    public DateOnly? PositionStartDate { get; set; }
+    /// <summary>
+    /// Звання на цій ставці (per-position). Null = без звання. WorkerClass звання має збігатися з посадою.
+    /// </summary>
+    public int? TitleTypeId { get; set; }
     /// <summary>
     /// Маппінг Request → entity. EmployeeId передається окремо бо він приходить з URL.
     /// </summary>
@@ -59,12 +66,14 @@ public class CreateEmployeePositionRequest
             TariffGradeId = r.TariffGradeId,
             RateCount = r.RateCount,
             HireDate = r.HireDate,
-            EffectiveFrom = r.HireDate,
+            PositionStartDate = r.PositionStartDate,
+            EffectiveFrom = r.PositionStartDate ?? r.HireDate,
             IsPrimary = r.IsPrimary,
             HasMilitaryRecord = r.HasMilitaryRecord,
             HasUnfavorable = r.HasUnfavorable,
             ComplexityBonusPct = r.ComplexityBonusPct,
-            PrestigeBonusPct = r.PrestigeBonusPct
+            PrestigeBonusPct = r.PrestigeBonusPct,
+            TitleTypeId = r.TitleTypeId
         };
     }
 }

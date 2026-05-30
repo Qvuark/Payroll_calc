@@ -22,6 +22,14 @@ public class UpdateEmployeePositionRequest
     public bool IsPrimary { get; set; }
     public bool HasMilitaryRecord { get; set; }
     public bool HasUnfavorable { get; set; }
+    /// <summary>
+    /// Дата початку роботи на цій посаді (для versioning). Null → береться HireDate.
+    /// </summary>
+    public DateOnly? PositionStartDate { get; set; }
+    /// <summary>
+    /// Звання на цій ставці (per-position). Null = без звання. WorkerClass звання має збігатися з посадою.
+    /// </summary>
+    public int? TitleTypeId { get; set; }
     [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
     [Range(0.05, 0.2)] public decimal? PrestigeBonusPct { get; set; }
 }

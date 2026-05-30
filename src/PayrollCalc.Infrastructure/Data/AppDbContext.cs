@@ -68,7 +68,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Position>().HasOne(p => p.Department).WithMany().HasForeignKey(p => p.DepartmentId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Position>().Property(p => p.ExcelAliases).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
         modelBuilder.Entity<TitleType>().Property(t => t.ExcelAliases).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
-        modelBuilder.Entity<Employee>().HasOne(e => e.TitleType).WithMany().HasForeignKey(e => e.TitleTypeId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<EmployeePosition>().HasOne(p => p.TitleType).WithMany().HasForeignKey(p => p.TitleTypeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<Employee>().Property(e => e.TaxId).HasMaxLength(10).IsRequired();
 
         // Інші Employee-залежні сутності (без змін у Phase 3.6 — прив'язані до Employee, не до EmployeePosition)
@@ -85,6 +85,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<WorkCalendar>().HasIndex(e => new { e.Year, e.Month }).IsUnique();
         modelBuilder.Entity<Timesheet>().HasIndex(e => new { e.EmployeeId, e.Year, e.Month }).IsUnique();
         modelBuilder.Entity<Calculation>().HasIndex(e => new { e.EmployeeId, e.Year, e.Month }).IsUnique();
+        // Довідники — імена унікальні, бо резолвери імпорту шукають за назвою (FirstOrDefault by Name).
+        // Дублі дали б недетермінований вибір рядка → тихий баг у розрахунку.
+        modelBuilder.Entity<Position>().HasIndex(p => p.Name).IsUnique();
+        modelBuilder.Entity<TitleType>().HasIndex(t => new { t.Name, t.WorkerClass }).IsUnique();
+        modelBuilder.Entity<Department>().HasIndex(d => d.Name).IsUnique();
+        // FieldKey — ключ правила включення у середню; дублі зробили б розрахунок недетермінованим.
+        modelBuilder.Entity<AvgSalaryInclusionRule>().HasIndex(r => r.FieldKey).IsUnique();
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PayrollCalc.Infrastructure.Data;
@@ -12,9 +13,11 @@ using PayrollCalc.Infrastructure.Data;
 namespace PayrollCalc.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260530142948_TitleTypePerPosition")]
+    partial class TitleTypePerPosition
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,9 +58,6 @@ namespace PayrollCalc.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("FieldKey")
-                        .IsUnique();
 
                     b.ToTable("AvgSalaryInclusionRules");
                 });
@@ -209,9 +209,6 @@ namespace PayrollCalc.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("Departments");
                 });
@@ -598,9 +595,6 @@ namespace PayrollCalc.Infrastructure.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.ToTable("Positions");
                 });
 
@@ -822,9 +816,6 @@ namespace PayrollCalc.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name", "WorkerClass")
-                        .IsUnique();
 
                     b.ToTable("TitleTypes");
                 });

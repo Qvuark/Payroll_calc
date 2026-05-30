@@ -39,6 +39,12 @@ public class StaffImporter
         {
             // Persona-поля однакові в усіх рядках групи — беремо перший як джерело.
             var firstRow = group.First();
+            // Попередження якщо в групі різні дати прийому (ймовірна помилка вводу мами): беремо з першого
+            // рядка, але сигналізуємо у звіт. Не блокуємо — імпорт продовжується.
+            if (group.Select(r => r.HireDate).Distinct().Count() > 1)
+                importErrors.Add(new ParserError(firstRow.RowIndex, "HireDate",
+                    $"Увага: для ІПН {firstRow.TaxId} різні дати прийому в рядках групи — взято з першого рядка.",
+                    ErrorSeverity.Warning));
             // empCreated потрібен для orphan-guard нижче: щойно створеного Employee без жодної
             // успішної позиції — відкочуємо. Existing Employee (empCreated=false) не чіпаємо.
             var (emp, empCreated) = await _employeeUpserter.UpsertAsync(firstRow, ct);

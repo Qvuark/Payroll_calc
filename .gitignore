@@ -38,3 +38,7 @@ logs/
 
 # Publish output
 publish/
+
+# Claude Code — не комітити інструкції/памʼять
+CLAUDE.md
+.claude/

@@ -45,11 +45,12 @@ public class PositionUpserter
                 $"Розряд '{staffRow.TariffGrade}' не знайдено в довіднику"));
             return (null, false);
         }
-
-        // Resolve TitleType per WorkerClass scope. Робиться тут (не в EmployeeUpserter), бо
-        // WorkerClass береться з посади. null/whitespace → без помилки, не знайдено → ParserError + null.
-        employee.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
-            _db, staffRow.TitleType, position.WorkerClass, staffRow.RowIndex, errors, ct);
+        if (!EmployeeValidator.ValidateGradeForClass(position.WorkerClass, tariffGrade.Grade))
+        {
+            errors.Add(new ParserError(staffRow.RowIndex, "TariffGrade",
+                $"Розряд {tariffGrade.Grade} не дозволено для класу '{position.WorkerClass}'"));
+            return (null, false);
+        }
 
         // Update path: знайти існуючу EP + одразу підтягти блоки через .Include() —
         // інакше при upsert нижче EF не побачить старого блока і вставить дублікат.
@@ -96,7 +97,7 @@ public class PositionUpserter
             return (null, false);
         }
         // Gpd/Pkr мають ВЛАСНИЙ TariffGrade, окремий від EmployeePosition.TariffGradeId.
-        // Бухгалтерські діапазони: ГПД = 10-14, ПКР = 10-12 (vault [[tariff_grade_ranges]]).
+        // Бухгалтерські діапазони: ГПД = 10-14, ПКР = 10-12.
         // Тому resolve окремо. NonPedagogical — без свого розряду, доплати фіксованими сумами.
         TariffGrade? gpdGrade = null;
         if (hasGpd)
@@ -180,6 +181,14 @@ public class PositionUpserter
             ep.HasUnfavorable = staffRow.HasUnfavorable;
             ep.ComplexityBonusPct = staffRow.ComplexityPct;
             wasCreated = false;
+        }
+
+        // Звання прив'язане до ставки (scope = WorkerClass посади), бо одна людина може мати різні звання
+        // на різних посадах. Пуста колонка ≠ "очистити" — резолвимо лише коли задано, інакше затерли б наявне.
+        if (!string.IsNullOrWhiteSpace(staffRow.TitleType))
+        {
+            ep.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
+                _db, staffRow.TitleType, position.WorkerClass, staffRow.RowIndex, errors, ct);
         }
 
         // Upsert блоків. Працює для обох гілок: для insert path ep.Gpd завжди null (нова сутність),

@@ -281,10 +281,10 @@ public class TeachersImporterTests : IClassFixture<PostgresFixture>, IAsyncLifet
         report.Errors.Should().BeEmpty();
 
         await using var readDb = _fx.CreateContext();
-        var emp = await readDb.Employees.Include(e => e.TitleType).SingleAsync();
-        emp.TitleType.Should().NotBeNull();
-        emp.TitleType!.Name.Should().Be("Старший вчитель");
-        emp.TitleType.WorkerClass.Should().Be(WorkerClass.Pedagogical);
+        var position = await readDb.EmployeePositions.Include(p => p.TitleType).SingleAsync();
+        position.TitleType.Should().NotBeNull();
+        position.TitleType!.Name.Should().Be("Старший вчитель");
+        position.TitleType.WorkerClass.Should().Be(WorkerClass.Pedagogical);
     }
 
     /// <summary>
@@ -306,8 +306,8 @@ public class TeachersImporterTests : IClassFixture<PostgresFixture>, IAsyncLifet
         report.Errors.Should().Contain(e => e.Field == "TitleType" && e.Message.Contains("Дед мороз"));
 
         await using var readDb = _fx.CreateContext();
-        var emp = await readDb.Employees.SingleAsync();
-        emp.TitleTypeId.Should().BeNull();
+        var position = await readDb.EmployeePositions.SingleAsync();
+        position.TitleTypeId.Should().BeNull();
     }
 
     /// <summary>

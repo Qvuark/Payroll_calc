@@ -10,7 +10,7 @@ namespace PayrollCalc.Core.DTOs.Employees.Requests;
 public class UpdateEmployeeRequest
 {
     [Required, MaxLength(200)] public string FullName { get; set; } = string.Empty;
-    [Required, StringLength(10, MinimumLength = 10)] public string TaxId { get; set; } = string.Empty;
+    [Required, RegularExpression(@"^\d{10}$", ErrorMessage = "ІПН має містити рівно 10 цифр.")] public string TaxId { get; set; } = string.Empty;
     /// <summary>
     /// Заповнюється коли працівник звільняється з усіх ставок (повне звільнення).
     /// </summary>
@@ -25,7 +25,14 @@ public class UpdateEmployeeRequest
     /// </summary>
     public int PedExperienceYears { get; set; } = 0;
     public decimal? SocialBenefitPct { get; set; }
-    public int? TitleTypeId { get; set; }
     [Required]
     public EmployeeStatus Status { get; set; }
+    /// <summary>
+    /// Заслужений вчитель/працівник освіти — фіксована надбавка.
+    /// </summary>
+    public bool IsHonored { get; set; }
+    /// <summary>
+    /// Сума надбавки за звання. Null коли IsHonored=false.
+    /// </summary>
+    public decimal? HonoredAmount { get; set; }
 }

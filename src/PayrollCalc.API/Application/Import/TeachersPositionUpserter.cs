@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using PayrollCalc.Core.Entities;
 using PayrollCalc.Core.Entities.Enums;
@@ -38,7 +39,6 @@ public class TeachersPositionUpserter
                 $"Посада '{row.Position}' не знайдена в довіднику"));
             return (null, false);
         }
-
         var tariffGrade = await _db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == row.TariffGrade, ct);
         if (tariffGrade is null)
         {
@@ -46,12 +46,19 @@ public class TeachersPositionUpserter
                 $"Розряд '{row.TariffGrade}' не знайдено в довіднику"));
             return (null, false);
         }
-
-        // TitleType резолвиться з урахуванням WorkerClass посади (одна назва може існувати для різних класів).
-        // null/whitespace → без помилки; не знайдено → ParserError + TitleTypeId=null (звання некритичне).
-        employee.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
-            _db, row.TitleType, position.WorkerClass, row.RowIndex, errors, ct);
-
+        if (!EmployeeValidator.ValidateGradeForClass(position.WorkerClass, tariffGrade.Grade))
+        {
+            errors.Add(new ParserError(row.RowIndex, "TariffGrade",
+                $"Розряд {tariffGrade.Grade} не дозволено для класу '{position.WorkerClass}'"));
+            return (null, false);
+        }
+        // Престижність — лише педагогам (Class 1). Для решти класів % безглуздий: відсікаємо ввід.
+        if (row.PrestigePct.HasValue && position.WorkerClass != WorkerClass.Pedagogical)
+        {
+            errors.Add(new ParserError(row.RowIndex, "PrestigePct",
+                $"Надбавку за престижність дозволено лише педагогам (Class 1), а не класу '{position.WorkerClass}'"));
+            return (null, false);
+        }
         // Update path: підтягуємо існуючу EP разом з блоками через Include() —
         // інакше при upsert нижче EF не побачить старий блок і вставить дубль.
         EmployeePosition? ep = null;
@@ -139,8 +146,11 @@ public class TeachersPositionUpserter
         if (hasWorkload && !string.IsNullOrWhiteSpace(row.Subject))
         {
             var subjectLower = row.Subject.ToLower();
-            var notebookRate = await _db.NotebookRates
-                .FirstOrDefaultAsync(r => subjectLower.Contains(r.SubjectKeyword), ct);
+            // Довідник малий (~6 рядків) — тягнемо весь і матчимо в пам'яті по межі слова.
+            // Boundary-match (\b перед keyword) прибирає false-positive: "рукавички" більше не чіпляє "укр".
+            var rates = await _db.NotebookRates.ToListAsync(ct);
+            var notebookRate = rates.FirstOrDefault(r =>
+                Regex.IsMatch(subjectLower, $@"\b{Regex.Escape(r.SubjectKeyword.ToLower())}"));
             if (notebookRate is not null)
                 notebookRateId = notebookRate.Id;
         }
@@ -180,6 +190,14 @@ public class TeachersPositionUpserter
             ep.ComplexityBonusPct = row.ComplexityPct;
             ep.PrestigeBonusPct = row.PrestigePct;
             wasCreated = false;
+        }
+
+        // Звання прив'язане до ставки (scope = WorkerClass посади), бо одна людина може мати різні звання
+        // на різних посадах. Пуста колонка ≠ "очистити" — резолвимо лише коли задано, інакше затерли б наявне.
+        if (!string.IsNullOrWhiteSpace(row.TitleType))
+        {
+            ep.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
+                _db, row.TitleType, position.WorkerClass, row.RowIndex, errors, ct);
         }
 
         // Workload upsert. ??= створює тільки коли блок відсутній (insert path або update без попереднього блоку).

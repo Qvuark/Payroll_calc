@@ -46,7 +46,10 @@ public static class DbSeeder
             new SystemParam { Key = "military_accounting", Value = 0.05m, EffectiveDate = date },
             new SystemParam { Key = "notebook_foreign_lang", Value = 0.10m, EffectiveDate = date },
             new SystemParam { Key = "notebook_default", Value = 0.15m, EffectiveDate = date },
-            new SystemParam { Key = "notebook_lang_lit", Value = 0.20m, EffectiveDate = date }
+            new SystemParam { Key = "notebook_lang_lit", Value = 0.20m, EffectiveDate = date },
+            // Надбавки МОП: дезінфектанти 10% (тільки уборщиці по наказу), нічні зміни 40% (за колдоговором).
+            new SystemParam { Key = "disinfectants_rate", Value = 0.10m, EffectiveDate = date },
+            new SystemParam { Key = "night_shifts_rate", Value = 0.40m, EffectiveDate = date }
         );
         await context.SaveChangesAsync();
     }

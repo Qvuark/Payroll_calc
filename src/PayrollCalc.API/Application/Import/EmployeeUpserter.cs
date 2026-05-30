@@ -44,6 +44,8 @@ public class EmployeeUpserter
             return (employee, WasCreated: true);
         }
 
+        // Status навмисно НЕ оновлюємо: якщо людина була Dismissed і знов з'явилась у файлі —
+        // повторне прийняття (rehire) робиться свідомо через UI, не тихо bulk-імпортом.
         employee.TabNumber = row.TabNumber!;
         employee.FullName = row.FullName!;
         employee.HireDate = row.HireDate!.Value;

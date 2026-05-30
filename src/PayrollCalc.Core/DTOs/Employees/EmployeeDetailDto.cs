@@ -32,8 +32,6 @@ public class EmployeeDetailDto
     /// Відсоток податкової соц.пільги. Null якщо пільги немає.
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
-    public int? TitleTypeId { get; set; }
-    public string? TitleTypeName { get; set; }
     /// <summary>
     /// Усі ставки працівника (активні та звільнені). Кожна несе власні блоки.
     /// </summary>
@@ -60,8 +58,6 @@ public class EmployeeDetailDto
             PedExperienceYears = e.PedExperienceYears,
             Status = e.Status,
             SocialBenefitPct = e.SocialBenefitPct,
-            TitleTypeId = e.TitleTypeId,
-            TitleTypeName = e.TitleType?.Name,
             Positions = e.Positions.Select(EmployeePositionDto.FromEntity).ToList()
         };
     }

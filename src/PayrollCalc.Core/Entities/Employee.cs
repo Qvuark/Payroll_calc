@@ -37,12 +37,6 @@ public class Employee
     public decimal? SocialBenefitPct { get; set; }
     public EmployeeStatus Status { get; set; }
     /// <summary>
-    /// Звання працівника (per-person). Застосовується до ставок Class 1 та 2,
-    /// які юридично приймають title-надбавку. Class 3 та 4 ігнорують навіть якщо запис є.
-    /// </summary>
-    public int? TitleTypeId { get; set; }
-    public TitleType? TitleType { get; set; }
-    /// <summary>
     /// Прапор "Заслужений вчитель/працівник освіти" (звання президентського указу).
     /// Additive до TitleType — людина може бути одночасно методистом і заслуженим.
     /// </summary>

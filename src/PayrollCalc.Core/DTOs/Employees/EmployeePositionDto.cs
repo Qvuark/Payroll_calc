@@ -34,6 +34,10 @@ public class EmployeePositionDto
     public bool IsPrimary { get; set; }
     public DateOnly HireDate { get; set; }
     public DateOnly? DismissalDate { get; set; }
+    /// <summary>
+    /// Дата початку роботи на цій посаді (вводиться окремо). Null → дорівнює HireDate.
+    /// </summary>
+    public DateOnly? PositionStartDate { get; set; }
     public DateOnly EffectiveFrom { get; set; }
     /// <summary>
     /// Перебуває на військовому обліку на цій ставці (надбавка 5%).
@@ -51,6 +55,11 @@ public class EmployeePositionDto
     /// Відсоток надбавки за престижність праці.
     /// </summary>
     public decimal? PrestigeBonusPct { get; set; }
+    /// <summary>
+    /// Звання на цій ставці (per-position). Null якщо без звання.
+    /// </summary>
+    public int? TitleTypeId { get; set; }
+    public string? TitleTypeName { get; set; }
     public EmployeeWorkloadDto? Workload { get; set; }
     public EmployeeAdminDto? Admin { get; set; }
     public EmployeeGpdDto? Gpd { get; set; }
@@ -80,11 +89,14 @@ public class EmployeePositionDto
             IsPrimary = e.IsPrimary,
             HireDate = e.HireDate,
             DismissalDate = e.DismissalDate,
+            PositionStartDate = e.PositionStartDate,
             EffectiveFrom = e.EffectiveFrom,
             HasMilitaryRecord = e.HasMilitaryRecord,
             HasUnfavorable = e.HasUnfavorable,
             ComplexityBonusPct = e.ComplexityBonusPct,
             PrestigeBonusPct = e.PrestigeBonusPct,
+            TitleTypeId = e.TitleTypeId,
+            TitleTypeName = e.TitleType?.Name,
             Workload = e.Workload != null ? EmployeeWorkloadDto.FromEntity(e.Workload) : null,
             Admin = e.Admin != null ? EmployeeAdminDto.FromEntity(e.Admin) : null,
             Gpd = e.Gpd != null ? EmployeeGpdDto.FromEntity(e.Gpd) : null,

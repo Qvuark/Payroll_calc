@@ -38,6 +38,8 @@ public static class EmployeeValidator
                     errors.Add("Педагогічний персонал не може мати непедагогічний блок.");
                 break;
             case WorkerClass.AdminPedagogical:
+                if (hasAdmin)
+                    errors.Add("Адміністративно-педагогічний персонал не може мати адміністративний блок (класне керівництво/кабінет — лише вчителі).");
                 if (hasNonPedagogical)
                     errors.Add("Адміністративно-педагогічний персонал не може мати непедагогічний блок.");
                 break;
@@ -64,5 +66,27 @@ public static class EmployeeValidator
         }
         return errors.Count > 0 ? errors : null;
     }
-
+    /// <summary>
+    /// Перевіряє чи дозволений тарифний розряд для WorkerClass посади.
+    /// Діапазони per-class (драфт); точні per-position межі додаються у UI-валідації пізніше.
+    /// </summary>
+    /// <param name="workerClass">Клас посади.</param>
+    /// <param name="grade">Номер тарифного розряду (TariffGrade.Grade).</param>
+    /// <returns>true якщо розряд у дозволеному діапазоні класу.</returns>
+    public static bool ValidateGradeForClass(WorkerClass workerClass, int grade)
+    {
+        switch (workerClass)
+        {
+            case WorkerClass.Pedagogical:
+                return grade >= 10 && grade <= 15;
+            case WorkerClass.AdminPedagogical:
+                return grade >= 8 && grade <= 18;
+            case WorkerClass.Specialist:
+                return grade >= 4 && grade <= 13;
+            case WorkerClass.MOP:
+                return grade >= 1 && grade <= 8;
+            default:
+                return false;
+        }
+    }
 }

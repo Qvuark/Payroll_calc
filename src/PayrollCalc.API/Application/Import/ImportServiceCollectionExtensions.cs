@@ -24,6 +24,7 @@ public static class ImportServiceCollectionExtensions
         services.AddScoped<TeachersPositionUpserter>();
         services.AddScoped<StaffImporter>();
         services.AddScoped<TeachersImporter>();
+        services.AddScoped<TimesheetTemplateService>();
         return services;
     }
 }

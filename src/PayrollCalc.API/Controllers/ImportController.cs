@@ -16,7 +16,8 @@ namespace PayrollCalc.API.Controllers;
 public class ImportController(
     StaffImporter staffImporter,
     TeachersImporter teachersImporter,
-    TemplateGenerator templateGenerator) : ControllerBase
+    TemplateGenerator templateGenerator,
+    TimesheetTemplateService timesheetTemplateService) : ControllerBase
 {
     /// <summary>
     /// Імпорт staff.xlsx — масове створення/оновлення Employee + EmployeePosition.
@@ -85,5 +86,25 @@ public class ImportController(
             bytes,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "teachers_template.xlsx");
+    }
+
+    /// <summary>
+    /// Віддає pre-filled timesheet-шаблон на (year, month): рядок на кожного активного працівника
+    /// з №/ІПН/таб/ПІБ/посадою. Мама вписує числа (відпрацьовано/заміна/нічні) і вантажить назад.
+    /// </summary>
+    /// <param name="year">Рік періоду.</param>
+    /// <param name="month">Місяць періоду (1..12).</param>
+    /// <param name="ct">Cancellation з боку клієнта.</param>
+    /// <returns>200 + xlsx attachment (timesheet_{year}_{month}.xlsx); 400 при невалідному місяці.</returns>
+    [HttpGet("templates/timesheet")]
+    public async Task<ActionResult> GetTimesheetTemplate([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+    {
+        if (month is < 1 or > 12)
+            return BadRequest("Місяць має бути в діапазоні 1..12");
+        var bytes = await timesheetTemplateService.BuildAsync(year, month, ct);
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"timesheet_{year}_{month:00}.xlsx");
     }
 }

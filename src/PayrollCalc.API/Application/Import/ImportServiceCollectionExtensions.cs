@@ -1,6 +1,7 @@
 using PayrollCalc.Documents.Export;
 using PayrollCalc.Documents.Import.Staff;
 using PayrollCalc.Documents.Import.Teachers;
+using PayrollCalc.Documents.Import.Timesheet;
 
 namespace PayrollCalc.API.Application.Import;
 
@@ -18,6 +19,7 @@ public static class ImportServiceCollectionExtensions
     {
         services.AddSingleton<StaffParser>();
         services.AddSingleton<TeachersParser>();
+        services.AddSingleton<TimesheetParser>();
         services.AddSingleton<TemplateGenerator>();
         services.AddScoped<EmployeeUpserter>();
         services.AddScoped<PositionUpserter>();
@@ -25,6 +27,8 @@ public static class ImportServiceCollectionExtensions
         services.AddScoped<StaffImporter>();
         services.AddScoped<TeachersImporter>();
         services.AddScoped<TimesheetTemplateService>();
+        services.AddScoped<TimesheetUpserter>();
+        services.AddScoped<TimesheetImporter>();
         return services;
     }
 }

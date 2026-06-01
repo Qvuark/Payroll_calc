@@ -16,6 +16,7 @@ namespace PayrollCalc.API.Controllers;
 public class ImportController(
     StaffImporter staffImporter,
     TeachersImporter teachersImporter,
+    TimesheetImporter timesheetImporter,
     TemplateGenerator templateGenerator,
     TimesheetTemplateService timesheetTemplateService) : ControllerBase
 {
@@ -54,6 +55,29 @@ public class ImportController(
 
         await using var stream = file.OpenReadStream();
         var report = await teachersImporter.ImportAsync(stream, ct);
+        return Ok(report);
+    }
+
+    /// <summary>
+    /// Імпорт timesheet.xlsx — масове оновлення табелів за (year, month). Match по ІПН,
+    /// людину не створює (не знайдено → рядок у звіті). Пише лише відпрацьовано/заміна/нічні,
+    /// гроші-one-offs з CRUD не чіпає. Атомарність: одна транзакція на файл.
+    /// </summary>
+    /// <param name="file">xlsx за схемою TimesheetColumnMap (наш pre-filled шаблон, заповнений мамою).</param>
+    /// <param name="year">Рік періоду.</param>
+    /// <param name="month">Місяць періоду (1..12).</param>
+    /// <param name="ct">Cancellation з боку клієнта.</param>
+    /// <returns>200 + ImportReport; 400 якщо файл порожній або місяць поза 1..12.</returns>
+    [HttpPost("timesheet")]
+    public async Task<ActionResult<ImportReport>> ImportTimesheet(IFormFile file, [FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest("Файл порожній або не передано");
+        if (month is < 1 or > 12)
+            return BadRequest("Місяць має бути в діапазоні 1..12");
+
+        await using var stream = file.OpenReadStream();
+        var report = await timesheetImporter.ImportAsync(stream, year, month, ct);
         return Ok(report);
     }
 

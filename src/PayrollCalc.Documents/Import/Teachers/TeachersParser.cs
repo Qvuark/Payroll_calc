@@ -35,7 +35,6 @@ public class TeachersParser
             sheet, _map.HeaderRowIndex, new Dictionary<int, string>(_map.ExpectedHeaders));
         if (headerErrors.Count > 0)
             return (rows, headerErrors);
-        //
         if (sheet.Rows.Count <= _map.FirstDataRowIndex)
         {
             errors.Add(new ParserError(

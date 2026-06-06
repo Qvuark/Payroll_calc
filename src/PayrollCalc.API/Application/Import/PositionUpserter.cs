@@ -9,10 +9,8 @@ using PayrollCalc.Core.Validators;
 namespace PayrollCalc.API.Application.Import;
 
 /// <summary>
-/// Insert-or-update EmployeePosition разом з опціональними блоками (Gpd / Pkr / NonPedagogical)
-/// для конкретного Employee. Resolve Position (за назвою) та TariffGrade (за номером) з довідників.
-/// Якщо resolve не вдався або ValidateBlocks повернув помилки — додає у errors, повертає null
-/// (Importer пропустить строку). SaveChangesAsync НЕ викликає — Importer комітить транзакцію на весь файл.
+/// Створює або оновлює одну ставку (EmployeePosition) + блоки Gpd/Pkr/NonPedagogical працівника.
+/// Резолвить назви/числа з файлу в Id довідників і валідує клас. Не комітить — це робить Importer на весь файл.
 /// </summary>
 public class PositionUpserter
 {
@@ -20,9 +18,8 @@ public class PositionUpserter
     public PositionUpserter(AppDbContext db) => _db = db;
 
     /// <summary>
-    /// Створює нову EmployeePosition або оновлює існуючу за парою (EmployeeId, PositionId).
-    /// Employee може бути ще не збереженим (Id=0) — EF підставить FK через nav property.
-    /// Повертає (null, false) якщо resolve посади/розряду впав; (entity, true) при insert; (entity, false) при update.
+    /// Знаходить ставку за (EmployeeId, PositionId) і оновлює, або створює нову.
+    /// Повертає (null, false) якщо resolve чи валідація впали (помилка вже в errors); (ставка, true) — створено; (ставка, false) — оновлено.
     /// </summary>
     public async Task<(EmployeePosition? Entity, bool WasCreated)> UpsertAsync(
         Employee employee,
@@ -37,7 +34,6 @@ public class PositionUpserter
                 $"Посада '{staffRow.Position}' не знайдена в довіднику"));
             return (null, false);
         }
-
         var tariffGrade = await _db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.TariffGrade, ct);
         if (tariffGrade is null)
         {
@@ -51,10 +47,8 @@ public class PositionUpserter
                 $"Розряд {tariffGrade.Grade} не дозволено для класу '{position.WorkerClass}'"));
             return (null, false);
         }
-
-        // Update path: знайти існуючу EP + одразу підтягти блоки через .Include() —
-        // інакше при upsert нижче EF не побачить старого блока і вставить дублікат.
-        // Insert path (Id=0 → нова Employee): ep = null, блоки створюються з нуля.
+        // Існуючу ставку тягнемо разом з блоками (Include), інакше EF не побачить старий блок і вставить дубль.
+        // Для нової людини (Id=0) шукати нічого — ep лишається null, блоки створяться з нуля.
         EmployeePosition? ep = null;
         if (employee.Id != 0)
         {
@@ -64,10 +58,7 @@ public class PositionUpserter
                 .Include(x => x.NonPedagogical)
                 .FirstOrDefaultAsync(x => x.EmployeeId == employee.Id && x.PositionId == position.Id, ct);
         }
-
-        // Прапори "чи присутній блок у рядку xlsx".
-        // Gpd/Pkr → визначаємо по годинах (0 = блок не потрібен, бо без годин блок безглуздий).
-        // NonPedagogical → HasValue для сум + bool flags для дезінфектантів/нічних (будь-яке поле = блок).
+        // Блок присутній якщо в рядку є його дані: Gpd/Pkr — години > 0, NonPedagogical — будь-яка сума чи прапор.
         var hasGpd = staffRow.GpdHours > 0;
         var hasPkr = staffRow.PkrHours > 0;
         var hasNonPedagogical = staffRow.MentorAmount.HasValue ||
@@ -76,9 +67,8 @@ public class PositionUpserter
                                 staffRow.Disinfectants ||
                                 staffRow.NightShifts;
 
-        // Бізнес-валідація: чи дозволено цей набір блоків для WorkerClass посади.
-        // Напр.: Class 4 (MOP) + GpdHours > 0 → помилка "МОП не може мати ГПД".
-        // hasWorkload/hasAdmin завжди false — це поля Teachers потоку, у Staff DTO їх нема.
+        // Чи дозволені ці блоки класу посади (напр. МОП + ГПД → помилка).
+        // Workload/Admin тут завжди false — це поля потоку Teachers, у Staff їх нема.
         var validationErrors = EmployeeValidator.ValidateBlocks(
             position.WorkerClass,
             hasWorkload: false,
@@ -96,9 +86,7 @@ public class PositionUpserter
             }
             return (null, false);
         }
-        // Gpd/Pkr мають ВЛАСНИЙ TariffGrade, окремий від EmployeePosition.TariffGradeId.
-        // Бухгалтерські діапазони: ГПД = 10-14, ПКР = 10-12.
-        // Тому resolve окремо. NonPedagogical — без свого розряду, доплати фіксованими сумами.
+        // ГПД і ПКР мають власний розряд, окремий від розряду ставки → резолвимо їх окремо.
         TariffGrade? gpdGrade = null;
         if (hasGpd)
         {
@@ -146,9 +134,7 @@ public class PositionUpserter
                 return (null, false);
             }
         }
-        // Insert або update базової EmployeePosition. Один-return-pattern щоб upsert блоків нижче
-        // спрацював для обох гілок (insert + update). До рефактору insert path робив ранній return
-        // і блоки Gpd/Pkr/NonPed для нових позицій ніколи не писались.
+        // Створюємо або оновлюємо ставку. Спільний шлях без раннього return — щоб блоки нижче писались і для нової, і для існуючої.
         bool wasCreated;
         if (ep is null)
         {
@@ -183,17 +169,15 @@ public class PositionUpserter
             wasCreated = false;
         }
 
-        // Звання прив'язане до ставки (scope = WorkerClass посади), бо одна людина може мати різні звання
-        // на різних посадах. Пуста колонка ≠ "очистити" — резолвимо лише коли задано, інакше затерли б наявне.
+        // Звання резолвимо лише коли воно задане: пуста колонка означає "не чіпати наявне", а не "очистити".
         if (!string.IsNullOrWhiteSpace(staffRow.TitleType))
         {
             ep.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
                 _db, staffRow.TitleType, position.WorkerClass, staffRow.RowIndex, errors, ct);
         }
 
-        // Upsert блоків. Працює для обох гілок: для insert path ep.Gpd завжди null (нова сутність),
-        // для update path ep.Gpd підтягнутий через .Include() вище. ??= створює тільки коли відсутній.
-        // Видалення блоків НЕ робимо: пусте поле в xlsx ≠ "очистити блок", імпорт — bulk-доповнення.
+        // ??= створює блок лише коли його ще нема, інакше перезаписує поля.
+        // Порожнє поле не очищає блок — імпорт тільки доповнює, не видаляє.
         if (hasGpd)
         {
             if (ep.Gpd is null)

@@ -10,11 +10,9 @@ using PayrollCalc.Infrastructure.Data;
 namespace PayrollCalc.API.Application.Import;
 
 /// <summary>
-/// Insert-or-update EmployeePosition разом з опціональними блоками (Workload / Admin) для Teachers потоку.
-/// Резолвить Position (за назвою), TariffGrade (за номером), TitleType (per WorkerClass scope) та
-/// NotebookRate (keyword-based по Subject). Мапить ClassMgmt / CabinetType string → enum.
-/// Якщо resolve не вдався, mapping невалідний або ValidateBlocks повернув помилки — додає у errors,
-/// повертає null (Importer пропустить рядок). SaveChangesAsync НЕ викликає — Importer комітить весь файл.
+/// Створює або оновлює одну ставку вчителя + блоки Workload/Admin.
+/// Резолвить назви/числа з файлу в Id довідників (Position, розряд, звання, ставка за зошити по предмету), мапить ClassMgmt/CabinetType в enum.
+/// Помилка resolve чи валідації → запис у errors + null (Importer пропустить рядок). Не комітить — це робить Importer.
 /// </summary>
 public class TeachersPositionUpserter
 {
@@ -22,9 +20,8 @@ public class TeachersPositionUpserter
     public TeachersPositionUpserter(AppDbContext db) => _db = db;
 
     /// <summary>
-    /// Створює нову EmployeePosition або оновлює існуючу за парою (EmployeeId, PositionId).
-    /// Employee може бути ще не збереженим (Id=0) — EF підставить FK через nav property.
-    /// Повертає (null, false) якщо resolve впав; (entity, true) при insert; (entity, false) при update.
+    /// Знаходить ставку за (EmployeeId, PositionId) і оновлює, або створює нову.
+    /// Повертає (null, false) якщо resolve чи валідація впали (помилка вже в errors); (ставка, true) — створено; (ставка, false) — оновлено.
     /// </summary>
     public async Task<(EmployeePosition? Entity, bool WasCreated)> UpsertAsync(
         Employee employee,
@@ -52,15 +49,14 @@ public class TeachersPositionUpserter
                 $"Розряд {tariffGrade.Grade} не дозволено для класу '{position.WorkerClass}'"));
             return (null, false);
         }
-        // Престижність — лише педагогам (Class 1). Для решти класів % безглуздий: відсікаємо ввід.
+        // Надбавку за престижність мають лише педагоги (Class 1) — для інших класів % не має сенсу.
         if (row.PrestigePct.HasValue && position.WorkerClass != WorkerClass.Pedagogical)
         {
             errors.Add(new ParserError(row.RowIndex, "PrestigePct",
                 $"Надбавку за престижність дозволено лише педагогам (Class 1), а не класу '{position.WorkerClass}'"));
             return (null, false);
         }
-        // Update path: підтягуємо існуючу EP разом з блоками через Include() —
-        // інакше при upsert нижче EF не побачить старий блок і вставить дубль.
+        // Існуючу ставку тягнемо разом з блоками (Include), інакше EF не побачить старий блок і вставить дубль.
         EmployeePosition? ep = null;
         if (employee.Id != 0)
         {
@@ -70,9 +66,8 @@ public class TeachersPositionUpserter
                 .FirstOrDefaultAsync(x => x.EmployeeId == employee.Id && x.PositionId == position.Id, ct);
         }
 
-        // Прапори "чи присутній блок у рядку xlsx".
-        // Workload → будь-яка з 12 hours-колонок > 0 (бо без годин блок безглуздий).
-        // Admin → ClassMgmt/CabinetType заповнені АБО будь-який bool-флаг (Gym/Shooting/Computers/Extracurricular/Website).
+        // Блок присутній якщо в рядку є його дані: Workload — будь-яка з 12 колонок годин > 0;
+        // Admin — заповнені ClassMgmt/CabinetType або будь-який прапор (Gym/Shooting/Computers/Extracurricular/Website).
         var hasWorkload =
             row.Hours1To4 > 0 || row.IndividualHours1To4 > 0 ||
             row.Hours5To9 > 0 || row.IndividualHours5To9 > 0 ||
@@ -84,9 +79,8 @@ public class TeachersPositionUpserter
             !string.IsNullOrWhiteSpace(row.CabinetType) ||
             row.Gym || row.Shooting || row.Computers || row.Extracurricular || row.Website;
 
-        // Бізнес-валідація: чи дозволено цей набір блоків для WorkerClass посади.
-        // Напр.: Specialist + Workload → "Спеціалісти не можуть мати навчальне навантаження".
-        // hasGpd/hasPkr/hasNonPedagogical завжди false — це поля Staff потоку, у Teachers DTO їх нема.
+        // Чи дозволені ці блоки класу посади (напр. Спеціаліст + Workload → помилка).
+        // Gpd/Pkr/NonPedagogical тут завжди false — це поля потоку Staff, у Teachers їх нема.
         var validationErrors = EmployeeValidator.ValidateBlocks(
             position.WorkerClass,
             hasWorkload: hasWorkload,
@@ -102,7 +96,7 @@ public class TeachersPositionUpserter
             return (null, false);
         }
 
-        // ClassMgmt string → ClassGradeGroup enum mapping. Невідоме значення = ParserError + skip.
+        // ClassMgmt "1-4"/"5-11" → enum ClassGradeGroup. Невідоме значення → ParserError + skip.
         ClassGradeGroup? classGradeGroup = null;
         if (!string.IsNullOrWhiteSpace(row.ClassMgmt))
         {
@@ -120,7 +114,7 @@ public class TeachersPositionUpserter
             }
         }
 
-        // CabinetType string → CabinetType enum mapping. Невідоме значення = ParserError + skip.
+        // Тип кабінету (рядок) → enum CabinetType. Невідоме значення → ParserError + skip.
         CabinetType? cabinetType = null;
         if (!string.IsNullOrWhiteSpace(row.CabinetType))
         {
@@ -139,15 +133,13 @@ public class TeachersPositionUpserter
             }
         }
 
-        // NotebookRate резолвиться по keyword-match — NotebookRate.SubjectKeyword є підрядок Subject.
-        // Тільки якщо Workload присутній (без годин блок не пишеться). Не знайдено = null без помилки
-        // (деякі предмети як фізкультура не мають ставки за зошити — це не помилка).
+        // Ставку за зошити шукаємо по предмету (SubjectKeyword входить у Subject), лише коли є Workload.
+        // Не знайдено → null без помилки: деякі предмети (напр. фізкультура) надбавки за зошити не мають.
         int? notebookRateId = null;
         if (hasWorkload && !string.IsNullOrWhiteSpace(row.Subject))
         {
             var subjectLower = row.Subject.ToLower();
-            // Довідник малий (~6 рядків) — тягнемо весь і матчимо в пам'яті по межі слова.
-            // Boundary-match (\b перед keyword) прибирає false-positive: "рукавички" більше не чіпляє "укр".
+            // Довідник малий → тягнемо весь і матчимо в пам'яті. \b перед keyword прибирає хибні збіги (напр. "рукавички" не чіпляє "укр").
             var rates = await _db.NotebookRates.ToListAsync(ct);
             var notebookRate = rates.FirstOrDefault(r =>
                 Regex.IsMatch(subjectLower, $@"\b{Regex.Escape(r.SubjectKeyword.ToLower())}"));
@@ -155,7 +147,7 @@ public class TeachersPositionUpserter
                 notebookRateId = notebookRate.Id;
         }
 
-        // Insert або update базової EmployeePosition. PrestigeBonusPct — Teachers-only (Class 1).
+        // Створюємо або оновлюємо ставку. PrestigeBonusPct — лише в потоці Teachers (Class 1).
         bool wasCreated;
         if (ep is null)
         {
@@ -192,16 +184,15 @@ public class TeachersPositionUpserter
             wasCreated = false;
         }
 
-        // Звання прив'язане до ставки (scope = WorkerClass посади), бо одна людина може мати різні звання
-        // на різних посадах. Пуста колонка ≠ "очистити" — резолвимо лише коли задано, інакше затерли б наявне.
+        // Звання резолвимо лише коли воно задане: пуста колонка означає "не чіпати наявне", а не "очистити".
         if (!string.IsNullOrWhiteSpace(row.TitleType))
         {
             ep.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
                 _db, row.TitleType, position.WorkerClass, row.RowIndex, errors, ct);
         }
 
-        // Workload upsert. ??= створює тільки коли блок відсутній (insert path або update без попереднього блоку).
-        // Видалення НЕ робимо: пусте поле в xlsx ≠ "очистити блок" (bulk-імпорт = доповнення).
+        // ??= створює блок лише коли його ще нема, інакше перезаписує поля.
+        // Порожнє поле не очищає блок — імпорт тільки доповнює, не видаляє.
         if (hasWorkload)
         {
             ep.Workload ??= new EmployeeWorkload();
@@ -221,7 +212,7 @@ public class TeachersPositionUpserter
             w.NotebookRateId = notebookRateId;
         }
 
-        // Admin upsert. ClassGradeGroup/CabinetType nullable — null коли тільки bool-флаги (наприклад Gym=true без класного керівництва).
+        // Admin: ClassGradeGroup/CabinetType лишаються null коли є тільки прапори (напр. Gym=true без класного керівництва).
         if (hasAdmin)
         {
             ep.Admin ??= new EmployeeAdmin();

@@ -6,9 +6,8 @@ using PayrollCalc.Core.Entities.Enums;
 namespace PayrollCalc.API.Application.Import;
 
 /// <summary>
-/// Insert-or-update Employee по природному ключу TaxId.
-/// НЕ викликає SaveChangesAsync — Importer комітить весь файл однією транзакцією.
-/// Не торкає Positions (це робота PositionUpserter).
+/// Створює або оновлює працівника (persona-поля: ПІБ, ІПН, стаж...) за ІПН.
+/// Ставки не чіпає — це робота PositionUpserter. Не комітить — це робить Importer на весь файл.
 /// </summary>
 public class EmployeeUpserter
 {
@@ -16,8 +15,8 @@ public class EmployeeUpserter
     public EmployeeUpserter(AppDbContext db) => _db = db;
 
     /// <summary>
-    /// Знаходить Employee за TaxId; оновлює persona-поля з DTO або створює новий запис.
-    /// Повертає сутність + прапор WasCreated (true=insert, false=update) — Importer лічить статистику.
+    /// Шукає працівника за ІПН: знайшов — оновлює persona-поля, ні — створює нового.
+    /// Повертає (працівник, WasCreated): true — створено, false — оновлено (Importer рахує статистику).
     /// </summary>
     public async Task<(Employee Entity, bool WasCreated)> UpsertAsync(
         IPersonaRow row,
@@ -44,8 +43,7 @@ public class EmployeeUpserter
             return (employee, WasCreated: true);
         }
 
-        // Status навмисно НЕ оновлюємо: якщо людина була Dismissed і знов з'явилась у файлі —
-        // повторне прийняття (rehire) робиться свідомо через UI, не тихо bulk-імпортом.
+        // Status не чіпаємо: якщо звільнений знов з'явився у файлі — повторний прийом роблять свідомо через UI, а не тихо імпортом.
         employee.TabNumber = row.TabNumber!;
         employee.FullName = row.FullName!;
         employee.HireDate = row.HireDate!.Value;

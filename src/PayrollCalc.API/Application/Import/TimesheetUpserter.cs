@@ -7,16 +7,15 @@ using PayrollCalc.Infrastructure.Data;
 namespace PayrollCalc.API.Application.Import;
 
 /// <summary>
-/// Match-or-update Timesheet по (EmployeeId, Year, Month). TaxId резолвиться в Employee;
-/// не знайдено — рядок у Errors, людину НЕ створюємо (табель посилається на існуючих).
-/// Пише ЛИШЕ 3 поля вводу (WorkedDays/ReplacementHours/NightHours) — гроші-one-offs з CRUD не чіпає.
-/// НЕ викликає SaveChangesAsync — Importer комітить весь файл однією транзакцією.
+/// Знаходить або оновлює табель за (EmployeeId, Year, Month). ІПН резолвить у працівника;
+/// не знайдено → помилка в звіт, людину НЕ створює (табель лише для наявних).
+/// Пише ЛИШЕ 3 поля вводу (відпрацьовано/заміна/нічні) — гроші-one-offs з картки не чіпає. Не комітить — це робить Importer.
 /// </summary>
 public class TimesheetUpserter(AppDbContext db)
 {
     /// <summary>
-    /// Резолвить Employee за TaxId і upsert Timesheet на (year, month). Помилки (не знайдено,
-    /// перевищення норми) додає у errors і повертає (null, false) = skip.
+    /// Знаходить працівника за ІПН і створює/оновлює його табель на (year, month).
+    /// Не знайдено або відпрацьовано > норми → помилка в errors + (null, false) = пропуск.
     /// </summary>
     /// <param name="row">Розпарсений рядок шаблону.</param>
     /// <param name="year">Рік періоду (з POST-параметра, не з файлу).</param>
@@ -58,8 +57,8 @@ public class TimesheetUpserter(AppDbContext db)
             };
             db.Timesheets.Add(timesheet);
         }
-        // Пишемо лише 3 поля вводу. Гроші-one-offs (Advance/AnnualBonus/...) лишаємо як були —
-        // їх у шаблон не виводимо, тож імпорт їх не чіпає (інакше bulk обнулив би ручні правки з CRUD).
+        // Пишемо лише 3 поля вводу. Гроші-one-offs (Advance/AnnualBonus/...) не чіпаємо — їх нема в шаблоні,
+        // інакше імпорт обнулив би ручні правки з картки.
         timesheet.WorkedDays = Round(row.WorkedDays);
         timesheet.ReplacementHours = Round(row.ReplacementHours);
         timesheet.NightHours = Round(row.NightHours);

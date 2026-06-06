@@ -6,9 +6,8 @@ using PayrollCalc.Infrastructure.Data;
 namespace PayrollCalc.API.Application.Import;
 
 /// <summary>
-/// Резолв TitleType string → Id з урахуванням WorkerClass scope.
-/// Спільний хелпер для StaffPositionUpserter і TeachersPositionUpserter — резолв логіка
-/// ідентична, виносимо щоб не копіпастити. Static бо без стану: тільки query до довідника.
+/// Шукає звання в довіднику за назвою + класом і повертає його Id.
+/// Спільний для Staff і Teachers upserter'ів. Static — стану нема, лише запит до БД.
 /// </summary>
 public static class TitleTypeResolver
 {

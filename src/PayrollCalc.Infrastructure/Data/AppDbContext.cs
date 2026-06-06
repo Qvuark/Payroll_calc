@@ -71,7 +71,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<EmployeePosition>().HasOne(p => p.TitleType).WithMany().HasForeignKey(p => p.TitleTypeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<Employee>().Property(e => e.TaxId).HasMaxLength(10).IsRequired();
 
-        // Інші Employee-залежні сутності (без змін у Phase 3.6 — прив'язані до Employee, не до EmployeePosition)
+        // Сутності прив'язані напряму до Employee (не до ставки): лікарняні, відпустки, курси, розрахунки.
         modelBuilder.Entity<SickLeave>().HasOne(s => s.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Vacation>().HasOne(v => v.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<TrainingLeave>().HasOne(t => t.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);

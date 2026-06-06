@@ -42,3 +42,6 @@ publish/
 # Claude Code — не комітити інструкції/памʼять
 CLAUDE.md
 .claude/
+
+# Згенеровані для перевірки очима зразки шаблонів
+timesheet_sample_*.xlsx

@@ -3,6 +3,7 @@ using FluentAssertions;
 using PayrollCalc.Documents.Export;
 using PayrollCalc.Documents.Import.Staff;
 using PayrollCalc.Documents.Import.Teachers;
+using PayrollCalc.Documents.Import.Timesheet;
 
 namespace PayrollCalc.Tests.Documents.Export;
 
@@ -105,5 +106,37 @@ public class TemplateGeneratorTests
 
         rows.Should().BeEmpty();
         errors.Should().ContainSingle().Which.Message.Should().Contain("відсутні дані");
+    }
+
+    // ─── FooterNotes: легенда timesheet пишеться на лист ───
+    [Fact]
+    public void Generate_TimesheetMap_WritesFooterNotes()
+    {
+        var map = new TimesheetColumnMap();
+        var bytes = new TemplateGenerator().Generate(map);
+
+        using var wb = new XLWorkbook(new MemoryStream(bytes));
+        var ws = wb.Worksheets.First();
+        var firstNote = map.FooterNotes.First();
+        ws.CellsUsed().Any(c => c.GetString() == firstNote).Should().BeTrue();
+    }
+
+    // ─── Pre-fill: значення рядка потрапляє у клітинку + сірий фон ("не чіпати") ───
+    [Fact]
+    public void Generate_PrefillRow_WritesValueWithGrayFill()
+    {
+        var map = new TimesheetColumnMap();
+        var rows = new List<IReadOnlyDictionary<int, string>>
+        {
+            new Dictionary<int, string> { { TimesheetColumnMap.ColTaxId, "1234567890" } },
+        };
+        var bytes = new TemplateGenerator().Generate(map, rows);
+
+        using var wb = new XLWorkbook(new MemoryStream(bytes));
+        var ws = wb.Worksheets.First();
+        var cell = ws.Cell(map.FirstDataRowIndex + 1, TimesheetColumnMap.ColTaxId + 1);
+        cell.GetString().Should().Be("1234567890");
+        // Сірий фон prefill ≠ білий (NoColor серіалізується як White).
+        cell.Style.Fill.BackgroundColor.Color.Name.Should().NotBe("White");
     }
 }

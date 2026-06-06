@@ -1,4 +1,5 @@
 using System.Data;
+using System.Linq;
 using PayrollCalc.Documents.Import.Timesheet;
 
 namespace PayrollCalc.Tests.Documents.Import.Timesheet;
@@ -18,7 +19,10 @@ internal static class TimesheetSheetBuilder
     public static DataTable BuildValid(params object?[][] dataRows)
     {
         var dt = new DataTable();
-        for (int i = 0; i < Map.ExpectedHeaders.Count; i++)
+        // Ширина = найбільша колонка серед Headers і Descriptions (+1). Descriptions має сірі
+        // довідкові колонки (8-14), яких нема в Headers — без цього запис опису вилітає за межі.
+        var colCount = Map.ExpectedHeaders.Keys.Concat(Map.Descriptions.Keys).Max() + 1;
+        for (int i = 0; i < colCount; i++)
             dt.Columns.Add($"c{i}", typeof(object));
         var header = dt.NewRow();
         foreach (var (col, name) in Map.ExpectedHeaders)
@@ -37,7 +41,6 @@ internal static class TimesheetSheetBuilder
         }
         return dt;
     }
-
     /// <summary>
     /// Валідна строка: TaxId (10 цифр) + 3 числа вводу. Модифікуй через індекс у тестах.
     /// </summary>
@@ -50,7 +53,6 @@ internal static class TimesheetSheetBuilder
         row[TimesheetColumnMap.ColNightHours] = 8;
         return row;
     }
-
     /// <summary>
     /// Повністю порожня строка (8 null) — для тестів skip-empty.
     /// </summary>

@@ -25,7 +25,8 @@ public class TimesheetsController(AppDbContext db) : ControllerBase
             return BadRequest("Місяць має бути в діапазоні 1..12");
         var employees = await db.Employees
             .Where(e => e.Status != EmployeeStatus.Dismissed)
-            .OrderBy(e => e.FullName)
+            // Сортування укр-алфавітом (collation), не по Unicode-кодах: інакше 'І' (U+0406) лізе поперед 'А'.
+            .OrderBy(e => EF.Functions.Collate(e.FullName, "uk-UA-x-icu"))
             .ToListAsync();
         var sheets = await db.Timesheets
             .Include(t => t.Employee)

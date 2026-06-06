@@ -57,6 +57,18 @@ public class TemplateGenerator
             dataRow++;
         }
         ws.Columns().AdjustToContents();
+        // Легенда-пояснення під даними (як заповнювати). Кожен рядок у колонці A.
+        // Пишемо ПІСЛЯ autosize, щоб довгий текст не розтягував колонку. Парсер ці рядки
+        // пропускає — у них нема TaxId, спрацьовує skip-empty.
+        if (map.FooterNotes.Count > 0)
+        {
+            dataRow++; // порожній рядок-відступ між даними і легендою
+            foreach (var note in map.FooterNotes)
+            {
+                ws.Cell(dataRow, 1).Value = note;
+                dataRow++;
+            }
+        }
         using var stream = new MemoryStream();
         wb.SaveAs(stream);
         return stream.ToArray();

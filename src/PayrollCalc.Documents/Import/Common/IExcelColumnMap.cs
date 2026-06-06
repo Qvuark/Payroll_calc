@@ -30,4 +30,9 @@ public interface IExcelColumnMap
     /// Укр. підписи колонок для шаблону: номер колонки → опис українською.
     /// </summary>
     IReadOnlyDictionary<int, string> Descriptions { get; }
+    /// <summary>
+    /// Рядки-пояснення під таблицею (як заповнювати). Дефолт порожньо — staff/teachers без легенди.
+    /// Парсер їх не зачіпає: пишуться в колонку A без TaxId, тож skip-empty їх пропускає.
+    /// </summary>
+    IReadOnlyList<string> FooterNotes => [];
 }

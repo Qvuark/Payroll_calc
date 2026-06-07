@@ -93,7 +93,10 @@ public static class DbSeeder
     {
         if (context.WorkCalendars.Any()) return;
 
-        var days = new[] { 19, 20, 21, 21, 19, 20, 23, 20, 22, 21, 21, 22 };
+        // Робочі дні 2026, укр. виробничий календар. Воєнний стан: скасовано майже всі свята,
+        // лишились 3 (24.08 пн, 01.10 чт, 25.12 пт) — їх віднято. Решта (1.01/8.03/Великдень/
+        // 1.05/8.05/Трійця/28.06/15.07) тепер робочі. Звірити з мамою Серпень/Жовтень/Грудень.
+        var days = new[] { 22, 20, 22, 22, 21, 22, 23, 20, 22, 21, 21, 22 };
         for (var month = 1; month <= 12; month++)
             context.WorkCalendars.Add(new WorkCalendar { Year = 2026, Month = month, WorkDays = days[month - 1] });
 
@@ -133,6 +136,13 @@ public static class DbSeeder
               WorkerClass = WorkerClass.AdminPedagogical,
               Pct = 0.10m,
               ExcelAliases = ["педагог-організатор", "пед.організатор", "організатор", "пед-організатор"]
+          },
+          new TitleType
+          {
+              Name = "Соціальний педагог",
+              WorkerClass = WorkerClass.AdminPedagogical,
+              Pct = 0.10m,
+              ExcelAliases = ["соц.педагог", "соцпедагог", "соц-педагог", "соц. педагог"]
           }
           );
         await context.SaveChangesAsync();

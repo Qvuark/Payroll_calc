@@ -46,4 +46,36 @@ public record PositionCalcInput
     /// N-гілка: надтарифні години (відомість F), додаються до пед.навантаження.
     /// </summary>
     public decimal AdditionalHours { get; init; }
+    /// <summary>
+    /// Класне керівництво: група класів для відсотка (1-4 → 20%, 5-11 → 25%). null — не класний керівник.
+    /// </summary>
+    public ClassGradeGroup? ClassManagementGroup { get; init; }
+    /// <summary>
+    /// Завідування кабінетом: тип для відсотка (звичайний 13%, муз/IT 10%). null — не завідує.
+    /// </summary>
+    public CabinetType? Cabinet { get; init; }
+    /// <summary>
+    /// Обслуговування комп'ютерної техніки — доплата 10% (відомість AA).
+    /// </summary>
+    public bool HasComputerMaintenance { get; init; }
+    /// <summary>
+    /// Ведення вебсайту — доплата 10% (відомість AB).
+    /// </summary>
+    public bool HasWebsite { get; init; }
+    /// <summary>
+    /// Наставництво — доплата 20% (відомість AD).
+    /// </summary>
+    public bool IsMentor { get; init; }
+    /// <summary>
+    /// Ведення військового обліку — доплата 5% (відомість AJ).
+    /// </summary>
+    public bool HasMilitaryRecord { get; init; }
+    /// <summary>
+    /// Робота з дезінфікуючими засобами — доплата 10% (відомість AN).
+    /// </summary>
+    public bool HasDisinfectants { get; init; }
+    /// <summary>
+    /// Складність і напруженість: % надбавки від окладу (дир/бухгалтери ~50%). 0 якщо немає.
+    /// </summary>
+    public decimal ComplexityPct { get; init; }
 }

@@ -83,15 +83,16 @@ public class PayrollCalculatorTests
     [Fact]
     public void Taxes_ComputedFromGross()
     {
-        var result = new PayrollCalculator().Calculate(Input(22, 22, Mop(oklad: 8000m)));
+        // Оклад вище МЗП (8647) — щоб доплата до мінімалки не спрацювала і gross лишався чистим.
+        var result = new PayrollCalculator().Calculate(Input(22, 22, Mop(oklad: 10000m)));
 
-        result.Gross.Should().Be(8000m);
+        result.Gross.Should().Be(10000m);
         result.Deductions.Should().SatisfyRespectively(
-            pdfo => { pdfo.Name.Should().Be("ПДФО"); pdfo.Amount.Should().Be(1440m); },
-            vz => { vz.Name.Should().Be("Військовий збір"); vz.Amount.Should().Be(400m); },
-            union => { union.Name.Should().Be("Профспілковий внесок"); union.Amount.Should().Be(80m); });
-        result.TotalWithheld.Should().Be(1920m);
-        result.NetPay.Should().Be(6080m);                // 8000 − 1920
+            pdfo => { pdfo.Name.Should().Be("ПДФО"); pdfo.Amount.Should().Be(1800m); },
+            vz => { vz.Name.Should().Be("Військовий збір"); vz.Amount.Should().Be(500m); },
+            union => { union.Name.Should().Be("Профспілковий внесок"); union.Amount.Should().Be(100m); });
+        result.TotalWithheld.Should().Be(2400m);
+        result.NetPay.Should().Be(7600m);                // 10000 − 2400
     }
 
     [Fact]
@@ -100,14 +101,69 @@ public class PayrollCalculatorTests
         var input = Input(
             normDays: 22,
             workedDays: 22,
-            positions: [Mop(oklad: 8000m)],
+            positions: [Mop(oklad: 10000m)],
             manual: new ManualAdjustments { Bonus = 5000m, Advance = 8000m });
 
         var result = new PayrollCalculator().Calculate(input);
 
         result.Earnings.Should().Contain(e => e.Name == "Премія" && e.Amount == 5000m);
-        result.Gross.Should().Be(13000m);                // 8000 + 5000
+        result.Gross.Should().Be(15000m);                // 10000 + 5000
         result.Deductions.Should().Contain(d => d.Name == "Аванс" && d.Amount == 8000m);
+    }
+
+    [Fact]
+    public void LowPaid_ToppedUpToMinimumWage()
+    {
+        // МОП з окладом 8000 < МЗП 8647 → доплата 647 тягне gross до мінімалки.
+        var result = new PayrollCalculator().Calculate(Input(22, 22, Mop(oklad: 8000m)));
+
+        var topUp = result.Earnings.Single(e => e.Name == "Доплата до МЗП");
+        topUp.Amount.Should().Be(647m);                  // 8647 − 8000
+        topUp.Formula.Should().Be("=8647-8000");
+        result.Gross.Should().Be(8647m);
+    }
+
+    [Fact]
+    public void AboveMinimum_NoTopUp()
+    {
+        var result = new PayrollCalculator().Calculate(Input(22, 22, Mop(oklad: 10000m)));
+
+        result.Earnings.Should().NotContain(e => e.Name == "Доплата до МЗП");
+    }
+
+    [Fact]
+    public void Tenure_FromRaisedBase_OkladPlus1749PlusTitle()
+    {
+        // raisedBase = 4198.5 (оклад) + 1679.4 (1749) + 419.85 (звання 10%) = 6297.75
+        var pos = Teacher(oklad: 8397m, hours: 9m, titlePct: 0.10m) with { TenurePct = 0.30m };
+        var result = new PayrollCalculator().Calculate(Input(22, 22, pos));
+
+        var tenure = result.Earnings.Single(e => e.Name == "Вислуга років");
+        tenure.Amount.Should().Be(1889.325m);            // 6297.75 × 30%
+        tenure.Formula.Should().Be("=6297.75*30%");
+    }
+
+    [Fact]
+    public void Prestige_FromRaisedBase_SameBaseAsTenure()
+    {
+        var pos = Teacher(oklad: 8397m, hours: 9m, titlePct: 0.10m) with { PrestigePct = 0.20m };
+        var result = new PayrollCalculator().Calculate(Input(22, 22, pos));
+
+        var prestige = result.Earnings.Single(e => e.Name == "Престижність");
+        prestige.Amount.Should().Be(1259.55m);           // 6297.75 × 20%
+    }
+
+    [Fact]
+    public void ClassManagement_FromTariffPlus1749_NoTitle()
+    {
+        // База класного — тариф+1749 БЕЗ звання: 8397 × 1.4 = 11755.8
+        var pos = Teacher(oklad: 8397m, hours: 9m, titlePct: 0.10m)
+            with { ClassManagementGroup = ClassGradeGroup.Grades1To4 };
+        var result = new PayrollCalculator().Calculate(Input(22, 22, pos));
+
+        var cm = result.Earnings.Single(e => e.Name == "Класне керівництво");
+        cm.Amount.Should().Be(2351.16m);                 // 11755.8 × 20%
+        cm.Formula.Should().Be("=11755.8*20%");
     }
 
     // --- helpers: збирають мінімальний вхід, щоб тіло тесту лишалось коротким ---

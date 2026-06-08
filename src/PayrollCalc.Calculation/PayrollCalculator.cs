@@ -48,9 +48,35 @@ public sealed class PayrollCalculator : IPayrollCalculator
         {
             var oklad = OkladCalculator.Calc(pos, input.NormDays, input.WorkedDays);
             list.Add(oklad);
-            AddIfAny(list, Bonus1749Calculator.Calc(pos, oklad.Amount, input.Params.Bonus1749));
-            AddIfAny(list, TitleCalculator.Calc(pos, oklad.Amount));
+
+            var bonus1749 = Bonus1749Calculator.Calc(pos, oklad.Amount, input.Params.Bonus1749);
+            AddIfAny(list, bonus1749);
+
+            var title = TitleCalculator.Calc(pos, oklad.Amount);
+            AddIfAny(list, title);
+
+            // Оклад з підвищенням — база похідних надбавок (вислуга, престиж...): оклад + №1749 + звання.
+            var raisedBase = oklad.Amount + (bonus1749?.Amount ?? 0m) + (title?.Amount ?? 0m);
+            AddIfAny(list, TenureCalculator.Calc(pos, raisedBase));
+            AddIfAny(list, PrestigeCalculator.Calc(pos, raisedBase));
+
+            var rate = input.Params.Bonus1749;
+            AddIfAny(list, ClassManagementCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(list, CabinetCalculator.Calc(pos, rate));
+            AddIfAny(list, ComputerMaintenanceCalculator.Calc(pos, rate));
+            AddIfAny(list, WebsiteCalculator.Calc(pos, rate));
+            AddIfAny(list, MentorCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(list, MilitaryRecordCalculator.Calc(pos, input.NormDays, input.WorkedDays));
+            AddIfAny(list, DisinfectantsCalculator.Calc(pos, input.Params.Disinfectants));
+            AddIfAny(list, ComplexityCalculator.Calc(pos));
         }
+
+        // Доплата до МЗП — остання з обчислюваних: тягне суму базових нарахувань до мінімалки.
+        // База порівняння = усе нараховане вище (оклад + надбавки), коеф = сумарні ставки працівника.
+        var countedEarnings = list.Sum(c => c.Amount);
+        var rateCoefficient = input.Positions.Sum(p => p.RateCount);
+        AddIfAny(list, MinimumWageCalculator.Calc(
+            input.Params.Mzp, rateCoefficient, countedEarnings, input.NormDays, input.WorkedDays));
 
         // Мануальні суми — на працівника за місяць (не на ставку).
         var m = input.Manual;

@@ -9,7 +9,8 @@ namespace PayrollCalc.Calculation;
 internal static class CalcFormat
 {
     /// <summary>
-    /// Число у вигляді тексту для формули: "4198.5", а не локальне "4198,5".
+    /// Число у вигляді тексту для формули: крапка-роздільник + без хвостових нулів
+    /// ("4198.5", "40", а не "4198,5" чи "40.00"). Впливає лише на текст формули, не на суми.
     /// </summary>
-    public static string Num(decimal value) => value.ToString(CultureInfo.InvariantCulture);
+    public static string Num(decimal value) => value.ToString("0.############", CultureInfo.InvariantCulture);
 }

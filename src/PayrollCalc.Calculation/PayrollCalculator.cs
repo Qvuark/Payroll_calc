@@ -43,9 +43,13 @@ public sealed class PayrollCalculator : IPayrollCalculator
         var list = new List<CalcComponent>();
 
         // Обчислювані надбавки — окремо по кожній ставці працівника.
+        // Порядок важливий: спершу оклад, далі надбавки що залежать від нього (№1749 тощо).
         foreach (var pos in input.Positions)
         {
-            AddIfAny(list, OkladCalculator.Calc(pos, input.NormDays, input.WorkedDays));
+            var oklad = OkladCalculator.Calc(pos, input.NormDays, input.WorkedDays);
+            list.Add(oklad);
+            AddIfAny(list, Bonus1749Calculator.Calc(pos, oklad.Amount, input.Params.Bonus1749));
+            AddIfAny(list, TitleCalculator.Calc(pos, oklad.Amount));
         }
 
         // Мануальні суми — на працівника за місяць (не на ставку).

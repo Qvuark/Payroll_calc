@@ -126,4 +126,8 @@ public record PositionCalcInput
     /// Заміни: кількість годин замін за місяць (з табеля).
     /// </summary>
     public decimal ReplacementHours { get; init; }
+    /// <summary>
+    /// Інклюзив: години в інклюзивних класах (відомість G). 0 → доплати немає.
+    /// </summary>
+    public decimal InclusiveHours { get; init; }
 }

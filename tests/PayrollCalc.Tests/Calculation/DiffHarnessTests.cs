@@ -89,6 +89,25 @@ public class DiffHarnessTests(ITestOutputHelper output)
         output.WriteLine($"Скирда: рушій={result.Gross}, еталон={etalonGross}, лишилось U(інклюзив)={inclusiveU}");
     }
 
+    [Fact]
+    public void Vdovchenko_r4_InclusiveMatchesEtalon()
+    {
+        // Вдовченко r4: вчитель, неповний місяць 17/22, інклюзив G=3.5.
+        // U = (8397+1749+звання15%)×20%/18×3.5 /22×17 = 391.1178.
+        var teacher = new PositionCalcInput
+        {
+            WorkerClass = WorkerClass.Pedagogical, PositionName = "Вчитель",
+            Oklad = 8397m, RateCount = 1m, PedHoursWeekly = 9m, TitlePct = 0.15m, InclusiveHours = 3.5m,
+        };
+        var result = new PayrollCalculator().Calculate(new CalcInput
+        {
+            EmployeeId = 1, FullName = "Вдовченко", Year = 2026, Month = 3,
+            NormDays = 22, WorkedDays = 17, Positions = [teacher], Manual = new ManualAdjustments(), Params = Params,
+        });
+
+        Component(result, "Інклюзивні класи").Should().BeApproximately(391.1178m, 0.001m);
+    }
+
     // --- helpers ---
 
     private static CalcResult Calc(params PositionCalcInput[] positions) => Calc(new ManualAdjustments(), positions);

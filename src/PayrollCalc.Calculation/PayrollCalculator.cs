@@ -81,6 +81,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
             AddIfAny(list, NotebookCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
             AddIfAny(list, Unfavorable2600Calculator.Calc(pos, input.Params.UnfavorableBase, input.NormDays, input.WorkedDays));
             AddIfAny(list, ReplacementCalculator.Calc(pos));
+            AddIfAny(list, InclusiveCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
         }
 
         // Доплата до МЗП — лише спеціалістам і МОП (Class 3/4); педагогам/адмін-педам не належить.

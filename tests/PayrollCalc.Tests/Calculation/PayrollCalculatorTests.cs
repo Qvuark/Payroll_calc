@@ -132,6 +132,15 @@ public class PayrollCalculatorTests
     }
 
     [Fact]
+    public void Teacher_BelowMinimum_NoTopUp_ClassNotEligible()
+    {
+        // Доплата до МЗП лише Class 3/4. Вчитель (Class 1) з мізерним навантаженням нижче мінімалки — без доплати.
+        var result = new PayrollCalculator().Calculate(Input(22, 22, Teacher(oklad: 8397m, hours: 1m)));
+
+        result.Earnings.Should().NotContain(e => e.Name == "Доплата до МЗП");
+    }
+
+    [Fact]
     public void Tenure_FromRaisedBase_OkladPlus1749PlusTitle()
     {
         // raisedBase = 4198.5 (оклад) + 1679.4 (1749) + 419.85 (звання 10%) = 6297.75

@@ -1,6 +1,7 @@
 using System.Globalization;
 using PayrollCalc.Calculation.Calculators;
 using PayrollCalc.Core.DTOs.Calculation;
+using PayrollCalc.Core.Entities.Enums;
 using PayrollCalc.Core.Interfaces;
 
 namespace PayrollCalc.Calculation;
@@ -71,12 +72,18 @@ public sealed class PayrollCalculator : IPayrollCalculator
             AddIfAny(list, ComplexityCalculator.Calc(pos));
         }
 
-        // Доплата до МЗП — остання з обчислюваних: тягне суму базових нарахувань до мінімалки.
-        // База порівняння = усе нараховане вище (оклад + надбавки), коеф = сумарні ставки працівника.
-        var countedEarnings = list.Sum(c => c.Amount);
-        var rateCoefficient = input.Positions.Sum(p => p.RateCount);
-        AddIfAny(list, MinimumWageCalculator.Calc(
-            input.Params.Mzp, rateCoefficient, countedEarnings, input.NormDays, input.WorkedDays));
+        // Доплата до МЗП — лише спеціалістам і МОП (Class 3/4); педагогам/адмін-педам не належить.
+        var eligibleForMinimum = input.Positions.All(p => p.WorkerClass is WorkerClass.Specialist or WorkerClass.MOP);
+        if (eligibleForMinimum)
+        {
+            // У мінімалку зараховуються оклад/вислуга/індексація; нічні й дезінфектанти платяться ПОНАД неї.
+            var countedEarnings = list
+                .Where(c => c.Name is not ("Дезінфікуючі засоби" or "Нічні"))
+                .Sum(c => c.Amount);
+            var rateCoefficient = input.Positions.Sum(p => p.RateCount);
+            AddIfAny(list, MinimumWageCalculator.Calc(
+                input.Params.Mzp, rateCoefficient, countedEarnings, input.NormDays, input.WorkedDays));
+        }
 
         // Мануальні суми — на працівника за місяць (не на ставку).
         var m = input.Manual;

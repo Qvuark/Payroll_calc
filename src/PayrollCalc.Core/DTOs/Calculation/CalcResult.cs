@@ -13,6 +13,14 @@ public record CalcResult
     public required int Year { get; init; }
     public required int Month { get; init; }
     /// <summary>
+    /// Норма робочих днів місяця (відомість — знаменник пропорції).
+    /// </summary>
+    public int NormDays { get; init; }
+    /// <summary>
+    /// Відпрацьовано днів (відомість C). За замовчуванням = норма.
+    /// </summary>
+    public decimal WorkedDays { get; init; }
+    /// <summary>
     /// Нарахування — кожна надбавка окремим компонентом (відповідає колонкам J:BB відомості).
     /// </summary>
     public required IReadOnlyList<CalcComponent> Earnings { get; init; }

@@ -1,3 +1,5 @@
+using PayrollCalc.Core.Entities.Enums;
+
 namespace PayrollCalc.Core.DTOs.Calculation;
 
 /// <summary>
@@ -9,4 +11,11 @@ namespace PayrollCalc.Core.DTOs.Calculation;
 /// <param name="Name">Назва рядка українською.</param>
 /// <param name="Amount">Сума (грн), повна точність.</param>
 /// <param name="Formula">Excel-формула з літеральними числами (з "=").</param>
-public record CalcComponent(string Name, decimal Amount, string Formula);
+public record CalcComponent(string Name, decimal Amount, string Formula)
+{
+    /// <summary>
+    /// Клас ставки, що породила компонент — щоб відомість клала оклад/№1749/звання/вислугу
+    /// у J-колонки (адмін/спец/МОП) чи N-колонки (педагог). null — рядок рівня працівника (МЗП, ручні).
+    /// </summary>
+    public WorkerClass? SourceClass { get; init; }
+}

@@ -28,6 +28,8 @@ public sealed class PayrollCalculator : IPayrollCalculator
             FullName = input.FullName,
             Year = input.Year,
             Month = input.Month,
+            NormDays = input.NormDays,
+            WorkedDays = input.WorkedDays,
             Earnings = earnings,
             Gross = gross,
             Deductions = deductions,
@@ -47,44 +49,50 @@ public sealed class PayrollCalculator : IPayrollCalculator
         // Порядок важливий: спершу оклад, далі надбавки що залежать від нього (№1749 тощо).
         foreach (var pos in input.Positions)
         {
+            // Збираємо надбавки ставки окремо, щоб у кінці позначити їх класом (для J/N-колонок відомості).
+            var posList = new List<CalcComponent>();
+
             var oklad = OkladCalculator.Calc(pos, input.NormDays, input.WorkedDays);
-            list.Add(oklad);
+            posList.Add(oklad);
 
             var bonus1749 = Bonus1749Calculator.Calc(pos, oklad.Amount, input.Params.Bonus1749);
-            AddIfAny(list, bonus1749);
+            AddIfAny(posList, bonus1749);
 
             var title = TitleCalculator.Calc(pos, oklad.Amount);
-            AddIfAny(list, title);
+            AddIfAny(posList, title);
 
             // Оклад з підвищенням — база похідних надбавок (вислуга, престиж...): оклад + №1749 + звання.
             var raisedBase = oklad.Amount + (bonus1749?.Amount ?? 0m) + (title?.Amount ?? 0m);
-            AddIfAny(list, TenureCalculator.Calc(pos, raisedBase));
-            AddIfAny(list, PrestigeCalculator.Calc(pos, raisedBase));
+            AddIfAny(posList, TenureCalculator.Calc(pos, raisedBase));
+            AddIfAny(posList, PrestigeCalculator.Calc(pos, raisedBase));
 
             var rate = input.Params.Bonus1749;
-            AddIfAny(list, ClassManagementCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
-            AddIfAny(list, CabinetCalculator.Calc(pos, rate));
-            AddIfAny(list, ComputerMaintenanceCalculator.Calc(pos, rate));
-            AddIfAny(list, WebsiteCalculator.Calc(pos, rate));
-            AddIfAny(list, MentorCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
-            AddIfAny(list, MilitaryRecordCalculator.Calc(pos, input.NormDays, input.WorkedDays));
-            AddIfAny(list, DisinfectantsCalculator.Calc(pos, input.Params.Disinfectants));
-            AddIfAny(list, ComplexityCalculator.Calc(pos));
+            AddIfAny(posList, ClassManagementCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, CabinetCalculator.Calc(pos, rate));
+            AddIfAny(posList, ComputerMaintenanceCalculator.Calc(pos, rate));
+            AddIfAny(posList, WebsiteCalculator.Calc(pos, rate));
+            AddIfAny(posList, MentorCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, MilitaryRecordCalculator.Calc(pos, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, DisinfectantsCalculator.Calc(pos, input.Params.Disinfectants));
+            AddIfAny(posList, ComplexityCalculator.Calc(pos));
 
             // Роль-специфічні надбавки від обчисленого окладу (бібліотекар/медсестра) + нічні (сторож).
-            AddIfAny(list, LibrarianTenureCalculator.Calc(pos, oklad.Amount));
-            AddIfAny(list, LibraryHeadCalculator.Calc(pos, oklad.Amount));
-            AddIfAny(list, TextbooksCalculator.Calc(pos, oklad.Amount));
-            AddIfAny(list, MedicTenureCalculator.Calc(pos, oklad.Amount));
-            AddIfAny(list, NightShiftCalculator.Calc(pos, input.Params.NightShifts));
+            AddIfAny(posList, LibrarianTenureCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(posList, LibraryHeadCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(posList, TextbooksCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(posList, MedicTenureCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(posList, NightShiftCalculator.Calc(pos, input.Params.NightShifts));
 
-            AddIfAny(list, NotebookCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
-            AddIfAny(list, Unfavorable2600Calculator.Calc(pos, input.Params.UnfavorableBase, input.NormDays, input.WorkedDays));
-            AddIfAny(list, ReplacementCalculator.Calc(pos));
-            AddIfAny(list, InclusiveCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, NotebookCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, Unfavorable2600Calculator.Calc(pos, input.Params.UnfavorableBase, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, ReplacementCalculator.Calc(pos));
+            AddIfAny(posList, InclusiveCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
 
             // Позаурочна робота (ГПД/ПКР) — власний блок із кількох надбавок.
-            list.AddRange(ExtendedActivityCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            posList.AddRange(ExtendedActivityCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+
+            // Позначаємо всі надбавки ставки її класом — відомість за ним обирає J- чи N-колонку.
+            list.AddRange(posList.Select(c => c with { SourceClass = pos.WorkerClass }));
         }
 
         // Доплата до МЗП — лише спеціалістам і МОП (Class 3/4); педагогам/адмін-педам не належить.

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PayrollCalc.API.Application.Calculation;
+using PayrollCalc.Documents.Export.Vedomost;
 
 namespace PayrollCalc.API.Controllers;
 
@@ -31,5 +32,19 @@ public class CalculationsController(PayrollCalculationService service) : Control
     {
         var results = await service.RunAllAsync(year, month, ct);
         return Ok(results);
+    }
+
+    /// <summary>
+    /// Відомість (xlsx) за місяць: рахує всіх активних і віддає файл як еталонний бланк.
+    /// </summary>
+    [HttpGet("vedomost")]
+    public async Task<IActionResult> Vedomost([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+    {
+        var results = await service.RunAllAsync(year, month, ct);
+        var bytes = new VedomostExporter().Build(results, year, month);
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"vedomost_{year}_{month:00}.xlsx");
     }
 }

@@ -26,10 +26,12 @@ public sealed class PayrollCalculator : IPayrollCalculator
         {
             EmployeeId = input.EmployeeId,
             FullName = input.FullName,
+            TaxId = input.TaxId,
             Year = input.Year,
             Month = input.Month,
             NormDays = input.NormDays,
             WorkedDays = input.WorkedDays,
+            Positions = input.Positions,
             Earnings = earnings,
             Gross = gross,
             Deductions = deductions,
@@ -163,10 +165,11 @@ public sealed class PayrollCalculator : IPayrollCalculator
     private static string Pct(decimal baseAmount, decimal rate)
         => $"={Num(baseAmount)}*{Num(rate * 100)}%";
     /// <summary>
-    /// Число у формулі — завжди з крапкою (InvariantCulture), щоб Excel не плутав з комою-роздільником.
+    /// Число у формулі — крапка-роздільник (InvariantCulture) і без хвостових нулів
+    /// ("53171.2125", "18", а не "53171.21250", "18.00"), щоб формула була чиста.
     /// </summary>
     private static string Num(decimal value)
-        => value.ToString(CultureInfo.InvariantCulture);
+        => value.ToString("0.############", CultureInfo.InvariantCulture);
     /// <summary>
     /// Знімок параметрів розрахунку (ключі = ключі SystemParam) для збереження й аудиту.
     /// </summary>

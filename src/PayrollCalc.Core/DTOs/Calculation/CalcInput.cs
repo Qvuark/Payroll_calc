@@ -9,6 +9,10 @@ public record CalcInput
 {
     public required int EmployeeId { get; init; }
     public required string FullName { get; init; }
+    /// <summary>
+    /// ІПН працівника (для розрахункового листа). Порожній — не вказано.
+    /// </summary>
+    public string TaxId { get; init; } = "";
     public required int Year { get; init; }
     public required int Month { get; init; }
     /// <summary>

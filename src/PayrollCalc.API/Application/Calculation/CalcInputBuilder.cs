@@ -50,6 +50,7 @@ public class CalcInputBuilder(AppDbContext db)
         {
             EmployeeId = employee.Id,
             FullName = employee.FullName,
+            TaxId = employee.TaxId,
             Year = year,
             Month = month,
             NormDays = calendar.WorkDays,

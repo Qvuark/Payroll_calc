@@ -13,9 +13,6 @@ public sealed class VedomostExporter
 {
     private const string Font = "Times New Roman";
     private const string MoneyFormat = "0.00";
-    private static readonly string[] MonthsUk =
-        ["січень", "лютий", "березень", "квітень", "травень", "червень",
-         "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"];
 
     public byte[] Build(IReadOnlyList<CalcResult> results, int year, int month)
     {
@@ -47,7 +44,7 @@ public sealed class VedomostExporter
     private static void WriteTitle(IXLWorksheet ws, int year, int month)
     {
         var cell = ws.Cell("B1");
-        cell.Value = $"Розрахунково платіжна відомість нарахування зарплати за {MonthsUk[month - 1]} {year}р.";
+        cell.Value = $"Розрахунково платіжна відомість нарахування зарплати за {ExportText.MonthUk(month)} {year}р.";
         cell.Style.Font.FontName = Font;
         cell.Style.Font.FontSize = 12;
         cell.Style.Font.Bold = true;

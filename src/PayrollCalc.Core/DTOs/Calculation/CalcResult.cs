@@ -10,6 +10,10 @@ public record CalcResult
 {
     public required int EmployeeId { get; init; }
     public required string FullName { get; init; }
+    /// <summary>
+    /// ІПН працівника (шапка розрахункового листа).
+    /// </summary>
+    public string TaxId { get; init; } = "";
     public required int Year { get; init; }
     public required int Month { get; init; }
     /// <summary>
@@ -20,6 +24,10 @@ public record CalcResult
     /// Відпрацьовано днів (відомість C). За замовчуванням = норма.
     /// </summary>
     public decimal WorkedDays { get; init; }
+    /// <summary>
+    /// Ставки працівника (посада, клас, навантаження) — для шапки розрахункового листа.
+    /// </summary>
+    public IReadOnlyList<PositionCalcInput> Positions { get; init; } = [];
     /// <summary>
     /// Нарахування — кожна надбавка окремим компонентом (відповідає колонкам J:BB відомості).
     /// </summary>

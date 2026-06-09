@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PayrollCalc.API.Application.Calculation;
+using PayrollCalc.Documents.Export.Payslip;
 using PayrollCalc.Documents.Export.Vedomost;
 
 namespace PayrollCalc.API.Controllers;
@@ -46,5 +47,19 @@ public class CalculationsController(PayrollCalculationService service) : Control
             bytes,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"vedomost_{year}_{month:00}.xlsx");
+    }
+
+    /// <summary>
+    /// Розрахункові листи (xlsx) за місяць: по дві платіжки в ряд для всіх активних.
+    /// </summary>
+    [HttpGet("payslips")]
+    public async Task<IActionResult> Payslips([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+    {
+        var results = await service.RunAllAsync(year, month, ct);
+        var bytes = new PayslipExporter().Build(results, year, month);
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"payslips_{year}_{month:00}.xlsx");
     }
 }

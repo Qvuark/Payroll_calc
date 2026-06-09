@@ -48,8 +48,9 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
     }
 
     /// <summary>
-    /// Upsert зведення за (EmployeeId, Year, Month): gross/податки/на руки + знімок параметрів + час.
-    /// Повний покомпонентний розклад у БД не лягає (для відомості/листів його дає рушій наживо).
+    /// Upsert зведення за (EmployeeId, Year, Month): gross/податки/на руки + ручні суми + знімок параметрів + час.
+    /// Повний покомпонентний розклад надбавок у БД не лягає (для відомості/листів його дає рушій наживо);
+    /// ручні суми зберігаємо завжди — це аудит того, що бухгалтер вписала в цей розрахунок.
     /// </summary>
     private async Task PersistAsync(CalcResult r, CancellationToken ct)
     {
@@ -66,6 +67,13 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
         calc.Vz = Amount(r.Deductions, "Військовий збір");
         calc.UnionFee = Amount(r.Deductions, "Профспілковий внесок");
         calc.NetSalary = r.NetPay;
+
+        // Ручні суми — кожна у своє поле; ManualTotal = решта ручних без власної колонки (премія+перерахунок).
+        calc.SickEmployer = Amount(r.Earnings, "Лікарняні (роботодавець)");
+        calc.SickFss = Amount(r.Earnings, "Лікарняні (ФСС)");
+        calc.VacationAmount = Amount(r.Earnings, "Відпускні");
+        calc.ManualTotal = Amount(r.Earnings, "Премія") + Amount(r.Earnings, "Перерахунок");
+
         calc.ParamsSnapshot = JsonSerializer.Serialize(r.ParamsSnapshot);
         calc.CalculatedAt = DateTime.UtcNow;
         calc.Status = CalculationStatus.Draft;

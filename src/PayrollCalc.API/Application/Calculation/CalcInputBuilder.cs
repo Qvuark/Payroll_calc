@@ -163,8 +163,12 @@ public class CalcInputBuilder(AppDbContext db)
         ? new ManualAdjustments()
         : new ManualAdjustments
         {
+            Bonus = t.Bonus,
             Advance = t.Advance,
-            EnforcementOrders = t.EnforcementOrders,
+            SickEmployer = t.SickEmployer,
+            SickFss = t.SickFss,
             Recalculation = t.Recalculation,
+            Vacation = t.Vacation,
+            EnforcementOrders = t.EnforcementOrders,
         };
 }

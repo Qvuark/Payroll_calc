@@ -112,6 +112,33 @@ public class PayrollCalculatorTests
     }
 
     [Fact]
+    public void Manual_AllAmounts_NamedComponents_SickFssReducesUnion()
+    {
+        // Усі 7 ручних сум разом. Імена компонентів = контракт із PersistAsync (він шукає їх по цих рядках).
+        var input = Input(
+            normDays: 22,
+            workedDays: 22,
+            positions: [Mop(oklad: 10000m)],
+            manual: new ManualAdjustments
+            {
+                Bonus = 5000m, Vacation = 3000m, SickEmployer = 1000m, SickFss = 2000m,
+                Recalculation = 500m, EnforcementOrders = 700m, Advance = 8000m,
+            });
+
+        var result = new PayrollCalculator().Calculate(input);
+
+        result.Earnings.Should().Contain(e => e.Name == "Відпускні" && e.Amount == 3000m);
+        result.Earnings.Should().Contain(e => e.Name == "Лікарняні (роботодавець)" && e.Amount == 1000m);
+        result.Earnings.Should().Contain(e => e.Name == "Лікарняні (ФСС)" && e.Amount == 2000m);
+        result.Earnings.Should().Contain(e => e.Name == "Перерахунок" && e.Amount == 500m);
+
+        result.Gross.Should().Be(21500m);                // 10000 + 5000 + 3000 + 1000 + 2000 + 500
+
+        // Профспілка = (gross − лікарняні ФСС) × 1% = (21500 − 2000) × 1%.
+        result.Deductions.Single(d => d.Name == "Профспілковий внесок").Amount.Should().Be(195m);
+    }
+
+    [Fact]
     public void LowPaid_ToppedUpToMinimumWage()
     {
         // МОП з окладом 8000 < МЗП 8647 → доплата 647 тягне gross до мінімалки.

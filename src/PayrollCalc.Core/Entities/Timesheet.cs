@@ -20,4 +20,20 @@ public class Timesheet
     public decimal EnforcementOrders { get; set; } = decimal.Zero;
     public decimal AnnualBonus { get; set; } = decimal.Zero;
     public decimal OtherManual { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Премія за місяць (відомість BB). Разова сума, рушій не рахує — вписує бухгалтер.
+    /// </summary>
+    public decimal Bonus { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Лікарняні за рахунок роботодавця, перші 5 днів (відомість AL).
+    /// </summary>
+    public decimal SickEmployer { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Лікарняні за рахунок ФСС (відомість AM). Зменшує базу профспілкового внеску.
+    /// </summary>
+    public decimal SickFss { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Відпускні (відомість AZ).
+    /// </summary>
+    public decimal Vacation { get; set; } = decimal.Zero;
 }

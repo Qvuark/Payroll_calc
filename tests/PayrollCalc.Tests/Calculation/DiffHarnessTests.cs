@@ -108,7 +108,53 @@ public class DiffHarnessTests(ITestOutputHelper output)
         Component(result, "Інклюзивні класи").Should().BeApproximately(391.1178m, 0.001m);
     }
 
+    [Fact]
+    public void Pkr_r20_BlockMatchesEtalon()
+    {
+        // Сухенко: ПКР AF=6836/18*2, AG=×40%, AH=(AF+AG)×30%, AI=(AF+AG)×20%.
+        var pos = Teacher() with
+        {
+            ExtendedActivity = new ExtendedActivityInput
+            {
+                Kind = ExtendedActivityKind.Pkr, Tariff = 6836m, Divisor = 18m, Hours = 2m,
+                TenurePct = 0.30m, ProrateByDays = true,
+            },
+        };
+        var result = Calc(pos);
+
+        Component(result, "За ПКР").Should().BeApproximately(759.5556m, 0.001m);
+        Component(result, "Підвищення №22").Should().BeApproximately(303.8222m, 0.001m);
+        Component(result, "Вислуга ГПД/ПКР").Should().BeApproximately(319.0133m, 0.001m);
+        Component(result, "Престижність ГПД/ПКР").Should().BeApproximately(212.6756m, 0.001m);
+    }
+
+    [Fact]
+    public void Gpd_r27_BlockMatchesEtalon()
+    {
+        // Троцюк: ГПД AE=8397/4, AG=×40%, AH=(AE+AG)×30%, AI=(AE+AG)×20%.
+        var pos = Teacher() with
+        {
+            ExtendedActivity = new ExtendedActivityInput
+            {
+                Kind = ExtendedActivityKind.Gpd, Tariff = 8397m, Divisor = 4m, Hours = 1m,
+                TenurePct = 0.30m, ProrateByDays = false,
+            },
+        };
+        var result = Calc(pos);
+
+        Component(result, "За ГПД").Should().Be(2099.25m);
+        Component(result, "Підвищення №22").Should().Be(839.70m);
+        Component(result, "Вислуга ГПД/ПКР").Should().Be(881.685m);
+        Component(result, "Престижність ГПД/ПКР").Should().Be(587.79m);
+    }
+
     // --- helpers ---
+
+    // Гола педставка без навантаження: оклад=0, лишаються тільки надбавки блоку що перевіряємо.
+    private static PositionCalcInput Teacher() => new()
+    {
+        WorkerClass = WorkerClass.Pedagogical, PositionName = "Вчитель", Oklad = 8397m, RateCount = 1m,
+    };
 
     private static CalcResult Calc(params PositionCalcInput[] positions) => Calc(new ManualAdjustments(), positions);
 

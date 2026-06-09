@@ -130,4 +130,8 @@ public record PositionCalcInput
     /// Інклюзив: години в інклюзивних класах (відомість G). 0 → доплати немає.
     /// </summary>
     public decimal InclusiveHours { get; init; }
+    /// <summary>
+    /// Позаурочна робота (ГПД/ПКР) з власним блоком надбавок (відомість AE/AF). null — немає.
+    /// </summary>
+    public ExtendedActivityInput? ExtendedActivity { get; init; }
 }

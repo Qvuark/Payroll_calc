@@ -26,6 +26,8 @@ public class CalcInputBuilder(AppDbContext db)
             .Include(e => e.Positions).ThenInclude(p => p.Workload)
             .Include(e => e.Positions).ThenInclude(p => p.Admin)
             .Include(e => e.Positions).ThenInclude(p => p.NonPedagogical)
+            .Include(e => e.Positions).ThenInclude(p => p.Gpd).ThenInclude(g => g!.TariffGrade)
+            .Include(e => e.Positions).ThenInclude(p => p.Pkr).ThenInclude(k => k!.TariffGrade)
             .FirstOrDefaultAsync(e => e.Id == employeeId, ct);
         if (employee is null)
             return null;
@@ -77,6 +79,9 @@ public class CalcInputBuilder(AppDbContext db)
         var admin = ep.Admin;
         var nonPed = ep.NonPedagogical;
         var workload = ep.Workload;
+        // Вислуга фіксована за стажем: педагогам — пед.стаж, спеціалістам/МОП — загальний.
+        // Та сама ставка йде і в основну вислугу, і в блок ГПД/ПКР.
+        var tenurePct = TenureRate.ForYears(TenureYears(workerClass, employee));
 
         return new PositionCalcInput
         {
@@ -87,8 +92,7 @@ public class CalcInputBuilder(AppDbContext db)
             RateCount = ep.RateCount,
             DirectorPct = ep.DirectorPct,
             TitlePct = ep.TitleType?.Pct ?? 0m,
-            // Вислуга фіксована за стажем: педагогам — пед.стаж, спеціалістам/МОП — загальний.
-            TenurePct = TenureRate.ForYears(TenureYears(workerClass, employee)),
+            TenurePct = tenurePct,
             PrestigePct = ep.PrestigeBonusPct ?? 0m,
             ComplexityPct = ep.ComplexityBonusPct ?? 0m,
             PedHoursWeekly = workload is null ? 0m : workload.Hours1To4 + workload.Hours5To9 + workload.Hours10To11,
@@ -106,7 +110,45 @@ public class CalcInputBuilder(AppDbContext db)
             IsHourly = isHourly,
             NightHours = isHourly ? timesheet?.NightHours ?? 0m : 0m,
             WorkedHours = isHourly ? timesheet?.WorkedHours ?? 0m : 0m,
+            ExtendedActivity = MapExtendedActivity(ep, tenurePct),
         };
+    }
+
+    /// <summary>
+    /// Тижнева норма годин ГПД — дільник бази (база = оклад/норма×години).
+    /// ⚠️ Не підтверджено: у відомості ГПД рахували неоднаково (оклад/4 та оклад/20×20). Уточнити в бухгалтера.
+    /// </summary>
+    private const decimal GpdHourNorm = 30m;
+
+    /// <summary>
+    /// Блок позаурочної роботи (ГПД/ПКР) ставки. Пріоритет ПКР, далі ГПД; null — немає жодного.
+    /// База: ПКР — тариф/18×год (проре по днях); ГПД — оклад/норма×год.
+    /// </summary>
+    private static ExtendedActivityInput? MapExtendedActivity(EmployeePosition ep, decimal tenurePct)
+    {
+        if (ep.Pkr is { } pkr)
+            return new ExtendedActivityInput
+            {
+                Kind = ExtendedActivityKind.Pkr,
+                Tariff = pkr.TariffGrade!.MonthlyRate,
+                Divisor = 18m,
+                Hours = pkr.PkrHours,
+                TenurePct = tenurePct,
+                ProrateByDays = true,
+            };
+
+        if (ep.Gpd is { } gpd)
+            return new ExtendedActivityInput
+            {
+                Kind = ExtendedActivityKind.Gpd,
+                Tariff = gpd.TariffGrade!.MonthlyRate,
+                Divisor = GpdHourNorm,
+                Hours = gpd.GpdHours,
+                TenurePct = tenurePct,
+                ProrateByDays = true,
+            };
+
+        return null;
     }
 
     /// <summary>

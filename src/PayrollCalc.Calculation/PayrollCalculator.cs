@@ -70,6 +70,13 @@ public sealed class PayrollCalculator : IPayrollCalculator
             AddIfAny(list, MilitaryRecordCalculator.Calc(pos, input.NormDays, input.WorkedDays));
             AddIfAny(list, DisinfectantsCalculator.Calc(pos, input.Params.Disinfectants));
             AddIfAny(list, ComplexityCalculator.Calc(pos));
+
+            // Роль-специфічні надбавки від обчисленого окладу (бібліотекар/медсестра) + нічні (сторож).
+            AddIfAny(list, LibrarianTenureCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(list, LibraryHeadCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(list, TextbooksCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(list, MedicTenureCalculator.Calc(pos, oklad.Amount));
+            AddIfAny(list, NightShiftCalculator.Calc(pos, input.Params.NightShifts));
         }
 
         // Доплата до МЗП — лише спеціалістам і МОП (Class 3/4); педагогам/адмін-педам не належить.
@@ -78,7 +85,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
         {
             // У мінімалку зараховуються оклад/вислуга/індексація; нічні й дезінфектанти платяться ПОНАД неї.
             var countedEarnings = list
-                .Where(c => c.Name is not ("Дезінфікуючі засоби" or "Нічні"))
+                .Where(c => c.Name is not ("Дезінфікуючі засоби" or "Доплата за нічні"))
                 .Sum(c => c.Amount);
             var rateCoefficient = input.Positions.Sum(p => p.RateCount);
             AddIfAny(list, MinimumWageCalculator.Calc(

@@ -175,6 +175,40 @@ public class PayrollCalculatorTests
         cm.Formula.Should().Be("=11755.8*20%");
     }
 
+    [Fact]
+    public void Librarian_TenureHeadTextbooks_FromOklad()
+    {
+        // Костенко r58 еталон: J=7356, V=J×30%, W=J×50%, X=J×8%
+        var pos = Specialist(oklad: 7356m) with { HasLibrarianTenure = true, IsLibraryHead = true, HasTextbooks = true };
+        var result = new PayrollCalculator().Calculate(Input(21, 21, pos));
+
+        result.Earnings.Single(e => e.Name == "Вислуга бібліотекаря").Amount.Should().Be(2206.8m);
+        result.Earnings.Single(e => e.Name == "Завідування бібліотекою").Amount.Should().Be(3678m);
+        result.Earnings.Single(e => e.Name == "За підручники").Amount.Should().Be(588.48m);
+    }
+
+    [Fact]
+    public void Medic_Tenure_ThirtyPercentOfOklad()
+    {
+        // Суховіцька r57 еталон: J=6003, Y=J×30%
+        var pos = Specialist(oklad: 6003m) with { HasMedicTenure = true };
+        var result = new PayrollCalculator().Calculate(Input(23, 23, pos));
+
+        result.Earnings.Single(e => e.Name == "Вислуга медпрацівника").Amount.Should().Be(1800.9m);
+    }
+
+    [Fact]
+    public void Guard_NightShift_TariffOver176()
+    {
+        // Ковальов r75 еталон: =3782/176*122*40%
+        var pos = Mop(oklad: 3782m) with { NightHours = 122m };
+        var result = new PayrollCalculator().Calculate(Input(22, 22, pos));
+
+        var night = result.Earnings.Single(e => e.Name == "Доплата за нічні");
+        night.Amount.Should().BeApproximately(1048.65m, 0.01m);   // 3782/176×122×40%
+        night.Formula.Should().Be("=3782/176*122*40%");
+    }
+
     // --- helpers: збирають мінімальний вхід, щоб тіло тесту лишалось коротким ---
 
     private static PositionCalcInput Teacher(decimal oklad, decimal hours, decimal titlePct = 0m) => new()
@@ -191,6 +225,14 @@ public class PayrollCalculatorTests
     {
         WorkerClass = WorkerClass.MOP,
         PositionName = "Прибиральниця",
+        Oklad = oklad,
+        RateCount = 1m,
+    };
+
+    private static PositionCalcInput Specialist(decimal oklad) => new()
+    {
+        WorkerClass = WorkerClass.Specialist,
+        PositionName = "Спеціаліст",
         Oklad = oklad,
         RateCount = 1m,
     };

@@ -78,4 +78,24 @@ public record PositionCalcInput
     /// Складність і напруженість: % надбавки від окладу (дир/бухгалтери ~50%). 0 якщо немає.
     /// </summary>
     public decimal ComplexityPct { get; init; }
+    /// <summary>
+    /// Вислуга бібліотекаря — доплата 30% від окладу (відомість V).
+    /// </summary>
+    public bool HasLibrarianTenure { get; init; }
+    /// <summary>
+    /// Завідування бібліотекою — доплата 50% від окладу (відомість W).
+    /// </summary>
+    public bool IsLibraryHead { get; init; }
+    /// <summary>
+    /// За підручники — доплата 8% від окладу (відомість X).
+    /// </summary>
+    public bool HasTextbooks { get; init; }
+    /// <summary>
+    /// Вислуга медпрацівника — доплата 30% від окладу (відомість Y).
+    /// </summary>
+    public bool HasMedicTenure { get; init; }
+    /// <summary>
+    /// Нічні години за місяць (відомість AO, сторож). Оплата = тариф/176×години×40%.
+    /// </summary>
+    public decimal NightHours { get; init; }
 }

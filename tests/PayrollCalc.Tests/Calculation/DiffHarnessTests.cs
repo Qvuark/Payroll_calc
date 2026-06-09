@@ -68,18 +68,25 @@ public class DiffHarnessTests(ITestOutputHelper output)
         {
             WorkerClass = WorkerClass.Pedagogical, PositionName = "Вчитель",
             Oklad = 8397m, RateCount = 1m, PedHoursWeekly = 9m, TitlePct = 0.15m, TenurePct = 0.30m, PrestigePct = 0.20m,
+            NotebookHours = 8m, NotebookPct = 0.15m,                          // S зошити
+            HasUnfavorable2600 = true,                                       // AY 2600
+            ReplacementRate = 256.2m, ReplacementHours = 8m,                 // AW заміни
         };
         var result = Calc(new ManualAdjustments { Bonus = 15615m }, director, teacher);
 
         // Престижність = (J+K)×25% + (N+O+P)×20% — головна перевірка по-позиційної логіки.
         Component(result, "Престижність").Should().Be(4945.035m);
         Component(result, "Складність і напруженість").Should().Be(5205m);
+        Component(result, "За перевірку зошитів").Should().Be(867.69m);      // S
+        Component(result, "Несприятливі умови (2600)").Should().Be(3900m);   // AY
+        Component(result, "Заміни").Should().Be(2049.6m);                    // AW
 
+        // Лишається тільки U інклюзив 2914.8 — аномальний (директорський варіант (J+K)×20%), на diff-тюнінг.
         const decimal etalonGross = 62903.3025m;
-        const decimal unimplementedTail = 867.69m + 2914.8m + 2049.6m + 3900m;   // S+U+AW+AY
-        result.Gross.Should().Be(etalonGross - unimplementedTail);               // 53171.2125
+        const decimal inclusiveU = 2914.8m;
+        result.Gross.Should().Be(etalonGross - inclusiveU);                  // 59988.5025
 
-        output.WriteLine($"Скирда: рушій={result.Gross}, еталон={etalonGross}, хвіст(S/U/AW/AY)={unimplementedTail}");
+        output.WriteLine($"Скирда: рушій={result.Gross}, еталон={etalonGross}, лишилось U(інклюзив)={inclusiveU}");
     }
 
     // --- helpers ---

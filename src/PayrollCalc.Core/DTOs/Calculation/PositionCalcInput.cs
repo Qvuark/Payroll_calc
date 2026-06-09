@@ -106,4 +106,24 @@ public record PositionCalcInput
     /// Відпрацьовані години за місяць (відомість D) — база окладу погодинної посади.
     /// </summary>
     public decimal WorkedHours { get; init; }
+    /// <summary>
+    /// Зошити: години перевірки зошитів (відомість S). 0 → доплати немає.
+    /// </summary>
+    public decimal NotebookHours { get; init; }
+    /// <summary>
+    /// Зошити: % за перевірку (NotebookRate: 10/15/20% за предметом).
+    /// </summary>
+    public decimal NotebookPct { get; init; }
+    /// <summary>
+    /// Доплата 2600 за роботу в несприятливих умовах (відомість AY, педагоги).
+    /// </summary>
+    public bool HasUnfavorable2600 { get; init; }
+    /// <summary>
+    /// Заміни: ставка за годину заміни (відомість AW) — вводиться вручну (precomputed).
+    /// </summary>
+    public decimal ReplacementRate { get; init; }
+    /// <summary>
+    /// Заміни: кількість годин замін за місяць (з табеля).
+    /// </summary>
+    public decimal ReplacementHours { get; init; }
 }

@@ -77,6 +77,10 @@ public sealed class PayrollCalculator : IPayrollCalculator
             AddIfAny(list, TextbooksCalculator.Calc(pos, oklad.Amount));
             AddIfAny(list, MedicTenureCalculator.Calc(pos, oklad.Amount));
             AddIfAny(list, NightShiftCalculator.Calc(pos, input.Params.NightShifts));
+
+            AddIfAny(list, NotebookCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(list, Unfavorable2600Calculator.Calc(pos, input.Params.UnfavorableBase, input.NormDays, input.WorkedDays));
+            AddIfAny(list, ReplacementCalculator.Calc(pos));
         }
 
         // Доплата до МЗП — лише спеціалістам і МОП (Class 3/4); педагогам/адмін-педам не належить.

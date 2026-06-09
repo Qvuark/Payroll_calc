@@ -209,6 +209,26 @@ public class PayrollCalculatorTests
         night.Formula.Should().Be("=3782/176*122*40%");
     }
 
+    [Fact]
+    public void Guard_Hourly_OkladAndMinimumByHours()
+    {
+        // Шамрай r76: погодинний сторож. J=3782/176×187, МЗП=8647/176×187, нічні=3782/176×126×40%.
+        var pos = Mop(oklad: 3782m) with { IsHourly = true, WorkedHours = 187m, NightHours = 126m };
+        var result = new PayrollCalculator().Calculate(Input(22, 22, pos));
+
+        // decimal-хвіст від ділення (3782/176) — норма при «без проміжного округлення», ріжеться на виводі.
+        var oklad = result.Earnings.Single(e => e.Name == "Оклад");
+        oklad.Amount.Should().BeApproximately(4018.375m, 0.0001m);   // 3782/176×187
+        oklad.Formula.Should().Be("=3782/176*187");
+
+        var mzp = result.Earnings.Single(e => e.Name == "Доплата до МЗП");
+        mzp.Amount.Should().BeApproximately(5169.0625m, 0.0001m);    // 8647/176×187 − оклад
+        mzp.Formula.Should().Be("=8647/176*187-4018.375");
+
+        result.Earnings.Single(e => e.Name == "Доплата за нічні").Amount
+            .Should().BeApproximately(1083.03m, 0.01m);
+    }
+
     // --- helpers: збирають мінімальний вхід, щоб тіло тесту лишалось коротким ---
 
     private static PositionCalcInput Teacher(decimal oklad, decimal hours, decimal titlePct = 0m) => new()

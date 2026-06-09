@@ -98,4 +98,12 @@ public record PositionCalcInput
     /// Нічні години за місяць (відомість AO, сторож). Оплата = тариф/176×години×40%.
     /// </summary>
     public decimal NightHours { get; init; }
+    /// <summary>
+    /// Погодинна посада (сторож): оклад і мінімалка рахуються від відпрацьованих годин, не днів.
+    /// </summary>
+    public bool IsHourly { get; init; }
+    /// <summary>
+    /// Відпрацьовані години за місяць (відомість D) — база окладу погодинної посади.
+    /// </summary>
+    public decimal WorkedHours { get; init; }
 }

@@ -15,8 +15,19 @@ public static class OkladCalculator
     /// Тижнева норма педагогічних годин на одну ставку вчителя (дільник погодинного окладу).
     /// </summary>
     private const int TeacherHourNorm = 18;
+    /// <summary>
+    /// Місячна норма годин для погодинних посад (сторож) — дільник погодинної ставки.
+    /// </summary>
+    private const int HourlyMonthNorm = 176;
     public static CalcComponent Calc(PositionCalcInput pos, int normDays, decimal workedDays)
     {
+        // Погодинна посада (сторож): оклад = тариф/176×години, без пропорції за дні (години її враховують).
+        if (pos.IsHourly)
+        {
+            var hourlyAmount = pos.Oklad / HourlyMonthNorm * pos.WorkedHours;
+            return new CalcComponent("Оклад", hourlyAmount, $"={Num(pos.Oklad)}/{HourlyMonthNorm}*{Num(pos.WorkedHours)}");
+        }
+
         var (amount, formula) = pos.WorkerClass == WorkerClass.Pedagogical
             ? CalcN(pos)
             : CalcJ(pos);

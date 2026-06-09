@@ -87,9 +87,8 @@ public sealed class PayrollCalculator : IPayrollCalculator
             var countedEarnings = list
                 .Where(c => c.Name is not ("Дезінфікуючі засоби" or "Доплата за нічні"))
                 .Sum(c => c.Amount);
-            var rateCoefficient = input.Positions.Sum(p => p.RateCount);
             AddIfAny(list, MinimumWageCalculator.Calc(
-                input.Params.Mzp, rateCoefficient, countedEarnings, input.NormDays, input.WorkedDays));
+                input.Params.Mzp, input.Positions, countedEarnings, input.NormDays, input.WorkedDays));
         }
 
         // Мануальні суми — на працівника за місяць (не на ставку).

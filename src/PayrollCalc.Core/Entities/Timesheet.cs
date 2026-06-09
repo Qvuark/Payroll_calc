@@ -8,6 +8,10 @@ public class Timesheet
     public int Year { get; set; }
     public int Month { get; set; }
     public decimal WorkedDays { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Відпрацьовані години за місяць (відомість D) — для погодинних посад (сторож). 0 у денних.
+    /// </summary>
+    public decimal WorkedHours { get; set; } = decimal.Zero;
     public decimal NightHours { get; set; } = decimal.Zero;
     public decimal HolidayAmount { get; set; } = decimal.Zero;
     public decimal ReplacementHours { get; set; } = decimal.Zero;

@@ -5,30 +5,51 @@ namespace PayrollCalc.Calculation.Calculators;
 
 /// <summary>
 /// Доплата до мінімальної зарплати (відомість AK) — витягує низькооплачуваних до МЗП.
-/// Доплата = МЗП×коеф_ставок[×пропорція] − уже нараховане, що зараховується в мінімалку.
-/// Якщо нараховане вже ≥ мінімалки → доплати немає (null). Рахується ОСТАННЬОЮ з нарахувань.
+/// Поріг рахується по кожній ставці окремо: денна = МЗП×ставки[×дні/норма], погодинна = МЗП/176×години.
+/// Доплата = сума порогів − уже нараховане, що зараховується. ≥ порога → доплати немає (null).
 /// </summary>
 public static class MinimumWageCalculator
 {
+    private const int HourlyMonthNorm = 176;
+
     /// <param name="mzp">Мінімальна зарплата на повну ставку (SystemParams, 8647).</param>
-    /// <param name="rateCoefficient">Сумарна кількість ставок працівника (коеф: 1, 0.5, 1.5).</param>
-    /// <param name="countedEarnings">Сума нарахувань, що зараховуються в мінімалку (оклад + основні надбавки).</param>
+    /// <param name="positions">Ставки працівника — кожна дає свій поріг (денний чи погодинний).</param>
+    /// <param name="countedEarnings">Сума нарахувань, що зараховуються в мінімалку.</param>
     public static CalcComponent? Calc(
         decimal mzp,
-        decimal rateCoefficient,
+        IReadOnlyList<PositionCalcInput> positions,
         decimal countedEarnings,
         int normDays,
         decimal workedDays)
     {
-        var threshold = mzp * rateCoefficient;
-        var formula = rateCoefficient == 1m ? $"={Num(mzp)}" : $"={Num(mzp)}*{Num(rateCoefficient)}";
-        (threshold, formula) = Prorate(threshold, formula, normDays, workedDays);
+        decimal threshold = 0m;
+        var parts = new List<string>();
+        foreach (var pos in positions)
+        {
+            if (pos.IsHourly)
+            {
+                threshold += mzp / HourlyMonthNorm * pos.WorkedHours;
+                parts.Add($"{Num(mzp)}/{HourlyMonthNorm}*{Num(pos.WorkedHours)}");
+            }
+            else
+            {
+                var part = mzp * pos.RateCount;
+                var partFormula = pos.RateCount == 1m ? Num(mzp) : $"{Num(mzp)}*{Num(pos.RateCount)}";
+                if (workedDays != normDays)
+                {
+                    part = part * workedDays / normDays;
+                    partFormula += $"/{Num(normDays)}*{Num(workedDays)}";
+                }
+                threshold += part;
+                parts.Add(partFormula);
+            }
+        }
 
         var topUp = threshold - countedEarnings;
         if (topUp <= 0)
             return null;
 
-        formula += $"-{Num(countedEarnings)}";
+        var formula = "=" + string.Join("+", parts) + $"-{Num(countedEarnings)}";
         return new CalcComponent("Доплата до МЗП", topUp, formula);
     }
 }

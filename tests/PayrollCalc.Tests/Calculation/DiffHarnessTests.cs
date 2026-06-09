@@ -2,7 +2,6 @@ using FluentAssertions;
 using PayrollCalc.Calculation;
 using PayrollCalc.Core.DTOs.Calculation;
 using PayrollCalc.Core.Entities.Enums;
-using Xunit.Abstractions;
 
 namespace PayrollCalc.Tests.Calculation;
 
@@ -11,7 +10,7 @@ namespace PayrollCalc.Tests.Calculation;
 /// і звіряємо результат рушія з її клітинками. Інструмент розробки — показує що збігається й що
 /// лишилось (хвіст S/U/AW/AY). Не частина програми.
 /// </summary>
-public class DiffHarnessTests(ITestOutputHelper output)
+public class DiffHarnessTests
 {
     private static readonly PayrollParams Params = new()
     {
@@ -55,14 +54,15 @@ public class DiffHarnessTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void Skyrda_r3_CoreMatches_TailDocumented()
+    public void Skyrda_r3_FullGrossMatchesEtalon()
     {
-        // Скирда: директор(J)+вчитель(N). Ядро (оклад/1749/звання/вислуга/престиж/складність/премія) має збігтись.
-        // Хвіст НЕ реалізований: S зошити 867.69 + U інклюзив 2914.8 + AW заміни 2049.6 + AY 2600 3900 = 9732.09.
+        // Скирда: директор(J)+вчитель(N). Після відповідей мами весь рядок збігається з еталоном:
+        // ядро + зошити + інклюзив (адмін flat) + заміни (авто-ставка) + 2600.
         var director = new PositionCalcInput
         {
             WorkerClass = WorkerClass.AdminPedagogical, PositionName = "Директор",
             Oklad = 10410m, RateCount = 1m, TenurePct = 0.30m, PrestigePct = 0.25m, ComplexityPct = 0.50m,
+            InclusiveHours = 1m,                                             // U: прапорець участі (адмін — flat 20%)
         };
         var teacher = new PositionCalcInput
         {
@@ -70,23 +70,20 @@ public class DiffHarnessTests(ITestOutputHelper output)
             Oklad = 8397m, RateCount = 1m, PedHoursWeekly = 9m, TitlePct = 0.15m, TenurePct = 0.30m, PrestigePct = 0.20m,
             NotebookHours = 8m, NotebookPct = 0.15m,                          // S зошити
             HasUnfavorable2600 = true,                                       // AY 2600
-            ReplacementRate = 256.2m, ReplacementHours = 8m,                 // AW заміни
+            ReplacementHours = 8m,                                           // AW заміни (ставку рахує рушій)
         };
         var result = Calc(new ManualAdjustments { Bonus = 15615m }, director, teacher);
 
         // Престижність = (J+K)×25% + (N+O+P)×20% — головна перевірка по-позиційної логіки.
         Component(result, "Престижність").Should().Be(4945.035m);
         Component(result, "Складність і напруженість").Should().Be(5205m);
-        Component(result, "За перевірку зошитів").Should().Be(867.69m);      // S
-        Component(result, "Несприятливі умови (2600)").Should().Be(3900m);   // AY
-        Component(result, "Заміни").Should().Be(2049.6m);                    // AW
+        Component(result, "За перевірку зошитів").Should().Be(867.69m);              // S
+        Component(result, "Несприятливі умови (2600)").Should().Be(3900m);           // AY
+        Component(result, "Інклюзивні класи").Should().Be(2914.8m);                  // U: (10410+40%)×20%
+        Component(result, "Заміни").Should().BeApproximately(2049.66m, 0.01m);       // AW: авто-ставка 256.21×8
 
-        // Лишається тільки U інклюзив 2914.8 — аномальний (директорський варіант (J+K)×20%), на diff-тюнінг.
-        const decimal etalonGross = 62903.3025m;
-        const decimal inclusiveU = 2914.8m;
-        result.Gross.Should().Be(etalonGross - inclusiveU);                  // 59988.5025
-
-        output.WriteLine($"Скирда: рушій={result.Gross}, еталон={etalonGross}, лишилось U(інклюзив)={inclusiveU}");
+        // Повний gross сходиться з еталоном (різниця ≤0.1 — округлення ставки заміни 256.2 vs 256.2077).
+        result.Gross.Should().BeApproximately(62903.3025m, 0.1m);
     }
 
     [Fact]

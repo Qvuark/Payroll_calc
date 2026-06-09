@@ -21,9 +21,9 @@ public static class ExtendedActivityCalculator
         if (pos.ExtendedActivity is not { } a)
             yield break;
 
-        // База: тариф/дільник×год. Множник годин опускаємо коли він 1 (ГПД як частка окладу).
+        // База: тариф/дільник×год. Дільник 1 опускаємо (ГПД = оклад×ставка), множник 1 теж.
         var baseAmount = a.Tariff / a.Divisor * a.Hours;
-        var baseFormula = $"={Num(a.Tariff)}/{Num(a.Divisor)}";
+        var baseFormula = a.Divisor == 1 ? $"={Num(a.Tariff)}" : $"={Num(a.Tariff)}/{Num(a.Divisor)}";
         if (a.Hours != 1)
             baseFormula += $"*{Num(a.Hours)}";
         // ПКР проре по днях місяця; для ГПД пропорція вже закладена в Hours.

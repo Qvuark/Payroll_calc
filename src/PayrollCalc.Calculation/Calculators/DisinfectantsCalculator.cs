@@ -4,8 +4,9 @@ using static PayrollCalc.Calculation.CalcFormat;
 namespace PayrollCalc.Calculation.Calculators;
 
 /// <summary>
-/// Доплата за роботу з дезінфікуючими засобами — 10% від окладу (відомість AN).
-/// База — голий оклад (без №1749). Прапорець зі ставки (HasDisinfectants); false → доплати немає.
+/// Доплата за роботу з дезінфікуючими засобами — 10% від окладу × кількість ставок (відомість AN).
+/// База залежить від ставок (підтв. мамою): повна — оклад×10%, Шкута 0.5 — оклад/2×10%, Мірошніченко 0.25 — оклад/4×10%.
+/// Прапорець зі ставки (HasDisinfectants); false → доплати немає.
 /// </summary>
 public static class DisinfectantsCalculator
 {
@@ -15,8 +16,11 @@ public static class DisinfectantsCalculator
         if (!pos.HasDisinfectants)
             return null;
 
-        var amount = pos.Oklad * rate;
-        var formula = $"={Num(pos.Oklad)}*{Num(rate * 100)}%";
+        var baseOklad = pos.Oklad * pos.RateCount;
+        var amount = baseOklad * rate;
+        var formula = pos.RateCount == 1
+            ? $"={Num(pos.Oklad)}*{Num(rate * 100)}%"
+            : $"={Num(pos.Oklad)}*{Num(pos.RateCount)}*{Num(rate * 100)}%";
         return new CalcComponent("Дезінфікуючі засоби", amount, formula);
     }
 }

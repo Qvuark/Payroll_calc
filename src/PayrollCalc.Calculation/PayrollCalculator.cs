@@ -87,8 +87,8 @@ public sealed class PayrollCalculator : IPayrollCalculator
 
             AddIfAny(posList, NotebookCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
             AddIfAny(posList, Unfavorable2600Calculator.Calc(pos, input.Params.UnfavorableBase, input.NormDays, input.WorkedDays));
-            AddIfAny(posList, ReplacementCalculator.Calc(pos));
-            AddIfAny(posList, InclusiveCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, ReplacementCalculator.Calc(pos, rate));
+            AddIfAny(posList, InclusiveCalculator.Calc(pos, oklad.Amount, rate, input.NormDays, input.WorkedDays));
 
             // Позаурочна робота (ГПД/ПКР) — власний блок із кількох надбавок.
             posList.AddRange(ExtendedActivityCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));

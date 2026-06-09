@@ -25,6 +25,9 @@ public class SystemParamsController : ControllerBase
     [HttpPut("{key}")]
     public async Task<ActionResult> Update(string key, [FromBody] SystemParamRequest request)
     {
+        // Від'ємна ставка податку/надбавки отруїла б усі наступні розрахунки.
+        if (request.Value < 0)
+            return BadRequest("Значення параметра не може бути від'ємним.");
         var systemParam = await _context.SystemParams.FirstOrDefaultAsync(s => s.Key == key);
         if (systemParam == null)
             return NotFound();

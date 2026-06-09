@@ -78,6 +78,34 @@ public class VedomostExporterTests
         act.Should().Throw<InvalidOperationException>().WithMessage("*Невідома надбавка*");
     }
 
+    [Fact]
+    public void Build_EmptyResults_ReturnsSheetWithoutTotals()
+    {
+        // Порожній місяць не має падати: лист із заголовком, без рядка «Разом» з перевернутим SUM.
+        var bytes = new VedomostExporter().Build([], 2026, 3);
+
+        using var wb = Load(bytes);
+        var ws = wb.Worksheet("ведомость");
+        ws.Cell("B1").GetString().Should().Contain("березень");
+        ws.Cell("B3").GetString().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Build_HolidayManual_LandsInApColumn()
+    {
+        var result = new PayrollCalculator().Calculate(new CalcInput
+        {
+            EmployeeId = 1, FullName = "Тест", Year = 2026, Month = 3,
+            NormDays = 22, WorkedDays = 22, Positions = [],
+            Manual = new ManualAdjustments { Holiday = 300m, AnnualBonus = 1000m }, Params = Params,
+        });
+
+        using var wb = Load(new VedomostExporter().Build([result], 2026, 3));
+        var ws = wb.Worksheet("ведомость");
+        ws.Cell("AP3").FormulaA1.Should().Be("300");
+        ws.Cell("AX3").FormulaA1.Should().Be("1000");
+    }
+
     private static CalcResult Calc(params PositionCalcInput[] positions)
         => new PayrollCalculator().Calculate(new CalcInput
         {

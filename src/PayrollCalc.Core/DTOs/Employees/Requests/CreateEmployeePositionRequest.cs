@@ -40,9 +40,9 @@ public class CreateEmployeePositionRequest
     /// </summary>
     [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
     /// <summary>
-    /// Ставка надбавки за престижність праці.
+    /// Ставка надбавки за престижність праці (вчитель 20%, дир-гілка 25%).
     /// </summary>
-    [Range(0.05, 0.2)] public decimal? PrestigeBonusPct { get; set; }
+    [Range(0.05, 0.25)] public decimal? PrestigeBonusPct { get; set; }
     /// <summary>
     /// Дата початку роботи на цій посаді. Якщо не задано — використовується Employee.HireDate.
     /// </summary>

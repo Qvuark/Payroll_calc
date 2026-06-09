@@ -73,4 +73,15 @@ public class DateParserTests
         success.Should().BeFalse();
         result.Should().Be(default);
     }
+
+    [Theory]
+    [InlineData(9999999.0)]    // за межами OADate — FromOADate кинув би ArgumentException
+    [InlineData(-9999999.0)]
+    public void TryParse_DoubleOutsideOADateRange_ReturnsFalseInsteadOfThrowing(double input)
+    {
+        var success = DateParser.TryParse(input, out var result);
+
+        success.Should().BeFalse();
+        result.Should().Be(default);
+    }
 }

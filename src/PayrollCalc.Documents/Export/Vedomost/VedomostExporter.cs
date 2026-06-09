@@ -22,6 +22,15 @@ public sealed class VedomostExporter
         WriteTitle(ws, year, month);
         WriteHeader(ws);
 
+        // Порожній місяць (жодного розрахунку): лист із заголовком без підсумків.
+        // Інакше «Разом» дістав би перевернутий діапазон SUM(J3:J2) і Excel лаявся б на файл.
+        if (results.Count == 0)
+        {
+            using var emptyMs = new MemoryStream();
+            wb.SaveAs(emptyMs);
+            return emptyMs.ToArray();
+        }
+
         const int firstDataRow = 3;
         var unmapped = new SortedSet<string>();
         for (var i = 0; i < results.Count; i++)

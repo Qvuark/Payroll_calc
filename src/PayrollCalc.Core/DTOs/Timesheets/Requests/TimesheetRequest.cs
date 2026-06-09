@@ -17,6 +17,10 @@ public class TimesheetRequest
     /// Відпрацьовано днів за місяць — головний вхід окладного розрахунку.
     /// </summary>
     [Range(0.0, 31.0)] public decimal WorkedDays { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Відпрацьовані години за місяць — лише для погодинних посад (сторож).
+    /// </summary>
+    [Range(0.0, 744.0)] public decimal WorkedHours { get; set; } = decimal.Zero;
     [Range(0.0, 744.0)] public decimal NightHours { get; set; } = decimal.Zero;
     [Range(0.0, 744.0)] public decimal ReplacementHours { get; set; } = decimal.Zero;
     [Range(0.0, 1000000.0)] public decimal HolidayAmount { get; set; } = decimal.Zero;
@@ -27,13 +31,25 @@ public class TimesheetRequest
     [Range(0.0, 1000000.0)] public decimal EnforcementOrders { get; set; } = decimal.Zero;
     [Range(0.0, 1000000.0)] public decimal AnnualBonus { get; set; } = decimal.Zero;
     /// <summary>
+    /// Премія за місяць (відомість BB).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal Bonus { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Лікарняні за рахунок роботодавця, перші 5 днів (відомість AL).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal SickEmployer { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Лікарняні за рахунок ФСС (відомість AM). Зменшує базу профспілкового внеску.
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal SickFss { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Відпускні (відомість AZ).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal Vacation { get; set; } = decimal.Zero;
+    /// <summary>
     /// Перерахунок. Може бути відʼємним — утримання минулої переплати.
     /// </summary>
     [Range(-1000000.0, 1000000.0)] public decimal Recalculation { get; set; } = decimal.Zero;
-    /// <summary>
-    /// Інші ручні коригування. Може бути відʼємним.
-    /// </summary>
-    [Range(-1000000.0, 1000000.0)] public decimal OtherManual { get; set; } = decimal.Zero;
 
     /// <summary>
     /// Маппінг Request → нова entity (insert-шлях upsert-у). Ставить ключ і делегує значення в ApplyTo.
@@ -59,14 +75,18 @@ public class TimesheetRequest
     public void ApplyTo(Timesheet entity)
     {
         entity.WorkedDays = Round(WorkedDays);
+        entity.WorkedHours = Round(WorkedHours);
         entity.NightHours = Round(NightHours);
         entity.ReplacementHours = Round(ReplacementHours);
         entity.HolidayAmount = Round(HolidayAmount);
         entity.Advance = Round(Advance);
         entity.EnforcementOrders = Round(EnforcementOrders);
         entity.AnnualBonus = Round(AnnualBonus);
+        entity.Bonus = Round(Bonus);
+        entity.SickEmployer = Round(SickEmployer);
+        entity.SickFss = Round(SickFss);
+        entity.Vacation = Round(Vacation);
         entity.Recalculation = Round(Recalculation);
-        entity.OtherManual = Round(OtherManual);
     }
     private static decimal Round(decimal value) =>
         Math.Round(value, 2, MidpointRounding.AwayFromZero);

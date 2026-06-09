@@ -325,6 +325,8 @@ public static class DbSeeder
                 Name = "Сторож",
                 DepartmentId = economic.Id,
                 WorkerClass = WorkerClass.MOP,
+                // Єдина погодинна посада: оклад = тариф/176×години з табеля, не за дні.
+                IsHourly = true,
                 ExcelAliases = new() { "сторож" }
             },
             new Position

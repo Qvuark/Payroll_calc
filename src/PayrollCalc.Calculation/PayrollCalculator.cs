@@ -88,7 +88,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
             AddIfAny(posList, NotebookCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
             AddIfAny(posList, Unfavorable2600Calculator.Calc(pos, input.Params.UnfavorableBase, input.NormDays, input.WorkedDays));
             AddIfAny(posList, ReplacementCalculator.Calc(pos, rate));
-            AddIfAny(posList, InclusiveCalculator.Calc(pos, oklad.Amount, rate, input.NormDays, input.WorkedDays));
+            AddIfAny(posList, InclusiveCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
 
             // Позаурочна робота (ГПД/ПКР) — власний блок із кількох надбавок.
             posList.AddRange(ExtendedActivityCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
@@ -111,11 +111,13 @@ public sealed class PayrollCalculator : IPayrollCalculator
 
         // Мануальні суми — на працівника за місяць (не на ставку).
         var m = input.Manual;
-        AddManual(list, "Премія", m.Bonus);
-        AddManual(list, "Відпускні", m.Vacation);
-        AddManual(list, "Лікарняні (роботодавець)", m.SickEmployer);
-        AddManual(list, "Лікарняні (ФСС)", m.SickFss);
-        AddManual(list, "Перерахунок", m.Recalculation);
+        AddManual(list, ComponentNames.Bonus, m.Bonus);
+        AddManual(list, ComponentNames.Vacation, m.Vacation);
+        AddManual(list, ComponentNames.SickEmployer, m.SickEmployer);
+        AddManual(list, ComponentNames.SickFss, m.SickFss);
+        AddManual(list, ComponentNames.Recalculation, m.Recalculation);
+        AddManual(list, ComponentNames.Holiday, m.Holiday);
+        AddManual(list, ComponentNames.AnnualBonus, m.AnnualBonus);
         return list;
     }
     /// <summary>
@@ -128,18 +130,18 @@ public sealed class PayrollCalculator : IPayrollCalculator
         var m = input.Manual;
         var list = new List<CalcComponent>
         {
-            new("ПДФО", gross * p.Pdfo, Pct(gross, p.Pdfo)),
-            new("Військовий збір", gross * p.Vz, Pct(gross, p.Vz)),
+            new(ComponentNames.Pdfo, gross * p.Pdfo, Pct(gross, p.Pdfo)),
+            new(ComponentNames.Vz, gross * p.Vz, Pct(gross, p.Vz)),
         };
 
         var unionBase = gross - m.SickFss;
         var unionFormula = m.SickFss != 0
             ? $"=({Num(gross)}-{Num(m.SickFss)})*{Num(p.Union * 100)}%"
             : Pct(gross, p.Union);
-        list.Add(new CalcComponent("Профспілковий внесок", unionBase * p.Union, unionFormula));
+        list.Add(new CalcComponent(ComponentNames.UnionFee, unionBase * p.Union, unionFormula));
 
-        AddManual(list, "Аванс", m.Advance);
-        AddManual(list, "Виконавчі листи", m.EnforcementOrders);
+        AddManual(list, ComponentNames.Advance, m.Advance);
+        AddManual(list, ComponentNames.EnforcementOrders, m.EnforcementOrders);
         return list;
     }
     /// <summary>

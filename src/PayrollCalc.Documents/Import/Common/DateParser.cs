@@ -40,6 +40,10 @@ public static class DateParser
         // Excel зберігає дати так під капотом, якщо ячейка без явного формату.
         if (value is double d)
         {
+            // Діапазон валідних OADate: поза ним FromOADate кидає ArgumentException
+            // і валив би весь імпорт замість помилки рядка (напр. число 9999999 у колонці дати).
+            if (d is < -657435.0 or >= 2958466.0)
+                return false;
             result = DateOnly.FromDateTime(DateTime.FromOADate(d));
             return true;
         }

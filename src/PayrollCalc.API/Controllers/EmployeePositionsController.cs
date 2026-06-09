@@ -264,6 +264,11 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             hasWorkload: false, hasAdmin: true, hasNonPedagogical: false, hasGpd: false, hasPkr: false);
         if (errors != null)
             return BadRequest(errors);
+        // Прапор без уточнення — калькулятор мовчки пропустив би надбавку (група/тип = null).
+        if (request.HasClassMgmt && request.ClassGradeGroup is null)
+            return BadRequest("Вкажіть групу класів (1-4 чи 5-11) для класного керівництва.");
+        if (request.HasCabinet && request.CabinetType is null)
+            return BadRequest("Вкажіть тип кабінету для завідування кабінетом.");
         if (position.Admin == null)
         {
             var newBlock = EmployeeAdminRequest.FromRequest(request);

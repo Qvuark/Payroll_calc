@@ -31,5 +31,5 @@ public class UpdateEmployeePositionRequest
     /// </summary>
     public int? TitleTypeId { get; set; }
     [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
-    [Range(0.05, 0.2)] public decimal? PrestigeBonusPct { get; set; }
+    [Range(0.05, 0.25)] public decimal? PrestigeBonusPct { get; set; }
 }

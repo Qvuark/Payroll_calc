@@ -30,7 +30,8 @@ public record ExtendedActivityInput
     /// </summary>
     public decimal TenurePct { get; init; }
     /// <summary>
-    /// Пропорція за неповний місяць по днях табеля. ПКР — true; ГПД — false (дні вже в Hours).
+    /// Пропорція за неповний місяць по днях табеля. Білдер ставить true і для ПКР, і для ГПД
+    /// (ГПД: Hours несе кількість ставок, дні в ньому НЕ закладені).
     /// </summary>
     public bool ProrateByDays { get; init; }
 }

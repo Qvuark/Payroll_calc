@@ -31,6 +31,14 @@ public record ManualAdjustments
     /// </summary>
     public decimal Vacation { get; init; }
     /// <summary>
+    /// Святкові (відомість AP). Ручна сума; авто-розрахунок від святкових годин — пізніше.
+    /// </summary>
+    public decimal Holiday { get; init; }
+    /// <summary>
+    /// Щорічна винагорода вчителям, ст.57 ЗУ "Про освіту" (відомість AX).
+    /// </summary>
+    public decimal AnnualBonus { get; init; }
+    /// <summary>
     /// Утримання за виконавчими листами (відомість BG).
     /// </summary>
     public decimal EnforcementOrders { get; init; }

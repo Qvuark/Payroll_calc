@@ -14,6 +14,12 @@ namespace PayrollCalc.API.Application.Calculation;
 public class CalcInputBuilder(AppDbContext db)
 {
     /// <summary>
+    /// Посади з вислугою 30% від окладу (відомість V/Y) — матч за назвою з сіда довідника.
+    /// </summary>
+    private const string LibrarianPositionName = "Завідувач бібліотеки";
+    private const string MedicPositionName = "Сестра медична";
+
+    /// <summary>
     /// Будує вхід рушія для працівника на (year, month). null — працівника немає.
     /// Нема табеля → дні = норма місяця, ручні суми = 0. Нема календаря → кидає (нема з чого брати норму).
     /// </summary>
@@ -23,7 +29,7 @@ public class CalcInputBuilder(AppDbContext db)
             .Include(e => e.Positions).ThenInclude(p => p.Position)
             .Include(e => e.Positions).ThenInclude(p => p.TariffGrade)
             .Include(e => e.Positions).ThenInclude(p => p.TitleType)
-            .Include(e => e.Positions).ThenInclude(p => p.Workload)
+            .Include(e => e.Positions).ThenInclude(p => p.Workload).ThenInclude(w => w!.NotebookRate)
             .Include(e => e.Positions).ThenInclude(p => p.Admin)
             .Include(e => e.Positions).ThenInclude(p => p.NonPedagogical)
             .Include(e => e.Positions).ThenInclude(p => p.Gpd).ThenInclude(g => g!.TariffGrade)
@@ -34,6 +40,9 @@ public class CalcInputBuilder(AppDbContext db)
 
         var calendar = await db.WorkCalendars.FirstOrDefaultAsync(wc => wc.Year == year && wc.Month == month, ct)
             ?? throw new InvalidOperationException($"Немає робочого календаря за {month:00}.{year}.");
+        // Норма 0 далі стала б дільником пропорції /норма×відпрацьовано — ділення на нуль.
+        if (calendar.WorkDays <= 0)
+            throw new InvalidOperationException($"Невалідна норма робочих днів ({calendar.WorkDays}) за {month:00}.{year}.");
 
         var timesheet = await db.Timesheets
             .FirstOrDefaultAsync(t => t.EmployeeId == employeeId && t.Year == year && t.Month == month, ct);
@@ -45,6 +54,17 @@ public class CalcInputBuilder(AppDbContext db)
             .Where(p => p.DismissalDate is null)
             .Select(p => MapPosition(p, employee, timesheet))
             .ToList();
+
+        // Заміни уроків — у табелі на працівника, а платяться від учительської ставки
+        // (формула від тарифу вчителя). Кладемо години на першу педагогічну, щоб
+        // багатоставковий (директор-вчитель) не отримав оплату двічі.
+        var replacementHours = timesheet?.ReplacementHours ?? 0m;
+        if (replacementHours != 0)
+        {
+            var teacherIdx = activePositions.FindIndex(p => p.WorkerClass == WorkerClass.Pedagogical);
+            if (teacherIdx >= 0)
+                activePositions[teacherIdx] = activePositions[teacherIdx] with { ReplacementHours = replacementHours };
+        }
 
         return new CalcInput
         {
@@ -98,6 +118,14 @@ public class CalcInputBuilder(AppDbContext db)
             ComplexityPct = ep.ComplexityBonusPct ?? 0m,
             PedHoursWeekly = workload is null ? 0m : workload.Hours1To4 + workload.Hours5To9 + workload.Hours10To11,
             AdditionalHours = workload?.AdditionalHours ?? 0m,
+            // Зошити: години з блоку навантаження, % — з довідника за предметом (NotebookRate).
+            NotebookHours = workload is null ? 0m
+                : workload.NotebookHours1To4 + workload.NotebookHours5To9 + workload.NotebookHours10To11,
+            NotebookPct = workload?.NotebookRate?.Pct ?? 0m,
+            // Інклюзив: учителю — реальні години; адміну калькулятор трактує >0 як прапорець участі (flat 20%).
+            InclusiveHours = workload is null ? 0m
+                : workload.InclusiveHours1To4 + workload.InclusiveHours5To9 + workload.InclusiveHours10To11,
+            HasUnfavorable2600 = ep.HasUnfavorable,
             ClassManagementGroup = admin is { HasClassMgmt: true } ? admin.ClassGradeGroup : null,
             Cabinet = admin is { HasCabinet: true } ? admin.CabinetType : null,
             HasComputerMaintenance = admin?.HasComputers ?? false,
@@ -107,6 +135,11 @@ public class CalcInputBuilder(AppDbContext db)
             HasDisinfectants = nonPed?.HasDisinfectants ?? false,
             IsLibraryHead = nonPed?.HasLibraryMgmt ?? false,
             HasTextbooks = nonPed?.HasTextbooks ?? false,
+            // Вислуга бібліотекаря/медпрацівника не має власного прапорця в БД — визначаємо
+            // за назвою посади (у школі рівно один бібліотекар і одна медсестра).
+            // Замінити на явний прапорець блоку, коли мама підтвердить правило.
+            HasLibrarianTenure = ep.Position.Name == LibrarianPositionName,
+            HasMedicTenure = ep.Position.Name == MedicPositionName,
             // Нічні/години — лише на погодинній ставці (сторож); табель на працівника, віддаємо погодинній посаді.
             IsHourly = isHourly,
             NightHours = isHourly ? timesheet?.NightHours ?? 0m : 0m,
@@ -164,6 +197,8 @@ public class CalcInputBuilder(AppDbContext db)
             SickFss = t.SickFss,
             Recalculation = t.Recalculation,
             Vacation = t.Vacation,
+            Holiday = t.HolidayAmount,
+            AnnualBonus = t.AnnualBonus,
             EnforcementOrders = t.EnforcementOrders,
         };
 }

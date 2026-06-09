@@ -256,6 +256,33 @@ public class PayrollCalculatorTests
             .Should().BeApproximately(1083.03m, 0.01m);
     }
 
+    [Fact]
+    public void AdminInclusive_PartialMonth_ProratesOnlyOnce()
+    {
+        // Інклюзив адміна — від СИРОГО тарифу з одною пропорцією: 10410×140%×20% × 11/22 = 1457.4.
+        // Від обчисленого окладу вийшло б ×(11/22)² — подвійне урізання.
+        var admin = new PositionCalcInput
+        {
+            WorkerClass = WorkerClass.AdminPedagogical, PositionName = "Директор",
+            Oklad = 10410m, RateCount = 1m, InclusiveHours = 1m,
+        };
+        var result = new PayrollCalculator().Calculate(Input(22, 11, admin));
+
+        var inclusive = result.Earnings.Single(e => e.Name == "Інклюзивні класи");
+        inclusive.Amount.Should().Be(1457.4m);
+        inclusive.Formula.Should().Be("=14574*20%/22*11");
+    }
+
+    [Fact]
+    public void Manual_HolidayAndAnnualBonus_AppearInEarnings()
+    {
+        var manual = new ManualAdjustments { Holiday = 300m, AnnualBonus = 1000m };
+        var result = new PayrollCalculator().Calculate(Input(22, 22, [Mop(8000m)], manual));
+
+        result.Earnings.Single(e => e.Name == "Святкові").Amount.Should().Be(300m);
+        result.Earnings.Single(e => e.Name == "Щорічна винагорода").Amount.Should().Be(1000m);
+    }
+
     // --- helpers: збирають мінімальний вхід, щоб тіло тесту лишалось коротким ---
 
     private static PositionCalcInput Teacher(decimal oklad, decimal hours, decimal titlePct = 0m) => new()

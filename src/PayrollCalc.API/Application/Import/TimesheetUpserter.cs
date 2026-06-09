@@ -44,6 +44,14 @@ public class TimesheetUpserter(AppDbContext db)
                 $"Відпрацьовано днів ({row.WorkedDays}) більше норми місяця ({workDaysNorm})"));
             return (null, false);
         }
+        // Від'ємні значення з файлу дали б від'ємний оклад у відомості — CRUD-шлях
+        // це ріже атрибутами Range, імпортний мусить різати сам.
+        if (row.WorkedDays < 0 || row.ReplacementHours < 0 || row.NightHours < 0)
+        {
+            errors.Add(new ParserError(row.RowIndex, "WorkedDays",
+                $"Від'ємні значення неприпустимі (дні {row.WorkedDays}, заміни {row.ReplacementHours}, нічні {row.NightHours})"));
+            return (null, false);
+        }
         var timesheet = await db.Timesheets.FirstOrDefaultAsync(
             t => t.EmployeeId == employee.Id && t.Year == year && t.Month == month, ct);
         var wasCreated = timesheet is null;

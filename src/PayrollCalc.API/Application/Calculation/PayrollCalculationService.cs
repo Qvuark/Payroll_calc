@@ -37,6 +37,9 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
             .Select(e => e.Id)
             .ToListAsync(ct);
 
+        // Одна транзакція на весь прогін: збій на 40-му працівнику відкочує все,
+        // інакше в БД лишилася б половина місяця з новими параметрами, половина зі старими.
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
         var results = new List<CalcResult>(ids.Count);
         foreach (var id in ids)
         {
@@ -44,6 +47,7 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
             if (r is not null)
                 results.Add(r);
         }
+        await tx.CommitAsync(ct);
         return results;
     }
 
@@ -63,16 +67,19 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
         }
 
         calc.GrossSalary = r.Gross;
-        calc.Pdfo = Amount(r.Deductions, "ПДФО");
-        calc.Vz = Amount(r.Deductions, "Військовий збір");
-        calc.UnionFee = Amount(r.Deductions, "Профспілковий внесок");
+        calc.Pdfo = Amount(r.Deductions, ComponentNames.Pdfo);
+        calc.Vz = Amount(r.Deductions, ComponentNames.Vz);
+        calc.UnionFee = Amount(r.Deductions, ComponentNames.UnionFee);
         calc.NetSalary = r.NetPay;
 
-        // Ручні суми — кожна у своє поле; ManualTotal = решта ручних без власної колонки (премія+перерахунок).
-        calc.SickEmployer = Amount(r.Earnings, "Лікарняні (роботодавець)");
-        calc.SickFss = Amount(r.Earnings, "Лікарняні (ФСС)");
-        calc.VacationAmount = Amount(r.Earnings, "Відпускні");
-        calc.ManualTotal = Amount(r.Earnings, "Премія") + Amount(r.Earnings, "Перерахунок");
+        // Ручні суми — кожна у своє поле; ManualTotal = решта ручних без власної колонки.
+        calc.SickEmployer = Amount(r.Earnings, ComponentNames.SickEmployer);
+        calc.SickFss = Amount(r.Earnings, ComponentNames.SickFss);
+        calc.VacationAmount = Amount(r.Earnings, ComponentNames.Vacation);
+        calc.ManualTotal = Amount(r.Earnings, ComponentNames.Bonus)
+            + Amount(r.Earnings, ComponentNames.Recalculation)
+            + Amount(r.Earnings, ComponentNames.Holiday)
+            + Amount(r.Earnings, ComponentNames.AnnualBonus);
 
         calc.ParamsSnapshot = JsonSerializer.Serialize(r.ParamsSnapshot);
         calc.CalculatedAt = DateTime.UtcNow;

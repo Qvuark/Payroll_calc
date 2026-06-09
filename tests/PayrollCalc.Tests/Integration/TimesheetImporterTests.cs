@@ -251,6 +251,31 @@ public class TimesheetImporterTests : IClassFixture<PostgresFixture>, IAsyncLife
         (await readDb.Timesheets.ToListAsync()).Should().ContainSingle();
     }
 
+    /// <summary>
+    /// Від'ємні дні/години у файлі → рядок у Errors, skip. CRUD ріже Range-атрибутами,
+    /// імпортний шлях мусить різати сам — інакше у відомості з'явився б від'ємний оклад.
+    /// </summary>
+    [Fact]
+    public async Task Negative_values_row_error_skipped()
+    {
+        await SeedEmployeeAsync();
+        await using var writeDb = _fx.CreateContext();
+        var importer = BuildImporter(writeDb);
+        var row = TimesheetXlsxBuilder.ValidRow();
+        row[TimesheetColumnMap.ColWorkedDays] = -5.0;
+        await using var xlsx = TimesheetXlsxBuilder.Build(row);
+
+        var report = await importer.ImportAsync(xlsx, 2026, 3);
+
+        report.Created.Should().Be(0);
+        report.Skipped.Should().Be(1);
+        report.Errors.Should().ContainSingle();
+        report.Errors[0].Message.Should().Contain("Від'ємні");
+
+        await using var readDb = _fx.CreateContext();
+        (await readDb.Timesheets.ToListAsync()).Should().BeEmpty();
+    }
+
     // ─── helpers ───
 
     private async Task<int> SeedEmployeeAsync(string taxId = Tax)

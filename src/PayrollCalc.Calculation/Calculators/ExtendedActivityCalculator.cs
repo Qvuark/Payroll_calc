@@ -26,7 +26,8 @@ public static class ExtendedActivityCalculator
         var baseFormula = a.Divisor == 1 ? $"={Num(a.Tariff)}" : $"={Num(a.Tariff)}/{Num(a.Divisor)}";
         if (a.Hours != 1)
             baseFormula += $"*{Num(a.Hours)}";
-        // ПКР проре по днях місяця; для ГПД пропорція вже закладена в Hours.
+        // Пропорція днями для обох видів (білдер ставить ProrateByDays=true):
+        // у ГПД Hours несе кількість ставок, дні в ньому не закладені.
         if (a.ProrateByDays)
             (baseAmount, baseFormula) = Prorate(baseAmount, baseFormula, normDays, workedDays);
 

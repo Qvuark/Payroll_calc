@@ -25,6 +25,9 @@ public class TariffGradesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, [FromBody] TariffGradeRequest request)
     {
+        // Нульовий/від'ємний оклад розряду зламав би розрахунок усім, хто на ньому сидить.
+        if (request.MonthlyRate <= 0)
+            return BadRequest("Оклад розряду має бути більшим за нуль.");
         var tariffGrade = await _context.TariffGrades.FirstOrDefaultAsync(t => t.Id == id);
         if (tariffGrade == null)
             return NotFound();

@@ -12,6 +12,12 @@ public static class DecimalParser
     /// <param name="value">Значення для парсингу (може бути int, double, decimal, string або null).</param>
     /// <param name="result">Розпарсений результат.</param>
     /// <returns>true, якщо парсинг успішний, false в іншому випадку.</returns>
+    /// <summary>
+    /// Культура бухгалтера (кома-decimal). Жорстко uk-UA, НЕ CurrentCulture —
+    /// інакше парсинг "3,14" залежав би від мови Windows конкретної машини.
+    /// </summary>
+    private static readonly CultureInfo UkCulture = CultureInfo.GetCultureInfo("uk-UA");
+
     public static bool TryParse(object? value, out decimal result)
     {
         // out обов'язково присвоїти до return — інакше компілятор лається
@@ -22,6 +28,10 @@ public static class DecimalParser
         // перевірки потрібні.
         if(value is double d)
         {
+            // Excel-ячейка може нести 1E300 чи NaN — пряме (decimal)d кинуло б
+            // OverflowException і завалило весь імпорт замість помилки рядка.
+            if (double.IsNaN(d) || double.IsInfinity(d) || Math.Abs(d) > (double)decimal.MaxValue)
+                return false;
             // Бухгалтерське округлення: 2.5 → 3 (НЕ banker's ToEven 2.5 → 2).
             // Дефолтний ToEven дав би розходження копійок у масових
             // розрахунках.
@@ -43,9 +53,9 @@ public static class DecimalParser
             return false;
         // Float — тільки знак + крапка/кома як decimal, БЕЗ thousand separator.
         // Інакше "3,14" на Invariant парситься як 314 (кома = розділювач тисяч).
-        // Спочатку Invariant (крапка-decimal), потім CurrentCulture (uk-UA: кома-decimal).
+        // Спочатку Invariant (крапка-decimal), потім uk-UA (кома-decimal).
         if(decimal.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
-            || decimal.TryParse(str, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+            || decimal.TryParse(str, NumberStyles.Float, UkCulture, out parsed))
         {
             result = Math.Round(parsed, 2, MidpointRounding.AwayFromZero);
             return true;

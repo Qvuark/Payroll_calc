@@ -27,9 +27,14 @@ public static class ExcelReaderBase
         // ExcelReaderFactory сам визначає формат (.xls vs .xlsx) по байтах.
         // using гарантує що file handle закриється, навіть якщо нижче впаде exception.
         using var reader = ExcelReaderFactory.CreateReader(stream);
-        // AsDataSet() читає всі листи у пам'ять. DataSet без using навмисно —
-        // повертаємо DataTable з його колекції, dispose родителя зробив би таблицю невалідною.
-        var dataset = reader.AsDataSet();
+        // FilterSheet — читаємо в пам'ять ЛИШЕ перший лист: інші нам не потрібні,
+        // а файл з десятком роздутих листів інакше з'їв би пам'ять процесу.
+        // DataSet без using навмисно — повертаємо DataTable з його колекції,
+        // dispose родителя зробив би таблицю невалідною.
+        var dataset = reader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            FilterSheet = (_, sheetIndex) => sheetIndex == 0,
+        });
         return dataset.Tables[0];
     }
 }

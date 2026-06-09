@@ -30,7 +30,8 @@ public class PositionsController : ControllerBase
         {
             Name = request.Name,
             DepartmentId = request.DepartmentId,
-            WorkerClass = request.WorkerClass
+            WorkerClass = request.WorkerClass,
+            IsHourly = request.IsHourly
         };
 
         _context.Positions.Add(position);
@@ -50,6 +51,7 @@ public class PositionsController : ControllerBase
         position.Name = request.Name;
         position.DepartmentId = request.DepartmentId;
         position.WorkerClass = request.WorkerClass;
+        position.IsHourly = request.IsHourly;
 
         await _context.SaveChangesAsync();
         return NoContent();
@@ -63,11 +65,11 @@ public class PositionsController : ControllerBase
             return NotFound();
 
         if (await _context.EmployeePositions.AnyAsync(e => e.PositionId == id))
-            return BadRequest("Cannot delete position that is assigned to employees.");
+            return BadRequest("Неможливо видалити посаду — на неї призначені працівники.");
 
         _context.Positions.Remove(position);
         await _context.SaveChangesAsync();
         return NoContent();
     }
 }
-public record PositionRequest(string Name, int DepartmentId, WorkerClass WorkerClass);
+public record PositionRequest(string Name, int DepartmentId, WorkerClass WorkerClass, bool IsHourly = false);

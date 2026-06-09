@@ -59,4 +59,17 @@ public class DecimalParserTests
         success.Should().BeFalse();
         result.Should().Be(0m);
     }
+
+    [Theory]
+    [InlineData(1E300)]                  // більше за decimal.MaxValue — каст кинув би Overflow
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void TryParse_HugeOrInvalidDouble_ReturnsFalseInsteadOfThrowing(double input)
+    {
+        // Контракт TryParse: кривa ячейка = false (помилка рядка у звіті), НЕ виняток на весь імпорт.
+        var success = DecimalParser.TryParse(input, out var result);
+
+        success.Should().BeFalse();
+        result.Should().Be(0m);
+    }
 }

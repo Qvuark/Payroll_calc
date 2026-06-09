@@ -21,6 +21,12 @@ public class ImportController(
     TimesheetTemplateService timesheetTemplateService) : ControllerBase
 {
     /// <summary>
+    /// Стеля розміру xlsx: наші файли — десятки КБ, а ExcelDataReader розпаковує весь лист
+    /// у пам'ять, тож роздутий/зловмисний файл поклав би процес по OOM.
+    /// </summary>
+    private const long MaxFileBytes = 10 * 1024 * 1024;
+
+    /// <summary>
     /// Імпорт staff.xlsx — масове створення/оновлення Employee + EmployeePosition.
     /// Атомарність: одна транзакція на файл, будь-яка помилка БД → відкат усього.
     /// Парсерські помилки рядків не валять імпорт — вони повертаються у ImportReport.Errors, валідні рядки зберігаються.
@@ -33,6 +39,8 @@ public class ImportController(
     {
         if (file is null || file.Length == 0)
             return BadRequest("Файл порожній або не передано");
+        if (file.Length > MaxFileBytes)
+            return BadRequest($"Файл завеликий ({file.Length / 1024 / 1024} МБ). Максимум — {MaxFileBytes / 1024 / 1024} МБ.");
 
         await using var stream = file.OpenReadStream();
         var report = await staffImporter.ImportAsync(stream, ct);
@@ -52,6 +60,8 @@ public class ImportController(
     {
         if (file is null || file.Length == 0)
             return BadRequest("Файл порожній або не передано");
+        if (file.Length > MaxFileBytes)
+            return BadRequest($"Файл завеликий ({file.Length / 1024 / 1024} МБ). Максимум — {MaxFileBytes / 1024 / 1024} МБ.");
 
         await using var stream = file.OpenReadStream();
         var report = await teachersImporter.ImportAsync(stream, ct);
@@ -73,8 +83,12 @@ public class ImportController(
     {
         if (file is null || file.Length == 0)
             return BadRequest("Файл порожній або не передано");
+        if (file.Length > MaxFileBytes)
+            return BadRequest($"Файл завеликий ({file.Length / 1024 / 1024} МБ). Максимум — {MaxFileBytes / 1024 / 1024} МБ.");
         if (month is < 1 or > 12)
             return BadRequest("Місяць має бути в діапазоні 1..12");
+        if (year is < 2020 or > 2100)
+            return BadRequest("Рік має бути в діапазоні 2020..2100");
 
         await using var stream = file.OpenReadStream();
         var report = await timesheetImporter.ImportAsync(stream, year, month, ct);
@@ -125,6 +139,8 @@ public class ImportController(
     {
         if (month is < 1 or > 12)
             return BadRequest("Місяць має бути в діапазоні 1..12");
+        if (year is < 2020 or > 2100)
+            return BadRequest("Рік має бути в діапазоні 2020..2100");
         var bytes = await timesheetTemplateService.BuildAsync(year, month, ct);
         return File(
             bytes,

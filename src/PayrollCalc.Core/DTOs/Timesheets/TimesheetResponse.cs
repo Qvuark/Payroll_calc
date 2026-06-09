@@ -15,12 +15,17 @@ public class TimesheetResponse
     public int Year { get; set; }
     public int Month { get; set; }
     public decimal WorkedDays { get; set; } = decimal.Zero;
+    public decimal WorkedHours { get; set; } = decimal.Zero;
     public decimal NightHours { get; set; } = decimal.Zero;
     public decimal ReplacementHours { get; set; } = decimal.Zero;
     public decimal HolidayAmount { get; set; } = decimal.Zero;
     public decimal Advance { get; set; } = decimal.Zero;
     public decimal EnforcementOrders { get; set; } = decimal.Zero;
     public decimal AnnualBonus { get; set; } = decimal.Zero;
+    public decimal Bonus { get; set; } = decimal.Zero;
+    public decimal SickEmployer { get; set; } = decimal.Zero;
+    public decimal SickFss { get; set; } = decimal.Zero;
+    public decimal Vacation { get; set; } = decimal.Zero;
     public decimal Recalculation { get; set; } = decimal.Zero;
     public decimal OtherManual { get; set; } = decimal.Zero;
     /// <summary>
@@ -39,12 +44,17 @@ public class TimesheetResponse
             Year = entity.Year,
             Month = entity.Month,
             WorkedDays = entity.WorkedDays,
+            WorkedHours = entity.WorkedHours,
             NightHours = entity.NightHours,
             ReplacementHours = entity.ReplacementHours,
             HolidayAmount = entity.HolidayAmount,
             Advance = entity.Advance,
             EnforcementOrders = entity.EnforcementOrders,
             AnnualBonus = entity.AnnualBonus,
+            Bonus = entity.Bonus,
+            SickEmployer = entity.SickEmployer,
+            SickFss = entity.SickFss,
+            Vacation = entity.Vacation,
             Recalculation = entity.Recalculation,
             OtherManual = entity.OtherManual
         };

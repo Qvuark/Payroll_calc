@@ -31,10 +31,14 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var (statusCode, title) = exception switch
+        // Detail лише для "своїх" InvalidOperationException — їх повідомлення українські й
+        // призначені користувачу (нема календаря, не налаштований параметр). Для решти Detail
+        // не віддаємо: текст Npgsql/EF несе нутрощі схеми (імена constraint'ів, ключі).
+        var (statusCode, title, detail) = exception switch
         {
-            DbUpdateException => (StatusCodes.Status409Conflict, "Дані вже існують"),
-            _ => (StatusCodes.Status500InternalServerError, "Внутрішня помилка сервера"),
+            DbUpdateException => (StatusCodes.Status409Conflict, "Дані вже існують", (string?)null),
+            InvalidOperationException => (StatusCodes.Status400BadRequest, "Некоректний запит або дані", exception.Message),
+            _ => (StatusCodes.Status500InternalServerError, "Внутрішня помилка сервера", null),
         };
         _logger.LogError(
             exception,
@@ -47,7 +51,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         {
             Status = statusCode,
             Title = title,
-            Detail = exception.Message,
+            Detail = detail,
             Instance = httpContext.Request.Path
         };
         httpContext.Response.StatusCode = statusCode;

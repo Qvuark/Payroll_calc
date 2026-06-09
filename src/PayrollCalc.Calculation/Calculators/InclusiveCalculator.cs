@@ -15,16 +15,15 @@ public static class InclusiveCalculator
     private const int TeacherHourNorm = 18;
     private const decimal Pct = 0.20m;
 
-    /// <param name="okladAmount">Обчислений оклад ставки (для адмінів — з урахуванням дир.%).</param>
     /// <param name="bonus1749Rate">Ставка №1749 (0.40).</param>
     public static CalcComponent? Calc(
-        PositionCalcInput pos, decimal okladAmount, decimal bonus1749Rate, int normDays, decimal workedDays)
+        PositionCalcInput pos, decimal bonus1749Rate, int normDays, decimal workedDays)
     {
         if (pos.InclusiveHours == 0)
             return null;
 
         var (amount, formula) = pos.WorkerClass == WorkerClass.AdminPedagogical
-            ? CalcAdmin(okladAmount, bonus1749Rate)
+            ? CalcAdmin(pos, bonus1749Rate)
             : CalcTeacher(pos, bonus1749Rate);
 
         (amount, formula) = Prorate(amount, formula, normDays, workedDays);
@@ -33,10 +32,13 @@ public static class InclusiveCalculator
 
     /// <summary>
     /// Адмін: 20% від (оклад+1749) цілком, без годин. Напр. Скирда (10410+40%)×20% = 2914.8.
+    /// База — сирий тариф (×дир.%×ставки), НЕ обчислений оклад: той вже містить пропорцію
+    /// за дні, і повторний Prorate дав би подвійне урізання за неповний місяць.
     /// </summary>
-    private static (decimal, string) CalcAdmin(decimal okladAmount, decimal bonus1749Rate)
+    private static (decimal, string) CalcAdmin(PositionCalcInput pos, decimal bonus1749Rate)
     {
-        var raised = okladAmount * (1 + bonus1749Rate);
+        var baseOklad = pos.Oklad * (pos.DirectorPct ?? 1m) * pos.RateCount;
+        var raised = baseOklad * (1 + bonus1749Rate);
         return (raised * Pct, $"={Num(raised)}*{Num(Pct * 100)}%");
     }
 

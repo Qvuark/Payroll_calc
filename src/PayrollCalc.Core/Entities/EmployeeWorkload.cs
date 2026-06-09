@@ -21,6 +21,10 @@ public class EmployeeWorkload
     public decimal InclusiveHours5To9 { get; set; } = decimal.Zero;
     public decimal InclusiveHours10To11 { get; set; } = decimal.Zero;
     /// <summary>
+    /// Надтарифні години (відомість F, "Год.над.роб.") — додаються до пед.навантаження в формулі окладу.
+    /// </summary>
+    public decimal AdditionalHours { get; set; } = decimal.Zero;
+    /// <summary>
     /// FK на NotebookRate (мапа Subject → Pct: 10/15/20%). Визначається предметом вчителя.
     /// </summary>
     public int? NotebookRateId { get; set; }

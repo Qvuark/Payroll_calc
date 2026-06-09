@@ -65,6 +65,11 @@ public class EmployeePosition
     /// Тільки для Class 1 (учителя). 5-20% по приказу.
     /// </summary>
     public decimal? PrestigeBonusPct { get; set; }
+    /// <summary>
+    /// Для директорозалежних посад — частка від окладу директора (заступник 0.95, головбух 0.90).
+    /// Оклад тоді = оклад_директора × DirectorPct. null — посада рахується від власного розряду.
+    /// </summary>
+    public decimal? DirectorPct { get; set; }
     public EmployeeWorkload? Workload { get; set; }
     public EmployeeAdmin? Admin { get; set; }
     public EmployeeGpd? Gpd { get; set; }

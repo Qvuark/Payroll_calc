@@ -116,14 +116,8 @@ public class CalcInputBuilder(AppDbContext db)
     }
 
     /// <summary>
-    /// Тижнева норма годин ГПД — дільник бази (база = оклад/норма×години).
-    /// ⚠️ Не підтверджено: у відомості ГПД рахували неоднаково (оклад/4 та оклад/20×20). Уточнити в бухгалтера.
-    /// </summary>
-    private const decimal GpdHourNorm = 30m;
-
-    /// <summary>
     /// Блок позаурочної роботи (ГПД/ПКР) ставки. Пріоритет ПКР, далі ГПД; null — немає жодного.
-    /// База: ПКР — тариф/18×год (проре по днях); ГПД — оклад/норма×год.
+    /// База: ПКР — тариф/18×год; ГПД — оклад×ставка (Divisor=1, GpdHours = к-сть ставок ГПД). Проре по днях.
     /// </summary>
     private static ExtendedActivityInput? MapExtendedActivity(EmployeePosition ep, decimal tenurePct)
     {
@@ -143,8 +137,8 @@ public class CalcInputBuilder(AppDbContext db)
             {
                 Kind = ExtendedActivityKind.Gpd,
                 Tariff = gpd.TariffGrade!.MonthlyRate,
-                Divisor = GpdHourNorm,
-                Hours = gpd.GpdHours,
+                Divisor = 1m,
+                Hours = gpd.GpdHours,            // к-сть ставок ГПД (0.5 / 1.0), не години
                 TenurePct = tenurePct,
                 ProrateByDays = true,
             };

@@ -62,7 +62,13 @@ export function EmployeeCardPage() {
         </div>
       )}
       {positions.map(p => (
-        <PositionCard key={p.id} employeeId={employeeId} position={p} />
+        <PositionCard
+          // Склад блоків у key: додавання/прибирання блока ремонтує картку ставки,
+          // інакше локальний стан форм залишив би «привид» щойно прибраного блока.
+          key={`${p.id}:${+!!p.workload}${+!!p.admin}${+!!p.gpd}${+!!p.pkr}${+!!p.nonPedagogical}`}
+          employeeId={employeeId}
+          position={p}
+        />
       ))}
 
       {addingPosition && (

@@ -15,17 +15,18 @@ namespace PayrollCalc.API.Controllers;
 public class EmployeesController(AppDbContext context) : ControllerBase
 {
     /// <summary>
-    /// Список активних працівників з інформацією про головну ставку.
-    /// Звільнених не повертає. Для повної картки з усіма ставками — GET /{id}.
+    /// Список працівників з інформацією про головну ставку. За замовчуванням без
+    /// звільнених; includeDismissed=true повертає і архів (картки доступні — soft delete).
     /// </summary>
+    /// <param name="includeDismissed">true — включити звільнених.</param>
     /// <returns>Колекція EmployeeSummaryDto.</returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EmployeeSummaryDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<EmployeeSummaryDto>>> GetAll([FromQuery] bool includeDismissed = false)
     {
         var employees = await context.Employees
             .Include(e => e.Positions).ThenInclude(p => p.Position).ThenInclude(p => p!.Department)
             .Include(e => e.Positions).ThenInclude(p => p.TariffGrade)
-            .Where(e => e.Status != EmployeeStatus.Dismissed)
+            .Where(e => includeDismissed || e.Status != EmployeeStatus.Dismissed)
             .ToListAsync();
         return Ok(employees.Select(emp => EmployeeSummaryDto.FromEntity(emp)).ToList());
     }

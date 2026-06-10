@@ -13,6 +13,7 @@ export const keys = {
   titleTypes: ['titleTypes'] as const,
   notebookRates: ['notebookRates'] as const,
   employees: ['employees'] as const,
+  employeesList: (includeDismissed: boolean) => ['employees', { includeDismissed }] as const,
   employee: (id: number) => ['employee', id] as const,
   timesheets: (year: number, month: number) => ['timesheets', year, month] as const,
 }
@@ -38,8 +39,12 @@ export const useTitleTypes = () =>
 export const useNotebookRates = () =>
   useQuery({ queryKey: keys.notebookRates, queryFn: ep.getNotebookRates })
 
-export const useEmployees = () =>
-  useQuery({ queryKey: keys.employees, queryFn: ep.getEmployees })
+// Ключ вкладений під 'employees' — invalidate keys.employees скидає обидва варіанти списку.
+export const useEmployees = (includeDismissed = false) =>
+  useQuery({
+    queryKey: keys.employeesList(includeDismissed),
+    queryFn: () => ep.getEmployees(includeDismissed),
+  })
 
 export const useEmployee = (id: number) =>
   useQuery({ queryKey: keys.employee(id), queryFn: () => ep.getEmployee(id) })

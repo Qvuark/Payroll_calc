@@ -428,6 +428,81 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         return Ok(EmployeePositionDto.FromEntity(saved!));
     }
 
+    /// <summary>
+    /// Видаляє блок навантаження зі ставки. Блок — атрибут без історії і посилань,
+    /// тому фізичний снос, не soft-delete. Якщо блока нема — 204 (ідемпотентно).
+    /// </summary>
+    /// <param name="employeeId">Id працівника з route.</param>
+    /// <param name="posId">Id ставки з route.</param>
+    /// <returns>204 NoContent, 404 якщо ставка не належить працівнику.</returns>
+    [HttpDelete("{posId}/workload")]
+    public Task<ActionResult> DeleteWorkload(int employeeId, int posId) =>
+        DeleteBlockAsync(employeeId, posId, p => p.Workload);
+
+    /// <summary>
+    /// Видаляє блок педагогічних обов'язків зі ставки (класне керівництво, кабінет тощо).
+    /// </summary>
+    /// <param name="employeeId">Id працівника з route.</param>
+    /// <param name="posId">Id ставки з route.</param>
+    /// <returns>204 NoContent, 404 якщо ставка не належить працівнику.</returns>
+    [HttpDelete("{posId}/admin")]
+    public Task<ActionResult> DeleteAdmin(int employeeId, int posId) =>
+        DeleteBlockAsync(employeeId, posId, p => p.Admin);
+
+    /// <summary>
+    /// Видаляє блок ГПД зі ставки.
+    /// </summary>
+    /// <param name="employeeId">Id працівника з route.</param>
+    /// <param name="posId">Id ставки з route.</param>
+    /// <returns>204 NoContent, 404 якщо ставка не належить працівнику.</returns>
+    [HttpDelete("{posId}/gpd")]
+    public Task<ActionResult> DeleteGpd(int employeeId, int posId) =>
+        DeleteBlockAsync(employeeId, posId, p => p.Gpd);
+
+    /// <summary>
+    /// Видаляє блок ПКР зі ставки.
+    /// </summary>
+    /// <param name="employeeId">Id працівника з route.</param>
+    /// <param name="posId">Id ставки з route.</param>
+    /// <returns>204 NoContent, 404 якщо ставка не належить працівнику.</returns>
+    [HttpDelete("{posId}/pkr")]
+    public Task<ActionResult> DeletePkr(int employeeId, int posId) =>
+        DeleteBlockAsync(employeeId, posId, p => p.Pkr);
+
+    /// <summary>
+    /// Видаляє блок непедагогічних надбавок зі ставки.
+    /// </summary>
+    /// <param name="employeeId">Id працівника з route.</param>
+    /// <param name="posId">Id ставки з route.</param>
+    /// <returns>204 NoContent, 404 якщо ставка не належить працівнику.</returns>
+    [HttpDelete("{posId}/nonpedagogical")]
+    public Task<ActionResult> DeleteNonPedagogical(int employeeId, int posId) =>
+        DeleteBlockAsync(employeeId, posId, p => p.NonPedagogical);
+
+    /// <summary>
+    /// Спільна логіка зносу блока: ставка не знайдена → 404; блока нема → 204 без
+    /// запису в БД (повторний DELETE безпечний); інакше Remove + Save → 204.
+    /// </summary>
+    /// <param name="employeeId">Id працівника для перевірки належності ставки.</param>
+    /// <param name="posId">Id ставки.</param>
+    /// <param name="selectBlock">Вибірка конкретного блока з завантаженої ставки.</param>
+    /// <returns>ActionResult для повернення з endpoint.</returns>
+    private async Task<ActionResult> DeleteBlockAsync<TBlock>(
+        int employeeId,
+        int posId,
+        Func<EmployeePosition, TBlock?> selectBlock) where TBlock : class
+    {
+        var position = await LoadFullPositionAsync(posId);
+        if (position == null || position.EmployeeId != employeeId)
+            return NotFound($"Ставка з id={posId} не належить працівнику.");
+        var block = selectBlock(position);
+        if (block == null)
+            return NoContent();
+        context.Remove(block);
+        await context.SaveChangesAsync();
+        return NoContent();
+    }
+
     private async Task<EmployeePosition?> LoadFullPositionAsync(int posId)
     {
         return await context.EmployeePositions

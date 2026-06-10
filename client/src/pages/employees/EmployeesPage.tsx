@@ -12,7 +12,8 @@ import { parseDec, todayIso } from '../../lib/format'
 type ImportKind = 'teachers' | 'staff' | null
 
 export function EmployeesPage() {
-  const { data, isPending, error } = useEmployees()
+  const [showDismissed, setShowDismissed] = useState(false)
+  const { data, isPending, error } = useEmployees(showDismissed)
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filterClass, setFilterClass] = useState(0)
@@ -36,7 +37,7 @@ export function EmployeesPage() {
       <div className="page-header">
         <div>
           <h1>Працівники</h1>
-          <p>{data.length} активних. Натисніть на рядок, щоб відкрити картку.</p>
+          <p>{data.length} {showDismissed ? 'разом зі звільненими' : 'активних'}. Натисніть на рядок, щоб відкрити картку.</p>
         </div>
         <div className="row">
           <button type="button" className="btn" onClick={() => setImportKind('teachers')}>⬆ Імпорт вчителів</button>
@@ -57,6 +58,10 @@ export function EmployeesPage() {
           <option value={0}>Всі класи</option>
           {([1, 2, 3, 4] as const).map(c => <option key={c} value={c}>Клас {c} — {WORKER_CLASS_LABELS[c]}</option>)}
         </select>
+        <label className="check">
+          <input type="checkbox" checked={showDismissed} onChange={e => setShowDismissed(e.target.checked)} />
+          Показати звільнених
+        </label>
       </div>
 
       <div className="table-wrap">

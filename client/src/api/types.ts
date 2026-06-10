@@ -215,10 +215,8 @@ export interface EmployeeDetail {
   pedExperienceYears: number
   status: EmployeeStatus
   socialBenefitPct: number | null
-  // Поки відсутні у EmployeeDetailDto бекенда (бекенд-задача) — читаємо опціонально,
-  // інакше збереження картки затерло б «Заслуженого» дефолтним false.
-  isHonored?: boolean
-  honoredAmount?: number | null
+  isHonored: boolean
+  honoredAmount: number | null
   positions: EmployeePosition[]
 }
 

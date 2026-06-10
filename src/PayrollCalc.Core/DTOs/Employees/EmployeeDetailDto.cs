@@ -33,6 +33,15 @@ public class EmployeeDetailDto
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
     /// <summary>
+    /// Заслужений вчитель/працівник освіти. Віддається у GET, бо PUT вимагає це поле —
+    /// інакше клієнт не знає поточного значення і затирає прапор дефолтом.
+    /// </summary>
+    public bool IsHonored { get; set; }
+    /// <summary>
+    /// Сума надбавки за звання «Заслужений». Null коли IsHonored=false.
+    /// </summary>
+    public decimal? HonoredAmount { get; set; }
+    /// <summary>
     /// Усі ставки працівника (активні та звільнені). Кожна несе власні блоки.
     /// </summary>
     public List<EmployeePositionDto> Positions { get; set; } = [];
@@ -58,6 +67,8 @@ public class EmployeeDetailDto
             PedExperienceYears = e.PedExperienceYears,
             Status = e.Status,
             SocialBenefitPct = e.SocialBenefitPct,
+            IsHonored = e.IsHonored,
+            HonoredAmount = e.HonoredAmount,
             Positions = e.Positions.Select(EmployeePositionDto.FromEntity).ToList()
         };
     }

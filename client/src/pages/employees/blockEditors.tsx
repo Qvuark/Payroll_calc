@@ -2,23 +2,40 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNotebookRates, useTariffGrades, keys } from '../../api/hooks'
-import { putAdmin, putGpd, putNonPedagogical, putPkr, putWorkload } from '../../api/endpoints'
+import { deleteBlock, putAdmin, putGpd, putNonPedagogical, putPkr, putWorkload } from '../../api/endpoints'
+import type { BlockKind } from '../../api/endpoints'
 import { ErrorNote, Field } from '../../components/ui'
 import { CABINET_TYPE_LABELS, CLASS_GRADE_GROUP_LABELS, GPD_GRADE_RANGE, PKR_GRADE_RANGE } from '../../api/types'
 import type { CabinetType, ClassGradeGroup, EmployeePosition } from '../../api/types'
 import { fmtNum, parseDec } from '../../lib/format'
 
 // Спільна обгортка блока: якщо блока нема — кнопка додавання,
-// якщо є (або щойно додається) — форма з власною кнопкою збереження.
-function BlockShell({ title, hint, exists, readOnly, children, onStart, started }: {
+// якщо є (або щойно додається) — форма з кнопками «Прибрати» і збереження.
+function BlockShell({ title, hint, exists, readOnly, children, onStart, started, employeeId, posId, kind, onRemoved }: {
   title: string
   hint: string
   exists: boolean
   readOnly: boolean
   started: boolean
   onStart: () => void
+  employeeId: number
+  posId: number
+  kind: BlockKind
+  onRemoved: () => void
   children: ReactNode
 }) {
+  const qc = useQueryClient()
+  const [removeError, setRemoveError] = useState<unknown>(null)
+  const remove = useMutation({
+    mutationFn: () => deleteBlock(employeeId, posId, kind),
+    onSuccess: () => {
+      setRemoveError(null)
+      onRemoved()
+      qc.invalidateQueries({ queryKey: keys.employee(employeeId) })
+    },
+    onError: setRemoveError,
+  })
+
   if (!exists && !started) {
     return (
       <div className="row mt8" style={{ borderTop: '1px solid var(--border)', paddingTop: 10 }}>
@@ -31,16 +48,23 @@ function BlockShell({ title, hint, exists, readOnly, children, onStart, started 
       </div>
     )
   }
+  const confirmRemove = () => {
+    if (window.confirm(`Прибрати блок «${title}» з цієї ставки? Введені в ньому дані буде втрачено.`))
+      remove.mutate()
+  }
   return (
     <div className="mt8" style={{ borderTop: '1px solid var(--border)', paddingTop: 10 }}>
       <div className="row mb16">
         <span style={{ fontWeight: 600 }}>{title}</span>
         <span className="hint">{hint}</span>
         <span className="spacer" />
-        <button type="button" className="btn btn-sm" disabled title="Видалення блоків з’явиться після оновлення програми">
-          Прибрати
-        </button>
+        {!readOnly && (
+          <button type="button" className="btn btn-sm btn-danger" onClick={confirmRemove} disabled={remove.isPending}>
+            Прибрати
+          </button>
+        )}
       </div>
+      <ErrorNote error={removeError} />
       {children}
     </div>
   )
@@ -148,6 +172,10 @@ export function WorkloadEditor({ employeeId, position, readOnly }: {
       readOnly={readOnly}
       started={started}
       onStart={() => setStarted(true)}
+      employeeId={employeeId}
+      posId={position.id}
+      kind="workload"
+      onRemoved={() => setStarted(false)}
     >
       <table style={{ maxWidth: 560 }}>
         <thead>
@@ -182,16 +210,11 @@ export function WorkloadEditor({ employeeId, position, readOnly }: {
       </table>
       {hasNotebookHours && (
         <div className="mt8" style={{ maxWidth: 360 }}>
-          <Field
-            label="Предмет для % зошитів"
-            hint={rates.data && rates.data.length === 0
-              ? 'Довідник предметів буде доступний після оновлення програми (зараз % береться з імпорту)'
-              : 'Відсоток оплати залежить від предмета'}
-          >
+          <Field label="Предмет для % зошитів" hint="Відсоток оплати залежить від предмета">
             <select
               value={form.notebookRateId}
               onChange={e => setForm(f => ({ ...f, notebookRateId: Number(e.target.value) }))}
-              disabled={readOnly || (rates.data ?? []).length === 0}
+              disabled={readOnly}
             >
               <option value={0}>Не вибрано</option>
               {(rates.data ?? []).map(r => (
@@ -263,6 +286,10 @@ export function AdminEditor({ employeeId, position, readOnly }: {
       readOnly={readOnly}
       started={started}
       onStart={() => setStarted(true)}
+      employeeId={employeeId}
+      posId={position.id}
+      kind="admin"
+      onRemoved={() => setStarted(false)}
     >
       <div className="row">
         <label className="check">
@@ -327,7 +354,7 @@ export function AdminEditor({ employeeId, position, readOnly }: {
 
 // ─── ГПД / ПКР (класи 1–2) ───
 
-function HoursWithGradeEditor({ employeeId, position, readOnly, title, hint, hoursLabel, range, block, save }: {
+function HoursWithGradeEditor({ employeeId, position, readOnly, title, hint, hoursLabel, range, block, kind, save }: {
   employeeId: number
   position: EmployeePosition
   readOnly: boolean
@@ -336,6 +363,7 @@ function HoursWithGradeEditor({ employeeId, position, readOnly, title, hint, hou
   hoursLabel: string
   range: [number, number]
   block: { tariffGradeId: number; hours: number } | null
+  kind: BlockKind
   save: (employeeId: number, posId: number, hours: number, tariffGradeId: number) => Promise<unknown>
 }) {
   const grades = useTariffGrades()
@@ -357,6 +385,10 @@ function HoursWithGradeEditor({ employeeId, position, readOnly, title, hint, hou
       readOnly={readOnly}
       started={started}
       onStart={() => setStarted(true)}
+      employeeId={employeeId}
+      posId={position.id}
+      kind={kind}
+      onRemoved={() => setStarted(false)}
     >
       <div className="row">
         <Field label={hoursLabel}>
@@ -389,6 +421,7 @@ export function GpdEditor(props: { employeeId: number; position: EmployeePositio
       hoursLabel="Годин на тиждень"
       range={GPD_GRADE_RANGE}
       block={gpd ? { tariffGradeId: gpd.tariffGradeId, hours: gpd.gpdHours } : null}
+      kind="gpd"
       save={(empId, posId, hours, tariffGradeId) => putGpd(empId, posId, { gpdHours: hours, tariffGradeId })}
     />
   )
@@ -404,6 +437,7 @@ export function PkrEditor(props: { employeeId: number; position: EmployeePositio
       hoursLabel="Годин на тиждень"
       range={PKR_GRADE_RANGE}
       block={pkr ? { tariffGradeId: pkr.tariffGradeId, hours: pkr.pkrHours } : null}
+      kind="pkr"
       save={(empId, posId, hours, tariffGradeId) => putPkr(empId, posId, { pkrHours: hours, tariffGradeId })}
     />
   )
@@ -478,6 +512,10 @@ export function NonPedagogicalEditor({ employeeId, position, readOnly }: {
       readOnly={readOnly}
       started={started}
       onStart={() => setStarted(true)}
+      employeeId={employeeId}
+      posId={position.id}
+      kind="nonpedagogical"
+      onRemoved={() => setStarted(false)}
     >
       <div className="row">
         <label className="check">

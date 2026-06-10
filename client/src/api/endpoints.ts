@@ -52,17 +52,18 @@ export const updateSystemParam = (key: string, value: number) =>
 
 export const getWorkCalendar = (year: number) =>
   api<WorkCalendarMonth[]>(`/workcalendar?year=${year}`)
+export const createCalendarYear = (year: number) =>
+  api<WorkCalendarMonth[]>(`/workcalendar/${year}`, { method: 'POST' })
+export const updateCalendarMonth = (year: number, month: number, workDays: number) =>
+  api<void>(`/workcalendar/${year}/${month}`, { method: 'PUT', body: JSON.stringify({ workDays }) })
 
-// Довідники звань/зошитів — ендпоінтів ще нема (бекенд-задача).
-// 404 → порожній список, UI деградує без падіння.
-export const getTitleTypes = () =>
-  api<TitleType[]>('/titletypes').catch(() => [] as TitleType[])
-export const getNotebookRates = () =>
-  api<NotebookRate[]>('/notebookrates').catch(() => [] as NotebookRate[])
+export const getTitleTypes = () => api<TitleType[]>('/titletypes')
+export const getNotebookRates = () => api<NotebookRate[]>('/notebookrates')
 
 // ─── Працівники ───
 
-export const getEmployees = () => api<EmployeeSummary[]>('/employees')
+export const getEmployees = (includeDismissed = false) =>
+  api<EmployeeSummary[]>(`/employees${includeDismissed ? '?includeDismissed=true' : ''}`)
 export const getEmployee = (id: number) => api<EmployeeDetail>(`/employees/${id}`)
 export const createEmployee = (body: CreateEmployeeRequest) =>
   api<EmployeeDetail>('/employees', { method: 'POST', body: JSON.stringify(body) })
@@ -92,6 +93,10 @@ export const putPkr = (employeeId: number, posId: number, body: PkrRequest) =>
   api<unknown>(`${posBase(employeeId)}/${posId}/pkr`, { method: 'PUT', body: JSON.stringify(body) })
 export const putNonPedagogical = (employeeId: number, posId: number, body: NonPedagogicalRequest) =>
   api<unknown>(`${posBase(employeeId)}/${posId}/nonpedagogical`, { method: 'PUT', body: JSON.stringify(body) })
+
+export type BlockKind = 'workload' | 'admin' | 'gpd' | 'pkr' | 'nonpedagogical'
+export const deleteBlock = (employeeId: number, posId: number, kind: BlockKind) =>
+  api<void>(`${posBase(employeeId)}/${posId}/${kind}`, { method: 'DELETE' })
 
 // ─── Табель ───
 

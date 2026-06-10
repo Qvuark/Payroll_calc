@@ -49,9 +49,11 @@ public class CalcInputBuilder(AppDbContext db)
 
         var paramMap = await LoadParamsAsync(year, month, ct);
 
-        // Тільки чинні ставки (не звільнені на дату періоду).
+        // Ставки, чинні бодай день у цьому місяці: активні + звільнені всередині/після нього.
+        // Звільнений серед місяця лишається у відомості свого місяця (дні бере з табеля).
+        var periodStart = new DateOnly(year, month, 1);
         var activePositions = employee.Positions
-            .Where(p => p.DismissalDate is null)
+            .Where(p => p.DismissalDate is null || p.DismissalDate >= periodStart)
             .Select(p => MapPosition(p, employee, timesheet))
             .ToList();
 

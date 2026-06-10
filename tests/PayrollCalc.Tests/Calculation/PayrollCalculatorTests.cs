@@ -205,8 +205,8 @@ public class PayrollCalculatorTests
     [Fact]
     public void Librarian_TenureHeadTextbooks_FromOklad()
     {
-        // Костенко r58 еталон: J=7356, V=J×30%, W=J×50%, X=J×8%
-        var pos = Specialist(oklad: 7356m) with { HasLibrarianTenure = true, IsLibraryHead = true, HasTextbooks = true };
+        // Костенко r58 еталон: J=7356, V=J×30% (стаж 20+ → TenurePct 0.30), W=J×50%, X=J×8%
+        var pos = Specialist(oklad: 7356m) with { HasLibrarianTenure = true, IsLibraryHead = true, HasTextbooks = true, TenurePct = 0.30m };
         var result = new PayrollCalculator().Calculate(Input(21, 21, pos));
 
         result.Earnings.Single(e => e.Name == "Вислуга бібліотекаря").Amount.Should().Be(2206.8m);
@@ -217,8 +217,8 @@ public class PayrollCalculatorTests
     [Fact]
     public void Medic_Tenure_ThirtyPercentOfOklad()
     {
-        // Суховіцька r57 еталон: J=6003, Y=J×30%
-        var pos = Specialist(oklad: 6003m) with { HasMedicTenure = true };
+        // Суховіцька r57 еталон: J=6003, Y=J×30% (стаж 20+ → TenurePct 0.30)
+        var pos = Specialist(oklad: 6003m) with { HasMedicTenure = true, TenurePct = 0.30m };
         var result = new PayrollCalculator().Calculate(Input(23, 23, pos));
 
         result.Earnings.Single(e => e.Name == "Вислуга медпрацівника").Amount.Should().Be(1800.9m);

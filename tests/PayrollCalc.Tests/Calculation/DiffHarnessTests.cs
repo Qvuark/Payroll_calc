@@ -21,8 +21,9 @@ public class DiffHarnessTests
     [Fact]
     public void Medic_r57_GrossMatchesEtalon()
     {
-        // Суховіцька: спеціаліст, оклад 6003, вислуга мед 30%, доплата до МЗП. Еталон BC=8647.
-        var pos = Spec(6003m) with { HasMedicTenure = true };
+        // Суховіцька: спеціаліст, оклад 6003, вислуга мед 30% (стаж 20+; пороги як у вчителів),
+        // доплата до МЗП. Вся вислуга у Y — основна M не платиться. Еталон BC=8647.
+        var pos = Spec(6003m) with { HasMedicTenure = true, TenurePct = 0.30m };
         var result = Calc(pos);
 
         Component(result, "Вислуга медпрацівника").Should().Be(1800.9m);
@@ -33,8 +34,9 @@ public class DiffHarnessTests
     [Fact]
     public void Librarian_r58_GrossMatchesEtalon()
     {
-        // Костенко: бібліотекар, оклад 7356. V=30%, W=50%, X=8%. Еталон BC=13829.28.
-        var pos = Spec(7356m) with { HasLibrarianTenure = true, IsLibraryHead = true, HasTextbooks = true };
+        // Костенко: бібліотекар, оклад 7356. V=30% (стаж 20+), W=50%, X=8%.
+        // Вся вислуга у V — основна M не платиться. Еталон BC=13829.28.
+        var pos = Spec(7356m) with { HasLibrarianTenure = true, IsLibraryHead = true, HasTextbooks = true, TenurePct = 0.30m };
         var result = Calc(pos);
 
         Component(result, "Вислуга бібліотекаря").Should().Be(2206.8m);

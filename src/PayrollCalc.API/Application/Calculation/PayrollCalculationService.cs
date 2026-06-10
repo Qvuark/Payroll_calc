@@ -28,14 +28,17 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
     }
 
     /// <summary>
-    /// Рахує всіх незвільнених працівників за місяць (для відомості/прогону всіх 74).
-    /// «У відпустці» теж рахується — його відпускні/лікарняні лежать у табелі цього місяця.
+    /// Рахує всіх працівників місяця (для відомості/прогону всіх 74). «У відпустці» рахується —
+    /// його відпускні лежать у табелі. Звільнений серед місяця теж у відомості свого останнього
+    /// місяця (фактичні дні + компенсація відпустки — правило бухгалтера); з наступного — випадає.
     /// Порядок — український алфавіт (collation), як у табелі та еталонній відомості.
     /// </summary>
     public async Task<IReadOnlyList<CalcResult>> RunAllAsync(int year, int month, CancellationToken ct = default)
     {
+        var periodStart = new DateOnly(year, month, 1);
         var ids = await db.Employees
-            .Where(e => e.Status != EmployeeStatus.Dismissed)
+            .Where(e => e.Status != EmployeeStatus.Dismissed
+                || (e.DismissalDate != null && e.DismissalDate >= periodStart))
             .OrderBy(e => EF.Functions.Collate(e.FullName, "uk-UA-x-icu"))
             .Select(e => e.Id)
             .ToListAsync(ct);

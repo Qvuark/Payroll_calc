@@ -77,6 +77,11 @@ a { color: var(--accent); text-decoration: none; }
 .nav-item.active { background: var(--accent-soft); color: var(--accent); }
 .nav-item svg { flex-shrink: 0; }
 
+/* Системний помаранчевий outline ріже око — свій спокійний фокус для клавіатури. */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+
 .main {
   flex: 1;
   overflow-y: auto;
@@ -353,6 +358,10 @@ th.sticky-col { z-index: 3; }
   gap: 12px;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
 }
+
+/* Картки документів: рівна висота, кнопка притиснута донизу. */
+.doc-card { flex: 1; min-width: 300px; display: flex; flex-direction: column; }
+.doc-card p { flex: 1; }
 
 /* Календар 3×4 */
 .calendar-grid {

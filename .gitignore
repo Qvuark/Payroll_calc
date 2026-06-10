@@ -45,3 +45,5 @@ CLAUDE.md
 
 # Згенеровані для перевірки очима зразки шаблонів
 timesheet_sample_*.xlsx
+# SPA-збірка клієнта (артефакт vite build, джерело — client/)
+src/PayrollCalc.API/wwwroot/

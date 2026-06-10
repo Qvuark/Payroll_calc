@@ -41,7 +41,7 @@ export function DocumentsPage() {
       <ErrorNote error={error} />
 
       <div className="row" style={{ alignItems: 'stretch', gap: 16 }}>
-        <div className="card" style={{ flex: 1, minWidth: 300 }}>
+        <div className="card doc-card">
           <h2>Відомість нарахування</h2>
           <p className="muted">
             Повна відомість по всіх працівниках у звичному форматі: колонки нарахувань,
@@ -56,7 +56,7 @@ export function DocumentsPage() {
             {busy === 'vedomost' ? 'Формую…' : '⬇ Скачати відомість'}
           </button>
         </div>
-        <div className="card" style={{ flex: 1, minWidth: 300 }}>
+        <div className="card doc-card">
           <h2>Розрахункові листи</h2>
           <p className="muted">
             Платіжки для видачі працівникам — по дві на аркуші. Кожен рядок нарахувань

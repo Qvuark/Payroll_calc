@@ -24,6 +24,10 @@ public record CalcInput
     /// </summary>
     public required decimal WorkedDays { get; init; }
     /// <summary>
+    /// Відсоток податкової соц.пільги — для шапки розрахункового листа. Null = пільги немає.
+    /// </summary>
+    public decimal? SocialBenefitPct { get; init; }
+    /// <summary>
     /// Ставки/посади працівника (1 Employee → N посад), кожна рахується окремо.
     /// </summary>
     public required IReadOnlyList<PositionCalcInput> Positions { get; init; }

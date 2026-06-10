@@ -61,6 +61,10 @@ try
     }
 
     app.UseHttpsRedirection();
+    // SPA з wwwroot: UseDefaultFiles підставляє index.html на "/", далі статика.
+    // Фронт на HashRouter — серверний fallback для маршрутів не потрібен.
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
     app.MapControllers();
 
     app.Run();

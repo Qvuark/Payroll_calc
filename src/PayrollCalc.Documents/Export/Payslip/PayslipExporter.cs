@@ -54,6 +54,28 @@ public sealed class PayslipExporter
         ws.Cell(row, ev).Value = "посада:";
         ws.Cell(row, dl).Value = string.Join(", ", r.Positions.Select(p => p.PositionName));
         row++;
+        var grades = r.Positions.Where(p => p.TariffGrade > 0).Select(p => p.TariffGrade).Distinct().ToList();
+        if (grades.Count > 0)
+        {
+            ws.Cell(row, el).Value = "Тарифний розряд";
+            ws.Cell(row, ev).Value = string.Join(", ", grades);
+            row++;
+        }
+        var titles = r.Positions.Where(p => p.TitleName != null).Select(p => p.TitleName!).Distinct().ToList();
+        if (titles.Count > 0)
+        {
+            ws.Cell(row, el).Value = "Звання";
+            ws.Cell(row, ev).Value = string.Join(", ", titles);
+            row++;
+        }
+        if (r.SocialBenefitPct is { } benefit)
+        {
+            // Пільга в БД може бути часткою (0.5) або відсотком (50) — нормалізуємо у відсотки.
+            var pct = benefit <= 1m ? benefit * 100m : benefit;
+            ws.Cell(row, el).Value = "Податкова соц. пільга";
+            ws.Cell(row, ev).Value = $"{pct:0.##}%";
+            row++;
+        }
         ws.Cell(row, el).Value = "Відпрацьовано днів/норма";
         ws.Cell(row, ev).Value = $"{r.WorkedDays}/{r.NormDays}";
         row++;

@@ -31,6 +31,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
             Month = input.Month,
             NormDays = input.NormDays,
             WorkedDays = input.WorkedDays,
+            SocialBenefitPct = input.SocialBenefitPct,
             Positions = input.Positions,
             Earnings = earnings,
             Gross = gross,

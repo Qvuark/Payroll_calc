@@ -1,0 +1,14 @@
+{
+  "name": "payrollcalc-desktop",
+  "productName": "PayrollCalc",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Десктоп-обгортка PayrollCalc: вікно над localhost-API",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^42.4.0"
+  }
+}

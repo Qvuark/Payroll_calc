@@ -29,6 +29,10 @@ public record CalcResult
     /// </summary>
     public IReadOnlyList<PositionCalcInput> Positions { get; init; } = [];
     /// <summary>
+    /// Відсоток податкової соц.пільги — для шапки розрахункового листа. Null = пільги немає.
+    /// </summary>
+    public decimal? SocialBenefitPct { get; init; }
+    /// <summary>
     /// Нарахування — кожна надбавка окремим компонентом (відповідає колонкам J:BB відомості).
     /// </summary>
     public required IReadOnlyList<CalcComponent> Earnings { get; init; }

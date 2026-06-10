@@ -13,6 +13,14 @@ public record PositionCalcInput
     public required WorkerClass WorkerClass { get; init; }
     public required string PositionName { get; init; }
     /// <summary>
+    /// Номер тарифного розряду (1-25) — для шапки розрахункового листа. 0 = не заданий.
+    /// </summary>
+    public int TariffGrade { get; init; }
+    /// <summary>
+    /// Назва звання («Старший вчитель») — для шапки розрахункового листа. Null = без звання.
+    /// </summary>
+    public string? TitleName { get; init; }
+    /// <summary>
     /// Місячний оклад розряду на повну ставку (TariffGrade.MonthlyRate) — число, що веде формулу.
     /// Для директорозалежних посад тут оклад директора, а множник у DirectorPct.
     /// </summary>

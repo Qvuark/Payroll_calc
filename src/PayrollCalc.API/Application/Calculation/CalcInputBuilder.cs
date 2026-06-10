@@ -75,6 +75,7 @@ public class CalcInputBuilder(AppDbContext db)
             Month = month,
             NormDays = calendar.WorkDays,
             WorkedDays = timesheet?.WorkedDays ?? calendar.WorkDays,
+            SocialBenefitPct = employee.SocialBenefitPct,
             Positions = activePositions,
             Manual = MapManual(timesheet),
             Params = PayrollParamsFactory.From(paramMap),
@@ -108,6 +109,8 @@ public class CalcInputBuilder(AppDbContext db)
         {
             WorkerClass = workerClass,
             PositionName = ep.Position.Name,
+            TariffGrade = ep.TariffGrade!.Grade,
+            TitleName = ep.TitleType?.Name,
             // Директорозалежна посада: тариф = оклад директора (за конвенцією заповнення TariffGrade), множник у DirectorPct.
             Oklad = ep.TariffGrade!.MonthlyRate,
             RateCount = ep.RateCount,

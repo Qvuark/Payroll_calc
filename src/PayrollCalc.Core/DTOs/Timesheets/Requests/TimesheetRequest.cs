@@ -50,6 +50,26 @@ public class TimesheetRequest
     /// Перерахунок. Може бути відʼємним — утримання минулої переплати.
     /// </summary>
     [Range(-1000000.0, 1000000.0)] public decimal Recalculation { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Позакласна робота з фізвиховання (відомість AC).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal PhysEducation { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Компенсація за невикористану відпустку (відомість AQ).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal VacationCompensation { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Оплата простою (відомість AR).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal Downtime { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Оплата за час курсів підвищення кваліфікації (відомість AT).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal Courses { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Індексація зарплати (відомість AV).
+    /// </summary>
+    [Range(0.0, 1000000.0)] public decimal Indexation { get; set; } = decimal.Zero;
 
     /// <summary>
     /// Маппінг Request → нова entity (insert-шлях upsert-у). Ставить ключ і делегує значення в ApplyTo.
@@ -87,6 +107,11 @@ public class TimesheetRequest
         entity.SickFss = Round(SickFss);
         entity.Vacation = Round(Vacation);
         entity.Recalculation = Round(Recalculation);
+        entity.PhysEducation = Round(PhysEducation);
+        entity.VacationCompensation = Round(VacationCompensation);
+        entity.Downtime = Round(Downtime);
+        entity.Courses = Round(Courses);
+        entity.Indexation = Round(Indexation);
     }
     private static decimal Round(decimal value) =>
         Math.Round(value, 2, MidpointRounding.AwayFromZero);

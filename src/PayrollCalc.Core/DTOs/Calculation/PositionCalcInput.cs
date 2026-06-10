@@ -127,10 +127,6 @@ public record PositionCalcInput
     /// </summary>
     public bool HasUnfavorable2600 { get; init; }
     /// <summary>
-    /// Заміни: ставка за годину заміни (відомість AW) — вводиться вручну (precomputed).
-    /// </summary>
-    public decimal ReplacementRate { get; init; }
-    /// <summary>
     /// Заміни: кількість годин замін за місяць (з табеля).
     /// </summary>
     public decimal ReplacementHours { get; init; }

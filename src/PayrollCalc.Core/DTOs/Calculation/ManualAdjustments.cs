@@ -42,4 +42,24 @@ public record ManualAdjustments
     /// Утримання за виконавчими листами (відомість BG).
     /// </summary>
     public decimal EnforcementOrders { get; init; }
+    /// <summary>
+    /// Позакласна робота з фізвиховання (відомість AC). Ручна сума — формули в еталоні немає.
+    /// </summary>
+    public decimal PhysEducation { get; init; }
+    /// <summary>
+    /// Компенсація за невикористану відпустку (відомість AQ).
+    /// </summary>
+    public decimal VacationCompensation { get; init; }
+    /// <summary>
+    /// Оплата простою (відомість AR).
+    /// </summary>
+    public decimal Downtime { get; init; }
+    /// <summary>
+    /// Оплата за час курсів підвищення кваліфікації (відомість AT).
+    /// </summary>
+    public decimal Courses { get; init; }
+    /// <summary>
+    /// Індексація зарплати (відомість AV). Зараховується в базу доплати до МЗП.
+    /// </summary>
+    public decimal Indexation { get; init; }
 }

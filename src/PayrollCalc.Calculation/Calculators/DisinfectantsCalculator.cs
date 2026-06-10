@@ -21,6 +21,6 @@ public static class DisinfectantsCalculator
         var formula = pos.RateCount == 1
             ? $"={Num(pos.Oklad)}*{Num(rate * 100)}%"
             : $"={Num(pos.Oklad)}*{Num(pos.RateCount)}*{Num(rate * 100)}%";
-        return new CalcComponent("Дезінфікуючі засоби", amount, formula);
+        return new CalcComponent(ComponentNames.Disinfectants, amount, formula);
     }
 }

@@ -346,7 +346,11 @@ export interface Timesheet {
   sickFss: number
   vacation: number
   recalculation: number
-  otherManual: number
+  physEducation: number
+  vacationCompensation: number
+  downtime: number
+  courses: number
+  indexation: number
 }
 
 export interface TimesheetRequest {
@@ -366,6 +370,11 @@ export interface TimesheetRequest {
   sickFss: number
   vacation: number
   recalculation: number
+  physEducation: number
+  vacationCompensation: number
+  downtime: number
+  courses: number
+  indexation: number
 }
 
 // ─── Розрахунок ───

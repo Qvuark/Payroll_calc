@@ -417,8 +417,8 @@ export function GpdEditor(props: { employeeId: number; position: EmployeePositio
     <HoursWithGradeEditor
       {...props}
       title="ГПД"
-      hint="група продовженого дня — окрема оплата з власним розрядом"
-      hoursLabel="Годин на тиждень"
+      hint="група продовженого дня — оплата = оклад розряду × кількість ставок"
+      hoursLabel="Ставок ГПД (0,5 чи 1 — НЕ години)"
       range={GPD_GRADE_RANGE}
       block={gpd ? { tariffGradeId: gpd.tariffGradeId, hours: gpd.gpdHours } : null}
       kind="gpd"

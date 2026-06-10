@@ -14,7 +14,7 @@ public class EmployeeGpd
     public int TariffGradeId { get; set; }
     public TariffGrade? TariffGrade { get; set; }
     /// <summary>
-    /// Кількість годин ГПД на тиждень.
+    /// Кількість СТАВОК ГПД (0.5 / 1.0), не годин: оплата = оклад розряду × це число.
     /// </summary>
     public decimal GpdHours { get; set; } = decimal.Zero;
 }

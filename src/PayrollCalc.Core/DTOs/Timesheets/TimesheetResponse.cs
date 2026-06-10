@@ -27,7 +27,11 @@ public class TimesheetResponse
     public decimal SickFss { get; set; } = decimal.Zero;
     public decimal Vacation { get; set; } = decimal.Zero;
     public decimal Recalculation { get; set; } = decimal.Zero;
-    public decimal OtherManual { get; set; } = decimal.Zero;
+    public decimal PhysEducation { get; set; } = decimal.Zero;
+    public decimal VacationCompensation { get; set; } = decimal.Zero;
+    public decimal Downtime { get; set; } = decimal.Zero;
+    public decimal Courses { get; set; } = decimal.Zero;
+    public decimal Indexation { get; set; } = decimal.Zero;
     /// <summary>
     /// Маппінг entity → DTO. Потребує завантаженого Employee (ПІБ, таб.номер).
     /// </summary>
@@ -56,7 +60,11 @@ public class TimesheetResponse
             SickFss = entity.SickFss,
             Vacation = entity.Vacation,
             Recalculation = entity.Recalculation,
-            OtherManual = entity.OtherManual
+            PhysEducation = entity.PhysEducation,
+            VacationCompensation = entity.VacationCompensation,
+            Downtime = entity.Downtime,
+            Courses = entity.Courses,
+            Indexation = entity.Indexation
         };
     }
     /// <summary>

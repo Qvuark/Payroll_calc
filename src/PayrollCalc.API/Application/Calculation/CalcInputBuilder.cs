@@ -203,5 +203,10 @@ public class CalcInputBuilder(AppDbContext db)
             Holiday = t.HolidayAmount,
             AnnualBonus = t.AnnualBonus,
             EnforcementOrders = t.EnforcementOrders,
+            PhysEducation = t.PhysEducation,
+            VacationCompensation = t.VacationCompensation,
+            Downtime = t.Downtime,
+            Courses = t.Courses,
+            Indexation = t.Indexation,
         };
 }

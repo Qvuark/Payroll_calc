@@ -28,12 +28,15 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
     }
 
     /// <summary>
-    /// Рахує всіх активних працівників за місяць (для відомості/прогону всіх 74).
+    /// Рахує всіх незвільнених працівників за місяць (для відомості/прогону всіх 74).
+    /// «У відпустці» теж рахується — його відпускні/лікарняні лежать у табелі цього місяця.
+    /// Порядок — український алфавіт (collation), як у табелі та еталонній відомості.
     /// </summary>
     public async Task<IReadOnlyList<CalcResult>> RunAllAsync(int year, int month, CancellationToken ct = default)
     {
         var ids = await db.Employees
-            .Where(e => e.Status == EmployeeStatus.Active)
+            .Where(e => e.Status != EmployeeStatus.Dismissed)
+            .OrderBy(e => EF.Functions.Collate(e.FullName, "uk-UA-x-icu"))
             .Select(e => e.Id)
             .ToListAsync(ct);
 

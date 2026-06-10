@@ -71,6 +71,7 @@ public sealed class VedomostExporter
         ws.Cell($"A{row}").Value = number;
         ws.Cell($"B{row}").Value = r.FullName;
         ws.Cell($"C{row}").Value = r.WorkedDays;
+        WriteInfoColumns(ws, r, row);
 
         // Збираємо формули по колонках: одна колонка може отримати кілька надбавок (багатоставковий).
         var byColumn = new Dictionary<string, List<string>>();
@@ -92,6 +93,25 @@ public sealed class VedomostExporter
             ws.Cell($"{col}{row}").FormulaA1 = string.Join("+", formulas);
 
         WriteLiveTotals(ws, r, row);
+    }
+
+    /// <summary>
+    /// Інфо-колонки D..H — години/навантаження зі ставок (сума по всіх ставках працівника).
+    /// Нулі лишаємо порожніми клітинками, як в еталоні. I (заміни ГПД) не ведеться — пропускаємо.
+    /// </summary>
+    private static void WriteInfoColumns(IXLWorksheet ws, CalcResult r, int row)
+    {
+        WriteIfAny(ws, "D", row, r.Positions.Sum(p => p.WorkedHours));
+        WriteIfAny(ws, "E", row, r.Positions.Sum(p => p.PedHoursWeekly));
+        WriteIfAny(ws, "F", row, r.Positions.Sum(p => p.AdditionalHours));
+        WriteIfAny(ws, "G", row, r.Positions.Sum(p => p.InclusiveHours));
+        WriteIfAny(ws, "H", row, r.Positions.Sum(p => p.ReplacementHours));
+    }
+
+    private static void WriteIfAny(IXLWorksheet ws, string col, int row, decimal value)
+    {
+        if (value != 0)
+            ws.Cell($"{col}{row}").Value = value;
     }
 
     /// <summary>

@@ -98,20 +98,24 @@ public sealed class PayrollCalculator : IPayrollCalculator
             list.AddRange(posList.Select(c => c with { SourceClass = pos.WorkerClass }));
         }
 
+        // Індексація — ручна сума, але кладеться ДО доплати до МЗП: за правилом вона
+        // зараховується в базу мінімалки (оклад+вислуга+індексація), решта ручних — ні.
+        var m = input.Manual;
+        AddManual(list, ComponentNames.Indexation, m.Indexation);
+
         // Доплата до МЗП — лише спеціалістам і МОП (Class 3/4); педагогам/адмін-педам не належить.
         var eligibleForMinimum = input.Positions.All(p => p.WorkerClass is WorkerClass.Specialist or WorkerClass.MOP);
         if (eligibleForMinimum)
         {
             // У мінімалку зараховуються оклад/вислуга/індексація; нічні й дезінфектанти платяться ПОНАД неї.
             var countedEarnings = list
-                .Where(c => c.Name is not ("Дезінфікуючі засоби" or "Доплата за нічні"))
+                .Where(c => c.Name is not (ComponentNames.Disinfectants or ComponentNames.NightShift))
                 .Sum(c => c.Amount);
             AddIfAny(list, MinimumWageCalculator.Calc(
                 input.Params.Mzp, input.Positions, countedEarnings, input.NormDays, input.WorkedDays));
         }
 
         // Мануальні суми — на працівника за місяць (не на ставку).
-        var m = input.Manual;
         AddManual(list, ComponentNames.Bonus, m.Bonus);
         AddManual(list, ComponentNames.Vacation, m.Vacation);
         AddManual(list, ComponentNames.SickEmployer, m.SickEmployer);
@@ -119,6 +123,10 @@ public sealed class PayrollCalculator : IPayrollCalculator
         AddManual(list, ComponentNames.Recalculation, m.Recalculation);
         AddManual(list, ComponentNames.Holiday, m.Holiday);
         AddManual(list, ComponentNames.AnnualBonus, m.AnnualBonus);
+        AddManual(list, ComponentNames.PhysEducation, m.PhysEducation);
+        AddManual(list, ComponentNames.VacationCompensation, m.VacationCompensation);
+        AddManual(list, ComponentNames.Downtime, m.Downtime);
+        AddManual(list, ComponentNames.Courses, m.Courses);
         return list;
     }
     /// <summary>

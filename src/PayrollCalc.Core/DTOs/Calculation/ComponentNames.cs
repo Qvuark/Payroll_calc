@@ -19,4 +19,11 @@ public static class ComponentNames
     public const string AnnualBonus = "Щорічна винагорода";
     public const string Advance = "Аванс";
     public const string EnforcementOrders = "Виконавчі листи";
+    public const string PhysEducation = "Позакласна робота з фізвиховання";
+    public const string VacationCompensation = "Компенсація за невикористану відпустку";
+    public const string Downtime = "Простій";
+    public const string Courses = "Курси";
+    public const string Indexation = "Індексація";
+    public const string Disinfectants = "Дезінфікуючі засоби";
+    public const string NightShift = "Доплата за нічні";
 }

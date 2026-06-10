@@ -321,6 +321,8 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             hasWorkload: false, hasAdmin: false, hasNonPedagogical: false, hasGpd: true, hasPkr: false);
         if (errors != null)
             return BadRequest(errors);
+        if (!EmployeeValidator.ValidateGpdGrade(tariffGrade.Grade))
+            return BadRequest($"Розряд {tariffGrade.Grade} недопустимий для ГПД (дозволено 10–14).");
         if (position.Gpd == null)
         {
             var newBlock = EmployeeGpdRequest.FromRequest(request);
@@ -365,6 +367,8 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             hasWorkload: false, hasAdmin: false, hasNonPedagogical: false, hasGpd: false, hasPkr: true);
         if (errors != null)
             return BadRequest(errors);
+        if (!EmployeeValidator.ValidatePkrGrade(tariffGrade.Grade))
+            return BadRequest($"Розряд {tariffGrade.Grade} недопустимий для ПКР (дозволено 10–12).");
         if (position.Pkr == null)
         {
             var newBlock = EmployeePkrRequest.FromRequest(request);

@@ -22,6 +22,11 @@ const COLS = [
   { key: 'holidayAmount', label: 'Святкові' },
   { key: 'annualBonus', label: 'Щоріч. винаг.' },
   { key: 'recalculation', label: 'Перерахунок' },
+  { key: 'physEducation', label: 'Фізвих.' },
+  { key: 'vacationCompensation', label: 'Компенс. відп.' },
+  { key: 'downtime', label: 'Простій' },
+  { key: 'courses', label: 'Курси' },
+  { key: 'indexation', label: 'Індексація' },
   { key: 'advance', label: 'Аванс' },
   { key: 'enforcementOrders', label: 'Викон. листи' },
 ] as const
@@ -79,6 +84,11 @@ export function TimesheetPage() {
       sickFss: val('sickFss'),
       vacation: val('vacation'),
       recalculation: val('recalculation'),
+      physEducation: val('physEducation'),
+      vacationCompensation: val('vacationCompensation'),
+      downtime: val('downtime'),
+      courses: val('courses'),
+      indexation: val('indexation'),
     }
   }
 

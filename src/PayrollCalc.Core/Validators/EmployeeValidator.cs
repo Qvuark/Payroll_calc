@@ -89,4 +89,12 @@ public static class EmployeeValidator
                 return false;
         }
     }
+    /// <summary>
+    /// Дозволений розряд для блоку ГПД (вихователь групи продовженого дня): 10–14.
+    /// </summary>
+    public static bool ValidateGpdGrade(int grade) => grade is >= 10 and <= 14;
+    /// <summary>
+    /// Дозволений розряд для блоку ПКР (керівник гуртка): 10–12.
+    /// </summary>
+    public static bool ValidatePkrGrade(int grade) => grade is >= 10 and <= 12;
 }

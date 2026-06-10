@@ -22,6 +22,6 @@ public static class NightShiftCalculator
 
         var amount = pos.Oklad / MonthlyHourNorm * pos.NightHours * rate;
         var formula = $"={Num(pos.Oklad)}/{MonthlyHourNorm}*{Num(pos.NightHours)}*{Num(rate * 100)}%";
-        return new CalcComponent("Доплата за нічні", amount, formula);
+        return new CalcComponent(ComponentNames.NightShift, amount, formula);
     }
 }

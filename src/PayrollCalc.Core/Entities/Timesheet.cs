@@ -19,7 +19,31 @@ public class Timesheet
     public decimal Advance { get; set; } = decimal.Zero;
     public decimal EnforcementOrders { get; set; } = decimal.Zero;
     public decimal AnnualBonus { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Легасі-поле без споживача (немає ні в запиті, ні в розрахунку). Дроп колонки — разом
+    /// з наступною міграцією-чисткою.
+    /// </summary>
     public decimal OtherManual { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Позакласна робота з фізвиховання (відомість AC). Ручна сума.
+    /// </summary>
+    public decimal PhysEducation { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Компенсація за невикористану відпустку (відомість AQ).
+    /// </summary>
+    public decimal VacationCompensation { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Оплата простою (відомість AR).
+    /// </summary>
+    public decimal Downtime { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Оплата за час курсів підвищення кваліфікації (відомість AT).
+    /// </summary>
+    public decimal Courses { get; set; } = decimal.Zero;
+    /// <summary>
+    /// Індексація зарплати (відомість AV). Зараховується в базу доплати до МЗП.
+    /// </summary>
+    public decimal Indexation { get; set; } = decimal.Zero;
     /// <summary>
     /// Премія за місяць (відомість BB). Разова сума, рушій не рахує — вписує бухгалтер.
     /// </summary>

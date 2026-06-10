@@ -22,7 +22,7 @@ public class Employee
     /// <summary>
     /// Загальний педагогічний стаж у роках на початок розрахункового року.
     /// Використовується для derive TenurePct (надбавка за вислугу).
-    /// Застосовується тільки до ставок Class 1.
+    /// Застосовується до педагогічних ставок (Class 1 і Class 2).
     /// </summary>
     public int PedExperienceYears { get; set; } = 0;
     /// <summary>
@@ -31,8 +31,9 @@ public class Employee
     /// </summary>
     public int GeneralExperienceYears { get; set; } = 0;
     /// <summary>
-    /// Відсоток податкової соц.пільги. Впливає на базу ПДФО.
-    /// Null якщо пільги немає. Вводиться вручну.
+    /// Відсоток податкової соц.пільги. Null якщо пільги немає. Вводиться вручну.
+    /// Зараз лише друкується в шапці розрахункового листа; зменшення бази ПДФО
+    /// не реалізовано — правило застосування уточнюється в бухгалтера.
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
     public EmployeeStatus Status { get; set; }

@@ -109,6 +109,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   padding: 20px;
 }
 .card + .card { margin-top: 16px; }
+/* Картки поруч у flex-ряду — відступ зверху від стопкового правила не потрібен. */
+.row > .card + .card { margin-top: 0; }
 
 .card-title {
   display: flex;

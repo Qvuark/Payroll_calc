@@ -6,9 +6,36 @@
   "description": "Десктоп-обгортка PayrollCalc: вікно над localhost-API",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist:win": "electron-builder --win"
   },
   "devDependencies": {
-    "electron": "^42.4.0"
+    "electron": "^42.4.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "ua.school.payrollcalc",
+    "productName": "PayrollCalc",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "icon.png"
+    ],
+    "extraResources": [
+      { "from": "api-win", "to": "api" },
+      { "from": "pgsql-win", "to": "pgsql" }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "PayrollCalc"
+    }
   }
 }

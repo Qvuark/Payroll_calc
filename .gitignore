@@ -47,3 +47,8 @@ CLAUDE.md
 timesheet_sample_*.xlsx
 # SPA-збірка клієнта (артефакт vite build, джерело — client/)
 src/PayrollCalc.API/wwwroot/
+
+# Electron packaging artifacts (важать сотні МБ — релізи йдуть у GitHub Releases, не в git)
+electron/api-win/
+electron/pgsql-win/
+electron/release/

@@ -22,19 +22,24 @@ public static class MinimumWageCalculator
         int normDays,
         decimal workedDays)
     {
+        // Поріг = скільки людина МУСИТЬ отримати за законом про мінімалку.
+        // Кожна ставка дає свій поріг, сумуємо. parts[] — шматки формули для клітинки Excel.
         decimal threshold = 0m;
         var parts = new List<string>();
         foreach (var pos in positions)
         {
             if (pos.IsHourly)
             {
+                // Погодинна (сторож): поріг = МЗП/176 × відпрацьовані години, а не ціла МЗП.
                 threshold += mzp / HourlyMonthNorm * pos.WorkedHours;
                 parts.Add($"{Num(mzp)}/{HourlyMonthNorm}*{Num(pos.WorkedHours)}");
             }
             else
             {
+                // Денна: поріг = МЗП × кількість ставок (1.5 ставки → поріг 1.5×МЗП).
                 var part = mzp * pos.RateCount;
                 var partFormula = pos.RateCount == 1m ? Num(mzp) : $"{Num(mzp)}*{Num(pos.RateCount)}";
+                // Неповний місяць (прийом/звільнення серед місяця) — поріг ріжемо по днях.
                 if (workedDays != normDays)
                 {
                     part = part * workedDays / normDays;
@@ -45,6 +50,7 @@ public static class MinimumWageCalculator
             }
         }
 
+        // Доплата = скільки бракує до порога. Заробив уже ≥ порога → доплати немає.
         var topUp = threshold - countedEarnings;
         if (topUp <= 0)
             return null;

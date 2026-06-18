@@ -7,7 +7,7 @@ namespace PayrollCalc.Documents.Import.Timesheet;
 /// </summary>
 public record TimesheetRowDto
 {
-    /// <summary>1-based номер рядка у файлі — для error-reporting мамі.</summary>
+    /// <summary>1-based номер рядка у файлі — для error-reporting бухгалтеру.</summary>
     public int RowIndex { get; init; }
     // Природний ключ матчингу. Резолвиться в EmployeeId у TimesheetUpserter.
     public string? TaxId { get; init; }

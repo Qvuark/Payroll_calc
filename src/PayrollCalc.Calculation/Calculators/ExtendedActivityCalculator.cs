@@ -15,12 +15,10 @@ public static class ExtendedActivityCalculator
     private const decimal PrestigePct = 0.20m;
 
     /// <param name="bonus22Rate">Ставка підвищення №22 (0.40) — той самий відсоток, що й №1749.</param>
-    public static IEnumerable<CalcComponent> Calc(
-        PositionCalcInput pos, decimal bonus22Rate, int normDays, decimal workedDays)
+    public static IEnumerable<CalcComponent> Calc(PositionCalcInput pos, decimal bonus22Rate, int normDays, decimal workedDays)
     {
         if (pos.ExtendedActivity is not { } a)
             yield break;
-
         // База: тариф/дільник×год. Дільник 1 опускаємо (ГПД = оклад×ставка), множник 1 теж.
         var baseAmount = a.Tariff / a.Divisor * a.Hours;
         var baseFormula = a.Divisor == 1 ? $"={Num(a.Tariff)}" : $"={Num(a.Tariff)}/{Num(a.Divisor)}";

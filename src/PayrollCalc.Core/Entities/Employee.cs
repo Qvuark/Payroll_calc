@@ -27,7 +27,7 @@ public class Employee
     public int PedExperienceYears { get; set; } = 0;
     /// <summary>
     /// Загальний стаж роботи у роках на початок розрахункового року.
-    /// Використовується для derive SickLeaveBase (лікарняні).
+    /// Використовується для виводу SickLeaveBase (лікарняні).
     /// </summary>
     public int GeneralExperienceYears { get; set; } = 0;
     /// <summary>

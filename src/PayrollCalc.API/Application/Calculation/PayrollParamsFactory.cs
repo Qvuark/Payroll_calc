@@ -3,7 +3,7 @@ using PayrollCalc.Core.DTOs.Calculation;
 namespace PayrollCalc.API.Application.Calculation;
 
 /// <summary>
-/// Збирає знімок PayrollParams з мапи SystemParams (Key→Value). Якщо ключа немає — кидає,
+/// Збирає типізований PayrollParams з мапи SystemParams (Key→Value). Якщо ключа немає — кидає,
 /// щоб розрахунок не побіг з мовчазним нулем у ставці податку (краще явна помилка конфігурації).
 /// </summary>
 public static class PayrollParamsFactory

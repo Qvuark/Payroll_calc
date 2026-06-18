@@ -67,6 +67,8 @@ public class AppDbContext : DbContext
         // Position + Employee — без блочних навігацій (вони на EmployeePosition)
         modelBuilder.Entity<Position>().HasOne(p => p.Department).WithMany().HasForeignKey(p => p.DepartmentId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Position>().Property(p => p.ExcelAliases).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
+        // SpecialTenure — обчислюване з Name, не колонка БД.
+        modelBuilder.Entity<Position>().Ignore(p => p.SpecialTenure);
         modelBuilder.Entity<TitleType>().Property(t => t.ExcelAliases).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
         modelBuilder.Entity<EmployeePosition>().HasOne(p => p.TitleType).WithMany().HasForeignKey(p => p.TitleTypeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<Employee>().Property(e => e.TaxId).HasMaxLength(10).IsRequired();

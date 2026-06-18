@@ -5,21 +5,18 @@ using PayrollCalc.Infrastructure.Data;
 
 namespace PayrollCalc.API.Controllers;
 
+/// <summary>
+/// Системні параметри розрахунку (ставки податків, МЗП, №1749...). Читання + правка
+/// значення за ключем. Звідси параметри живлять рушій через PayrollParamsFactory.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class SystemParamsController : ControllerBase
+public class SystemParamsController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public SystemParamsController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SystemParam>>> Get()
     {
-        return await _context.SystemParams.ToListAsync();
+        return await context.SystemParams.ToListAsync();
     }
 
     [HttpPut("{key}")]
@@ -28,13 +25,13 @@ public class SystemParamsController : ControllerBase
         // Від'ємна ставка податку/надбавки отруїла б усі наступні розрахунки.
         if (request.Value < 0)
             return BadRequest("Значення параметра не може бути від'ємним.");
-        var systemParam = await _context.SystemParams.FirstOrDefaultAsync(s => s.Key == key);
+        var systemParam = await context.SystemParams.FirstOrDefaultAsync(s => s.Key == key);
         if (systemParam == null)
             return NotFound();
 
         systemParam.Value = request.Value;
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return NoContent();
     }
 }

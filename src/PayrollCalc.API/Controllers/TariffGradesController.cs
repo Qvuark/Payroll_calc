@@ -5,21 +5,18 @@ using PayrollCalc.Infrastructure.Data;
 
 namespace PayrollCalc.API.Controllers;
 
+/// <summary>
+/// Довідник тарифних розрядів. Лише читання + правка окладу (MonthlyRate):
+/// набір розрядів фіксований тарифною сіткою, рядки не додаються й не видаляються.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class TariffGradesController : ControllerBase
+public class TariffGradesController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public TariffGradesController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TariffGrade>>> Get()
     {
-        return await _context.TariffGrades.OrderBy(t => t.Grade).ToListAsync();
+        return await context.TariffGrades.OrderBy(t => t.Grade).ToListAsync();
     }
 
     [HttpPut("{id}")]
@@ -28,13 +25,13 @@ public class TariffGradesController : ControllerBase
         // Нульовий/від'ємний оклад розряду зламав би розрахунок усім, хто на ньому сидить.
         if (request.MonthlyRate <= 0)
             return BadRequest("Оклад розряду має бути більшим за нуль.");
-        var tariffGrade = await _context.TariffGrades.FirstOrDefaultAsync(t => t.Id == id);
+        var tariffGrade = await context.TariffGrades.FirstOrDefaultAsync(t => t.Id == id);
         if (tariffGrade == null)
             return NotFound();
 
         tariffGrade.MonthlyRate = request.MonthlyRate;
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return NoContent();
     }
 }

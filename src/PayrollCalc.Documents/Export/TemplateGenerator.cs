@@ -6,14 +6,14 @@ namespace PayrollCalc.Documents.Export;
 /// <summary>
 /// Генерує .xlsx-шаблон зі схеми IExcelColumnMap — порожній (staff/teachers) або pre-filled ростером (timesheet).
 /// Row HeaderRowIndex — англ. ключі (по них парсер валідує файл при імпорті).
-/// Row DescriptionRowIndex — укр. підписи (мама бачить що куди вписувати).
-/// Row FirstDataRowIndex+ — порожньо або pre-fill з БД (caller передає рядки), решта колонок заповнює мама.
+/// Row DescriptionRowIndex — укр. підписи (бухгалтер бачить що куди вписувати).
+/// Row FirstDataRowIndex+ — порожньо або pre-fill з БД (caller передає рядки), решта колонок заповнює бухгалтер.
 /// Один генератор на всі парсери (Teachers, Staff, GPD, ...) — нова мапа = новий шаблон без зайвого коду.
 /// </summary>
 public class TemplateGenerator
 {
     /// <summary>
-    /// Порожній шаблон (staff/teachers): тільки заголовки + описи, дані вписує мама.
+    /// Порожній шаблон (staff/teachers): тільки заголовки + описи, дані вписує бухгалтер.
     /// Делегує в pre-fill overload з порожнім ростером.
     /// </summary>
     /// <param name="map">Схема колонок конкретного шаблону (Teachers/Staff/...).</param>
@@ -21,7 +21,7 @@ public class TemplateGenerator
     public byte[] Generate(IExcelColumnMap map, string nameOfSheet = "Sheet1") => Generate(map, [], nameOfSheet);
     /// <summary>
     /// Pre-filled шаблон (timesheet): заголовки + описи + рядки ростера з БД.
-    /// Каже мамі що міняти не можна (сірий фон), решта колонок лишаються порожні під ввід.
+    /// Каже бухгалтеру що міняти не можна (сірий фон), решта колонок лишаються порожні під ввід.
     /// </summary>
     /// <param name="map">Схема колонок шаблону.</param>
     /// <param name="prefillRows">Рядки ростера: кожен словник = колонка → готове значення з БД. Порожній = шаблон без pre-fill.</param>
@@ -43,7 +43,7 @@ public class TemplateGenerator
             cell.Style.Fill.SetBackgroundColor(XLColor.LightBlue);
         }
         // Pre-fill: кожен словник = один рядок ростера (колонка → готове значення з БД).
-        // Сірий фон сигналить мамі "не чіпати" (ІПН/ПІБ/посада ставить програма). Колонки для
+        // Сірий фон сигналить бухгалтеру "не чіпати" (ІПН/ПІБ/посада ставить програма). Колонки для
         // вводу у словнику відсутні → лишаються порожні. Autosize нижче — ПІСЛЯ запису даних.
         var dataRow = map.FirstDataRowIndex + 1;
         foreach (var prefillRow in prefillRows)

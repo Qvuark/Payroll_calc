@@ -2,7 +2,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 using PayrollCalc.Core.Entities.Enums;
 
 namespace PayrollCalc.Core.Entities;
-
+/// <summary>
+/// Відомість нарахувань і утримань працівника за місяць.
+/// </summary>
 public class Calculation
 {
     public int Id { get; set; }

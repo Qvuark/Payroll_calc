@@ -5,7 +5,7 @@ namespace PayrollCalc.Documents.Import.Teachers;
 
 /// <summary>
 /// Парсер teachers.xlsx. Stream → (List&lt;TeachersRowDto&gt;, List&lt;ParserError&gt;).
-/// Не throws на bad data — збирає всі помилки у список, мама бачить повний звіт за один прохід.
+/// Не throws на bad data — збирає всі помилки у список, бухгалтер бачить повний звіт за один прохід.
 /// Не знає про БД і бізнес-правила — це робота Importer (resolve string→Id, cross-record check).
 /// </summary>
 public class TeachersParser
@@ -48,7 +48,7 @@ public class TeachersParser
         {
             var row = sheet.Rows[rowNumber];
             // +1 — у Excel нумерація рядків 1-based, у DataTable 0-based.
-            // Передаємо у ParseRow саме "людський" номер, щоб мама бачила
+            // Передаємо у ParseRow саме "людський" номер, щоб бухгалтер бачив
             // у репорті помилок ту ж цифру, що в Excel.
             var dto = ParseRow(row, rowNumber + 1, errors);
             if (dto is not null)
@@ -59,7 +59,7 @@ public class TeachersParser
     /// <summary>
     /// Парсить одну строку Excel у TeachersRowDto. Повертає null якщо
     /// рядок порожній або відсутні mandatory поля. Помилки додає у errors,
-    /// не throws — мама хоче бачити повний звіт за один прохід.
+    /// не throws — бухгалтер хоче бачити повний звіт за один прохід.
     /// </summary>
     private TeachersRowDto? ParseRow(DataRow row, int rowNumber, List<ParserError> errors)
     {

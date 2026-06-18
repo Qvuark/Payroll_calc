@@ -12,11 +12,8 @@ namespace PayrollCalc.API.Application.Import;
 /// Створює або оновлює одну ставку (EmployeePosition) + блоки Gpd/Pkr/NonPedagogical працівника.
 /// Резолвить назви/числа з файлу в Id довідників і валідує клас. Не комітить — це робить Importer на весь файл.
 /// </summary>
-public class PositionUpserter
+public class PositionUpserter(AppDbContext db)
 {
-    private readonly AppDbContext _db;
-    public PositionUpserter(AppDbContext db) => _db = db;
-
     /// <summary>
     /// Знаходить ставку за (EmployeeId, PositionId) і оновлює, або створює нову.
     /// Повертає (null, false) якщо resolve чи валідація впали (помилка вже в errors); (ставка, true) — створено; (ставка, false) — оновлено.
@@ -27,14 +24,14 @@ public class PositionUpserter
         List<ParserError> errors,
         CancellationToken ct = default)
     {
-        var position = await _db.Positions.FirstOrDefaultAsync(p => p.Name == staffRow.Position, ct);
+        var position = await db.Positions.FirstOrDefaultAsync(p => p.Name == staffRow.Position, ct);
         if (position is null)
         {
             errors.Add(new ParserError(staffRow.RowIndex, "Position",
                 $"Посада '{staffRow.Position}' не знайдена в довіднику"));
             return (null, false);
         }
-        var tariffGrade = await _db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.TariffGrade, ct);
+        var tariffGrade = await db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.TariffGrade, ct);
         if (tariffGrade is null)
         {
             errors.Add(new ParserError(staffRow.RowIndex, "TariffGrade",
@@ -52,7 +49,7 @@ public class PositionUpserter
         EmployeePosition? ep = null;
         if (employee.Id != 0)
         {
-            ep = await _db.EmployeePositions
+            ep = await db.EmployeePositions
                 .Include(x => x.Gpd)
                 .Include(x => x.Pkr)
                 .Include(x => x.NonPedagogical)
@@ -99,7 +96,7 @@ public class PositionUpserter
                 ));
                 return (null, false);
             }
-            gpdGrade = await _db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.GpdGrade, ct);
+            gpdGrade = await db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.GpdGrade, ct);
             if (gpdGrade is null)
             {
                 errors.Add(new ParserError(
@@ -123,7 +120,7 @@ public class PositionUpserter
                 ));
                 return (null, false);
             }
-            pkrGrade = await _db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.PkrGrade, ct);
+            pkrGrade = await db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.PkrGrade, ct);
             if (pkrGrade is null)
             {
                 errors.Add(new ParserError(
@@ -152,7 +149,7 @@ public class PositionUpserter
                 HasUnfavorable = staffRow.HasUnfavorable,
                 ComplexityBonusPct = staffRow.ComplexityPct,
             };
-            _db.EmployeePositions.Add(ep);
+            db.EmployeePositions.Add(ep);
             wasCreated = true;
         }
         else
@@ -173,7 +170,7 @@ public class PositionUpserter
         if (!string.IsNullOrWhiteSpace(staffRow.TitleType))
         {
             ep.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
-                _db, staffRow.TitleType, position.WorkerClass, staffRow.RowIndex, errors, ct);
+                db, staffRow.TitleType, position.WorkerClass, staffRow.RowIndex, errors, ct);
         }
 
         // ??= створює блок лише коли його ще нема, інакше перезаписує поля.

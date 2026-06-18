@@ -9,7 +9,7 @@ namespace PayrollCalc.Documents.Import.Teachers;
 /// </summary>
 public record TeachersRowDto : IPersonaRow
 {
-    /// <summary>1-based номер рядка у файлі — для error-reporting мамі.</summary>
+    /// <summary>1-based номер рядка у файлі — для error-reporting бухгалтеру.</summary>
     public int RowIndex { get; init; }
     // ─── Persona (повторюється у мульти-рядках, береться з першого) ───
     public string? TabNumber { get; init; }

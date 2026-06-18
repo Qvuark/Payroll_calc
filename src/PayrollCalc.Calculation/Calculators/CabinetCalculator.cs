@@ -26,7 +26,7 @@ public static class CabinetCalculator
             CabinetType.Workshop => PctWorkshop,
             _ => PctStandard,
         };
-        // База включає звання (підтв. мамою): Ганницька (8397+15%+40%)×13%, Куріна без звання (8397+40%)×13%.
+        // База включає звання (підтв. бухгалтером): Ганницька (8397+15%+40%)×13%, Куріна без звання (8397+40%)×13%.
         var raisedOklad = pos.Oklad * (1 + bonus1749Rate + pos.TitlePct);
         var amount = raisedOklad * pct;
         var formula = $"={Num(raisedOklad)}*{Num(pct * 100)}%";

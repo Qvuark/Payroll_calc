@@ -240,8 +240,8 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
 
     /// <summary>
     /// Upsert блока педагогічних обов'язків (класне керівництво, кабінет, спортзал, тир тощо).
-    /// Тільки для Class 1 (вчителі) — інші класи отримають 400 (мама: ці надбавки лише в учителів).
-    /// Назва "admin" історична: після Phase 3.6.5 тут лише педагогічні обов'язки, не адмін-функції.
+    /// Тільки для Class 1 (вчителі) — інші класи отримають 400 (бухгалтер: ці надбавки лише в учителів).
+    /// Назва "admin" історична й оманлива: тут лише педагогічні обов'язки, не адмін-функції директора.
     /// </summary>
     /// <param name="employeeId">Id працівника з route.</param>
     /// <param name="posId">Id ставки з route.</param>
@@ -338,7 +338,6 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         var saved = await LoadFullPositionAsync(posId);
         return Ok(EmployeePositionDto.FromEntity(saved!));
     }
-
     /// <summary>
     /// Upsert блока ПКР (педагогічно-керівнича робота — гуртки, секції).
     /// Тільки для Class 1 і Class 2. Має власний тарифний розряд.

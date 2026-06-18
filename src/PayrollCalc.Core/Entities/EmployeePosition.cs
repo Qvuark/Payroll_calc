@@ -36,12 +36,12 @@ public class EmployeePosition
     /// </summary>
     public DateOnly? PositionStartDate { get; set; }
     /// <summary>
-    /// Дата з якої запис чинний. У MVP дорівнює HireDate; у Phase 2.7 використовується для versioning історії змін ставки.
+    /// Дата з якої запис чинний. У MVP дорівнює HireDate; закладено під майбутній versioning історії змін ставки.
     /// </summary>
     public DateOnly EffectiveFrom { get; set; }
     /// <summary>
     /// Дата закриття чинності запису для versioning. У MVP завжди null.
-    /// У Phase 7+ використовується для зберігання історії змін ставки без втрати старих даних
+    /// Закладено під майбутнє зберігання історії змін ставки без втрати старих даних
     /// (не плутати з DismissalDate — це різні концепти: запис vs звільнення з посади).
     /// </summary>
     public DateOnly? EffectiveTo { get; set; }

@@ -7,6 +7,10 @@ using PayrollCalc.Infrastructure.Data;
 
 namespace PayrollCalc.API.Controllers;
 
+/// <summary>
+/// Табелі: читання (список будується від працівників, не від наявних записів) + upsert
+/// за (EmployeeId, Year, Month). Паралельний шлях до Excel-імпорту — пишуть у ту саму таблицю.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class TimesheetsController(AppDbContext db) : ControllerBase

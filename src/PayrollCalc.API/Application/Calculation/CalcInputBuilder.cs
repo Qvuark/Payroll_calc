@@ -14,14 +14,9 @@ namespace PayrollCalc.API.Application.Calculation;
 public class CalcInputBuilder(AppDbContext db)
 {
     /// <summary>
-    /// Посади з вислугою 30% від окладу (відомість V/Y) — матч за назвою з сіда довідника.
-    /// </summary>
-    private const string LibrarianPositionName = "Завідувач бібліотеки";
-    private const string MedicPositionName = "Сестра медична";
-
-    /// <summary>
-    /// Будує вхід рушія для працівника на (year, month). null — працівника немає.
-    /// Нема табеля → дні = норма місяця, ручні суми = 0. Нема календаря → кидає (нема з чого брати норму).
+    /// Будує вхід рушія (CalcInput) на працівника за (year, month) — єдина публічна точка білдера.
+    /// Нема табеля → дні = норма місяця, ручні = 0. Нема календаря → кидає. null — працівника немає.
+    /// Викликається з PayrollCalculationService.RunAsync (на кожного працівника); результат → рушій.
     /// </summary>
     public async Task<CalcInput?> BuildAsync(int employeeId, int year, int month, CancellationToken ct = default)
     {
@@ -84,9 +79,13 @@ public class CalcInputBuilder(AppDbContext db)
         };
     }
 
+    /// <summary>
+    /// Версійний знімок SystemParams: по кожному ключу — останнє значення з EffectiveDate ≤ початок місяця.
+    /// Так розрахунок за минулий місяць бере ставки/МЗП, чинні ТОДІ, а не сьогоднішні.
+    /// Викликається з BuildAsync; результат → PayrollParamsFactory.From.
+    /// </summary>
     private async Task<Dictionary<string, decimal>> LoadParamsAsync(int year, int month, CancellationToken ct)
     {
-        // Знімок параметрів, чинних на початок періоду: по кожному ключу — останнє значення ≤ дати.
         var periodStart = new DateOnly(year, month, 1);
         var rows = await db.SystemParams
             .Where(sp => sp.EffectiveDate <= periodStart)
@@ -96,6 +95,11 @@ public class CalcInputBuilder(AppDbContext db)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(sp => sp.EffectiveDate).First().Value);
     }
 
+    /// <summary>
+    /// Мапить одну ставку (EmployeePosition + блоки) у плоский PositionCalcInput для рушія:
+    /// дерайвить TenurePct зі стажу, тягне %-и й прапори надбавок з блоків, hourly-години з табеля.
+    /// Викликається з BuildAsync по кожній активній ставці працівника.
+    /// </summary>
     private static PositionCalcInput MapPosition(EmployeePosition ep, Employee employee, Timesheet? timesheet)
     {
         var workerClass = ep.Position!.WorkerClass;
@@ -140,11 +144,9 @@ public class CalcInputBuilder(AppDbContext db)
             HasDisinfectants = nonPed?.HasDisinfectants ?? false,
             IsLibraryHead = nonPed?.HasLibraryMgmt ?? false,
             HasTextbooks = nonPed?.HasTextbooks ?? false,
-            // Вислуга бібліотекаря/медпрацівника не має власного прапорця в БД — визначаємо
-            // за назвою посади (у школі рівно один бібліотекар і одна медсестра).
-            // Замінити на явний прапорець блоку, коли мама підтвердить правило.
-            HasLibrarianTenure = ep.Position.Name == LibrarianPositionName,
-            HasMedicTenure = ep.Position.Name == MedicPositionName,
+            // Спец-вислуга (бібл/мед) — ознака живе на посаді (Position.SpecialTenure), не в мапері.
+            HasLibrarianTenure = ep.Position.SpecialTenure == SpecialTenureKind.Librarian,
+            HasMedicTenure = ep.Position.SpecialTenure == SpecialTenureKind.Medic,
             // Нічні/години — лише на погодинній ставці (сторож); табель на працівника, віддаємо погодинній посаді.
             IsHourly = isHourly,
             NightHours = isHourly ? timesheet?.NightHours ?? 0m : 0m,
@@ -154,11 +156,14 @@ public class CalcInputBuilder(AppDbContext db)
     }
 
     /// <summary>
-    /// Блок позаурочної роботи (ГПД/ПКР) ставки. Пріоритет ПКР, далі ГПД; null — немає жодного.
+    /// Блок позаурочної роботи (ГПД/ПКР) ставки → ExtendedActivityInput. Пріоритет ПКР, далі ГПД; null — немає жодного.
     /// База: ПКР — тариф/18×год; ГПД — оклад×ставка (Divisor=1, GpdHours = к-сть ставок ГПД). Проре по днях.
+    /// Викликається з MapPosition.
     /// </summary>
     private static ExtendedActivityInput? MapExtendedActivity(EmployeePosition ep, decimal tenurePct)
     {
+        // ГПД і ПКР на одній ставці взаємовиключні (підтв. бухгалтером) — співіснувати не можуть,
+        // тому порядок перевірки ролі не грає: береться той блок, що заведений.
         if (ep.Pkr is { } pkr)
             return new ExtendedActivityInput
             {
@@ -185,13 +190,19 @@ public class CalcInputBuilder(AppDbContext db)
     }
 
     /// <summary>
-    /// Стаж для вислуги: педагогічні класи рахують пед.стаж, решта — загальний.
+    /// Стаж для вислуги: педагогічні класи (1/2) рахують пед.стаж, решта (3/4) — загальний.
+    /// Викликається з MapPosition, годує TenureRate.ForYears.
     /// </summary>
     private static int TenureYears(WorkerClass wc, Employee e)
         => wc is WorkerClass.Pedagogical or WorkerClass.AdminPedagogical
             ? e.PedExperienceYears
             : e.GeneralExperienceYears;
 
+    /// <summary>
+    /// Грошові поля табеля (премія, лікарняні, відпускні, індексація…) → ManualAdjustments.
+    /// Табеля нема → порожній об'єкт (усі ручні = 0).
+    /// Викликається з BuildAsync.
+    /// </summary>
     private static ManualAdjustments MapManual(Timesheet? t) => t is null
         ? new ManualAdjustments()
         : new ManualAdjustments

@@ -5,22 +5,18 @@ using PayrollCalc.Core.Entities.Enums;
 using PayrollCalc.Infrastructure.Data;
 
 namespace PayrollCalc.API.Controllers;
+/// <summary>
+/// CRUD довідника посад. Delete заблоковано, якщо на посаду призначені працівники.
+/// WorkerClass посади визначає набір дозволених блоків надбавок на ставці.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class PositionsController : ControllerBase
+public class PositionsController(AppDbContext context) : ControllerBase
 {
-
-    private readonly AppDbContext _context;
-
-    public PositionsController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Position>>> GetAll()
     {
-        return await _context.Positions.Include(p => p.Department).ToListAsync();
+        return await context.Positions.Include(p => p.Department).ToListAsync();
     }
 
     [HttpPost]
@@ -34,18 +30,18 @@ public class PositionsController : ControllerBase
             IsHourly = request.IsHourly
         };
 
-        _context.Positions.Add(position);
-        await _context.SaveChangesAsync();
+        context.Positions.Add(position);
+        await context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAll), new { id = position.Id }, position);
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, [FromBody] PositionRequest request)
     {
-        var position = await _context.Positions.FirstOrDefaultAsync(p => p.Id == id);
+        var position = await context.Positions.FirstOrDefaultAsync(p => p.Id == id);
         if (position == null)
             return NotFound();
-        var department = await _context.Departments.FirstOrDefaultAsync(d => d.Id == request.DepartmentId);
+        var department = await context.Departments.FirstOrDefaultAsync(d => d.Id == request.DepartmentId);
         if (department == null)
             return BadRequest("Відділ не знайдено.");
         position.Name = request.Name;
@@ -53,22 +49,22 @@ public class PositionsController : ControllerBase
         position.WorkerClass = request.WorkerClass;
         position.IsHourly = request.IsHourly;
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        var position = await _context.Positions.FirstOrDefaultAsync(p => p.Id == id);
+        var position = await context.Positions.FirstOrDefaultAsync(p => p.Id == id);
         if (position == null)
             return NotFound();
 
-        if (await _context.EmployeePositions.AnyAsync(e => e.PositionId == id))
+        if (await context.EmployeePositions.AnyAsync(e => e.PositionId == id))
             return BadRequest("Неможливо видалити посаду — на неї призначені працівники.");
 
-        _context.Positions.Remove(position);
-        await _context.SaveChangesAsync();
+        context.Positions.Remove(position);
+        await context.SaveChangesAsync();
         return NoContent();
     }
 }

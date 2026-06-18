@@ -86,7 +86,7 @@ public static class ExcelFieldReader
     public static bool GetOptionalBool(DataRow row, int col)
     {
         // BoolParser.TryParse повертає false на null/пусто/невідоме значення.
-        // Для bool поля default false — ок, мама не пометила = не активно.
+        // Для bool поля default false — ок, бухгалтер не позначив = не активно.
         _ = BoolParser.TryParse(row[col], out var b);
         return b;
     }

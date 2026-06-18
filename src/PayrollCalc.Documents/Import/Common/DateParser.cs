@@ -10,7 +10,7 @@ namespace PayrollCalc.Documents.Import.Common;
 public static class DateParser
 {
     // TryParseExact приймає масив форматів і йде по черзі. Розширюй сюди коли
-    // мама принесе файл у новому форматі — без правки логіки.
+    // бухгалтер принесе файл у новому форматі — без правки логіки.
     private static readonly string[] Formats = new[]
     {
         "dd.MM.yyyy",   // 12.05.2024 — укр./рос. стандарт

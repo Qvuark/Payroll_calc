@@ -11,18 +11,11 @@ namespace PayrollCalc.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/titletypes")]
-public class TitleTypesController : ControllerBase
+public class TitleTypesController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public TitleTypesController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TitleType>>> Get()
     {
-        return await _context.TitleTypes.OrderBy(t => t.Name).ToListAsync();
+        return await context.TitleTypes.OrderBy(t => t.Name).ToListAsync();
     }
 }

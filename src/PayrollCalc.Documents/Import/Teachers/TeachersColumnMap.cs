@@ -3,7 +3,7 @@ namespace PayrollCalc.Documents.Import.Teachers;
 using PayrollCalc.Documents.Import.Common;
 
 /// <summary>
-/// Розкладка teachers.xlsx: де лежать заголовки, опис українською для мами,
+/// Розкладка teachers.xlsx: де лежать заголовки, опис українською для бухгалтера,
 /// індекси кожної колонки. Один map шарять Parser, HeaderValidator і TemplateGenerator.
 /// </summary>
 public class TeachersColumnMap : IExcelColumnMap
@@ -102,7 +102,7 @@ public class TeachersColumnMap : IExcelColumnMap
         { 39, "Website" },
     };
 
-    // Описи row 1 українською — мама бачить що куди вписувати.
+    // Описи row 1 українською — бухгалтер бачить що куди вписувати.
     // TemplateGenerator пише їх у шаблон під заголовками.
     private static readonly Dictionary<int, string> UkrDescriptions = new()
     {

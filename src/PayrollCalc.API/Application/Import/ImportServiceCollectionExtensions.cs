@@ -12,8 +12,8 @@ namespace PayrollCalc.API.Application.Import;
 public static class ImportServiceCollectionExtensions
 {
     /// <summary>
-    /// Реєструє парсери, генератор шаблонів та upserter'и/importer'и Staff і Teachers потоків.
-    /// При додаванні нових пайплайнів (Timesheet, GPD) — продовжувати цей метод (одна точка входу для bootstrap).
+    /// Реєструє парсери, генератор шаблонів та upserter'и/importer'и Staff, Teachers і Timesheet потоків.
+    /// При додаванні нового Excel-потоку — продовжувати цей метод (одна точка входу для bootstrap).
     /// </summary>
     public static IServiceCollection AddImportServices(this IServiceCollection services)
     {

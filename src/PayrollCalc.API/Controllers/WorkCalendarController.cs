@@ -5,22 +5,19 @@ using PayrollCalc.Infrastructure.Data;
 
 namespace PayrollCalc.API.Controllers;
 
+/// <summary>
+/// Робочий календар: норма робочих днів на кожен місяць (база пропорції за неповний місяць).
+/// Створення року (12 місяців) + правка норми; закритий місяць (є розрахунки) не редагується.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class WorkCalendarController : ControllerBase
+public class WorkCalendarController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public WorkCalendarController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WorkCalendar>>> Get([FromQuery] int? year = null)
     {
         var targetYear = year ?? DateTime.UtcNow.Year;
-        return await _context.WorkCalendars
+        return await context.WorkCalendars
             .Where(wc => wc.Year == targetYear)
             .OrderBy(wc => wc.Month)
             .ToListAsync();
@@ -37,13 +34,13 @@ public class WorkCalendarController : ControllerBase
     {
         if (year is < 2020 or > 2100)
             return BadRequest("Рік має бути в діапазоні 2020..2100.");
-        if (await _context.WorkCalendars.AnyAsync(wc => wc.Year == year))
+        if (await context.WorkCalendars.AnyAsync(wc => wc.Year == year))
             return Conflict($"Календар на {year} рік уже існує.");
         var months = Enumerable.Range(1, 12)
             .Select(m => new WorkCalendar { Year = year, Month = m, WorkDays = 0 })
             .ToList();
-        _context.WorkCalendars.AddRange(months);
-        await _context.SaveChangesAsync();
+        context.WorkCalendars.AddRange(months);
+        await context.SaveChangesAsync();
         return CreatedAtAction(nameof(Get), new { year }, months);
     }
 
@@ -62,14 +59,14 @@ public class WorkCalendarController : ControllerBase
             return BadRequest("Місяць має бути в діапазоні 1..12.");
         if (request.WorkDays is < 0 or > 31)
             return BadRequest("Норма робочих днів має бути в діапазоні 0..31.");
-        var entry = await _context.WorkCalendars
+        var entry = await context.WorkCalendars
             .FirstOrDefaultAsync(wc => wc.Year == year && wc.Month == month);
         if (entry == null)
             return NotFound($"Місяць {month:00}.{year} відсутній у календарі. Спершу створіть рік.");
-        if (await _context.Calculations.AnyAsync(c => c.Year == year && c.Month == month))
+        if (await context.Calculations.AnyAsync(c => c.Year == year && c.Month == month))
             return Conflict("Місяць закритий — за нього вже є збережені розрахунки.");
         entry.WorkDays = request.WorkDays;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return NoContent();
     }
 }

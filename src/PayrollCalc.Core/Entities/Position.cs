@@ -28,4 +28,17 @@ public class Position
     /// </summary>
     public List<string> ExcelAliases { get; set; } = [];
     public Department? Department { get; set; }
+    private const string LibrarianPositionName = "Завідувач бібліотеки";
+    private const string MedicPositionName = "Сестра медична";
+    /// <summary>
+    /// Вид спеціальної вислуги (колонка V/Y відомості) — виводиться з назви посади.
+    /// Тимчасово за назвою (у школі один бібліотекар і одна медсестра); коли додамо явну
+    /// колонку в БД — зміниться лише цей getter, споживачі (білдер) лишаться як є.
+    /// </summary>
+    public SpecialTenureKind SpecialTenure => Name switch
+    {
+        LibrarianPositionName => SpecialTenureKind.Librarian,
+        MedicPositionName => SpecialTenureKind.Medic,
+        _ => SpecialTenureKind.None,
+    };
 }

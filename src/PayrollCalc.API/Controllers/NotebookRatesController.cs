@@ -11,18 +11,11 @@ namespace PayrollCalc.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/notebookrates")]
-public class NotebookRatesController : ControllerBase
+public class NotebookRatesController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public NotebookRatesController(AppDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<NotebookRate>>> Get()
     {
-        return await _context.NotebookRates.OrderBy(r => r.SubjectKeyword).ToListAsync();
+        return await context.NotebookRates.OrderBy(r => r.SubjectKeyword).ToListAsync();
     }
 }

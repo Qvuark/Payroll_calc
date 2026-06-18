@@ -8,30 +8,18 @@ namespace PayrollCalc.API.Application.Import;
 /// Оркестратор імпорту teachers.xlsx: Stream → Parser → групуємо рядки по ІПН → upsert людини + її ставок (з блоками) → 1 SaveChanges на файл → звіт.
 /// Один коміт = атомарність: будь-який збій відкочує весь файл.
 /// </summary>
-public class TeachersImporter
+public class TeachersImporter(
+    TeachersParser parser,
+    EmployeeUpserter employeeUpserter,
+    TeachersPositionUpserter positionUpserter,
+    AppDbContext db)
 {
-    private readonly TeachersParser _parser;
-    private readonly EmployeeUpserter _employeeUpserter;
-    private readonly TeachersPositionUpserter _positionUpserter;
-    private readonly AppDbContext _db;
-    public TeachersImporter(
-        TeachersParser parser,
-        EmployeeUpserter employeeUpserter,
-        TeachersPositionUpserter positionUpserter,
-        AppDbContext db)
-    {
-        _parser = parser;
-        _employeeUpserter = employeeUpserter;
-        _positionUpserter = positionUpserter;
-        _db = db;
-    }
-
     /// <summary>
     /// Імпортує teachers.xlsx з потоку. Повертає звіт: скільки створено/оновлено/пропущено + усі помилки (парсера й resolve).
     /// </summary>
     public async Task<ImportReport> ImportAsync(Stream xlsx, CancellationToken ct = default)
     {
-        var (rows, parseErrors) = _parser.Parse(xlsx);
+        var (rows, parseErrors) = parser.Parse(xlsx);
         // Помилки upserter'ів збираємо в окремий список від парсерських — у звіт підуть обидва пули.
         var importErrors = new List<ParserError>();
         var createdRows = 0;
@@ -49,11 +37,11 @@ public class TeachersImporter
                     $"Увага: для ІПН {firstRow.TaxId} різні дати прийому в рядках групи — взято з першого рядка.",
                     ErrorSeverity.Warning));
             // empCreated потрібен для orphan-guard нижче: новоствореного працівника без жодної успішної ставки відкотимо. Існуючого не чіпаємо.
-            var (emp, empCreated) = await _employeeUpserter.UpsertAsync(firstRow, ct);
+            var (emp, empCreated) = await employeeUpserter.UpsertAsync(firstRow, ct);
             var groupSucceeded = 0;
             foreach (var row in group)
             {
-                var (ep, isCreated) = await _positionUpserter.UpsertAsync(emp, row, importErrors, ct);
+                var (ep, isCreated) = await positionUpserter.UpsertAsync(emp, row, importErrors, ct);
                 if (isCreated)
                 {
                     createdRows++;
@@ -69,10 +57,10 @@ public class TeachersImporter
             }
             // Orphan-guard: створили людину, але жодна ставка не пройшла → прибираємо її, щоб не лишилась без ставок.
             if (empCreated && groupSucceeded == 0)
-                _db.Employees.Remove(emp);
+                db.Employees.Remove(emp);
         }
         // 1 коміт на весь файл = атомарність: збій → відкат усіх змін.
-        await _db.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(ct);
         return new ImportReport(createdRows, updatedRows, skippedRows, parseErrors.Concat(importErrors).ToList());
     }
 }

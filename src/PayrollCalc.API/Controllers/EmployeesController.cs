@@ -130,7 +130,7 @@ public class EmployeesController(AppDbContext context) : ControllerBase
         employee.Status = EmployeeStatus.Dismissed;
         employee.DismissalDate = today;
         // Каскадно звільняємо всі активні ставки. Інакше вони лишаються "висіти" активними:
-        // розрахунок Phase 5 нарахує зарплату звільненому, а унікальний індекс ставки
+        // розрахунок нарахує зарплату звільненому, а унікальний індекс ставки
         // (WHERE DismissalDate IS NULL) заблокує повторне прийняття людини на ту саму посаду.
         foreach (var position in employee.Positions.Where(p => p.DismissalDate == null))
         {

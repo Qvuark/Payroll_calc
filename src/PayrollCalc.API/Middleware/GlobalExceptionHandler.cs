@@ -10,14 +10,8 @@ namespace PayrollCalc.API.Middleware;
 /// повертає клієнту ProblemDetails (RFC 7807) з відповідним status code.
 /// Зареєстрований у Program.cs через AddExceptionHandler + UseExceptionHandler.
 /// </summary>
-public class GlobalExceptionHandler : IExceptionHandler
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
-    {
-        _logger = logger;
-    }
-
     /// <summary>
     /// Викликається ASP.NET для кожного unhandled exception. Маппить тип винятку
     /// у HTTP status, логує, формує ProblemDetails-відповідь у JSON.
@@ -40,7 +34,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             InvalidOperationException => (StatusCodes.Status400BadRequest, "Некоректний запит або дані", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "Внутрішня помилка сервера", null),
         };
-        _logger.LogError(
+        logger.LogError(
             exception,
             "Помилка обробки запиту {Method} {Path} → {StatusCode}",
             httpContext.Request.Method,

@@ -14,11 +14,8 @@ namespace PayrollCalc.API.Application.Import;
 /// Резолвить назви/числа з файлу в Id довідників (Position, розряд, звання, ставка за зошити по предмету), мапить ClassMgmt/CabinetType в enum.
 /// Помилка resolve чи валідації → запис у errors + null (Importer пропустить рядок). Не комітить — це робить Importer.
 /// </summary>
-public class TeachersPositionUpserter
+public class TeachersPositionUpserter(AppDbContext db)
 {
-    private readonly AppDbContext _db;
-    public TeachersPositionUpserter(AppDbContext db) => _db = db;
-
     /// <summary>
     /// Знаходить ставку за (EmployeeId, PositionId) і оновлює, або створює нову.
     /// Повертає (null, false) якщо resolve чи валідація впали (помилка вже в errors); (ставка, true) — створено; (ставка, false) — оновлено.
@@ -29,14 +26,14 @@ public class TeachersPositionUpserter
         List<ParserError> errors,
         CancellationToken ct = default)
     {
-        var position = await _db.Positions.FirstOrDefaultAsync(p => p.Name == row.Position, ct);
+        var position = await db.Positions.FirstOrDefaultAsync(p => p.Name == row.Position, ct);
         if (position is null)
         {
             errors.Add(new ParserError(row.RowIndex, "Position",
                 $"Посада '{row.Position}' не знайдена в довіднику"));
             return (null, false);
         }
-        var tariffGrade = await _db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == row.TariffGrade, ct);
+        var tariffGrade = await db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == row.TariffGrade, ct);
         if (tariffGrade is null)
         {
             errors.Add(new ParserError(row.RowIndex, "TariffGrade",
@@ -60,7 +57,7 @@ public class TeachersPositionUpserter
         EmployeePosition? ep = null;
         if (employee.Id != 0)
         {
-            ep = await _db.EmployeePositions
+            ep = await db.EmployeePositions
                 .Include(x => x.Workload)
                 .Include(x => x.Admin)
                 .FirstOrDefaultAsync(x => x.EmployeeId == employee.Id && x.PositionId == position.Id, ct);
@@ -100,12 +97,15 @@ public class TeachersPositionUpserter
         ClassGradeGroup? classGradeGroup = null;
         if (!string.IsNullOrWhiteSpace(row.ClassMgmt))
         {
-            classGradeGroup = row.ClassMgmt.Trim() switch
+            switch (row.ClassMgmt.Trim())
             {
-                "1-4" => ClassGradeGroup.Grades1To4,
-                "5-11" => ClassGradeGroup.Grades5To11,
-                _ => null
-            };
+                case "1-4":
+                    classGradeGroup = ClassGradeGroup.Grades1To4;
+                    break;
+                case "5-11":
+                    classGradeGroup = ClassGradeGroup.Grades5To11;
+                    break;
+            }
             if (classGradeGroup is null)
             {
                 errors.Add(new ParserError(row.RowIndex, "ClassMgmt",
@@ -118,13 +118,18 @@ public class TeachersPositionUpserter
         CabinetType? cabinetType = null;
         if (!string.IsNullOrWhiteSpace(row.CabinetType))
         {
-            cabinetType = row.CabinetType.Trim() switch
+            switch (row.CabinetType.Trim())
             {
-                "звичайний" => CabinetType.Standard,
-                "музика-IT" => CabinetType.MusicOrIT,
-                "майстерня" => CabinetType.Workshop,
-                _ => null
-            };
+                case "звичайний":
+                    cabinetType = CabinetType.Standard;
+                    break;
+                case "музика-IT":
+                    cabinetType = CabinetType.MusicOrIT;
+                    break;
+                case "майстерня":
+                    cabinetType = CabinetType.Workshop;
+                    break;
+            }
             if (cabinetType is null)
             {
                 errors.Add(new ParserError(row.RowIndex, "CabinetType",
@@ -140,7 +145,7 @@ public class TeachersPositionUpserter
         {
             var subjectLower = row.Subject.ToLower();
             // Довідник малий → тягнемо весь і матчимо в пам'яті. \b перед keyword прибирає хибні збіги (напр. "рукавички" не чіпляє "укр").
-            var rates = await _db.NotebookRates.ToListAsync(ct);
+            var rates = await db.NotebookRates.ToListAsync(ct);
             var notebookRate = rates.FirstOrDefault(r =>
                 Regex.IsMatch(subjectLower, $@"\b{Regex.Escape(r.SubjectKeyword.ToLower())}"));
             if (notebookRate is not null)
@@ -166,7 +171,7 @@ public class TeachersPositionUpserter
                 ComplexityBonusPct = row.ComplexityPct,
                 PrestigeBonusPct = row.PrestigePct,
             };
-            _db.EmployeePositions.Add(ep);
+            db.EmployeePositions.Add(ep);
             wasCreated = true;
         }
         else
@@ -188,7 +193,7 @@ public class TeachersPositionUpserter
         if (!string.IsNullOrWhiteSpace(row.TitleType))
         {
             ep.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
-                _db, row.TitleType, position.WorkerClass, row.RowIndex, errors, ct);
+                db, row.TitleType, position.WorkerClass, row.RowIndex, errors, ct);
         }
 
         // ??= створює блок лише коли його ще нема, інакше перезаписує поля.

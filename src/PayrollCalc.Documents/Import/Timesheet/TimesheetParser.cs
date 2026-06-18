@@ -5,7 +5,7 @@ namespace PayrollCalc.Documents.Import.Timesheet;
 
 /// <summary>
 /// Парсер timesheet.xlsx. Stream → (List&lt;TimesheetRowDto&gt;, List&lt;ParserError&gt;).
-/// Не throws на bad data — збирає помилки у список, мама бачить повний звіт за один прохід.
+/// Не throws на bad data — збирає помилки у список, бухгалтер бачить повний звіт за один прохід.
 /// Не знає про БД: resolve TaxId→Employee і cross-check — робота Importer/Upserter.
 /// </summary>
 public class TimesheetParser
@@ -44,7 +44,7 @@ public class TimesheetParser
         {
             var row = sheet.Rows[rowNumber];
             // +1 — у Excel нумерація рядків 1-based, у DataTable 0-based.
-            // Передаємо "людський" номер, щоб мама бачила у звіті ту ж цифру, що в Excel.
+            // Передаємо "людський" номер, щоб бухгалтер бачив у звіті ту ж цифру, що в Excel.
             var dto = ParseRow(row, rowNumber + 1, errors);
             if (dto is not null)
                 dtos.Add(dto);
@@ -53,7 +53,7 @@ public class TimesheetParser
     }
     /// <summary>
     /// Парсить одну строку у TimesheetRowDto. Повертає null якщо рядок порожній (нема TaxId)
-    /// або ІПН кривий. Помилки додає у errors, не throws — мама хоче повний звіт за прохід.
+    /// або ІПН кривий. Помилки додає у errors, не throws — бухгалтер хоче повний звіт за прохід.
     /// </summary>
     private TimesheetRowDto? ParseRow(DataRow row, int rowNumber, List<ParserError> errors)
     {

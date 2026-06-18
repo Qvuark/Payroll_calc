@@ -5,58 +5,55 @@ using PayrollCalc.Infrastructure.Data;
 
 namespace PayrollCalc.API.Controllers;
 
+/// <summary>
+/// CRUD довідника відділів школи. Delete заблоковано, якщо на відділ є посади
+/// (інакше осиротіли б посади з цим DepartmentId).
+/// </summary>
 [ApiController]
 [Route("api/departments")]
-public class DepartmentsController : ControllerBase
+public class DepartmentsController(AppDbContext db) : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public DepartmentsController(AppDbContext db)
-    {
-        _db = db;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Department>>> GetAll()
     {
-        return await _db.Departments.ToListAsync();
+        return await db.Departments.ToListAsync();
     }
 
     [HttpPost]
     public async Task<ActionResult<Department>> Create([FromBody]DepartmentRequest request)
     {
         var department = new Department { Name = request.Name };
-        _db.Departments.Add(department);
-        await _db.SaveChangesAsync();
+        db.Departments.Add(department);
+        await db.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAll), new { id = department.Id }, department);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody]DepartmentRequest request)
     {
-        var department = await _db.Departments.FindAsync(id);
+        var department = await db.Departments.FindAsync(id);
         if (department == null)
         {
             return NotFound();
         }
 
         department.Name = request.Name;
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var department = await _db.Departments.FindAsync(id);
+        var department = await db.Departments.FindAsync(id);
         if (department == null)
         {
             return NotFound();
         }
-        if (await _db.Positions.AnyAsync(p => p.DepartmentId == id))
+        if (await db.Positions.AnyAsync(p => p.DepartmentId == id))
             return Conflict("Неможливо видалити підрозділ — є посади, які до нього прив'язані.");
-        _db.Departments.Remove(department);
-        await _db.SaveChangesAsync();
+        db.Departments.Remove(department);
+        await db.SaveChangesAsync();
         return NoContent();
     }
 }

@@ -14,7 +14,7 @@ public interface IExcelColumnMap
     /// </summary>
     int HeaderRowIndex { get; }
     /// <summary>
-    /// 0-based номер рядка з укр. підписами колонок. Те, що бачить мама у шаблоні.
+    /// 0-based номер рядка з укр. підписами колонок. Те, що бачить бухгалтер у шаблоні.
     /// </summary>
     int DescriptionRowIndex { get; }
     /// <summary>

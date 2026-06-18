@@ -9,11 +9,8 @@ namespace PayrollCalc.API.Application.Import;
 /// Створює або оновлює працівника (persona-поля: ПІБ, ІПН, стаж...) за ІПН.
 /// Ставки не чіпає — це робота PositionUpserter. Не комітить — це робить Importer на весь файл.
 /// </summary>
-public class EmployeeUpserter
+public class EmployeeUpserter(AppDbContext db)
 {
-    private readonly AppDbContext _db;
-    public EmployeeUpserter(AppDbContext db) => _db = db;
-
     /// <summary>
     /// Шукає працівника за ІПН: знайшов — оновлює persona-поля, ні — створює нового.
     /// Повертає (працівник, WasCreated): true — створено, false — оновлено (Importer рахує статистику).
@@ -22,7 +19,7 @@ public class EmployeeUpserter
         IPersonaRow row,
         CancellationToken ct = default)
     {
-        var employee = await _db.Employees.FirstOrDefaultAsync(p => p.TaxId == row.TaxId, ct);
+        var employee = await db.Employees.FirstOrDefaultAsync(p => p.TaxId == row.TaxId, ct);
         if (employee is null)
         {
             employee = new Employee
@@ -39,7 +36,7 @@ public class EmployeeUpserter
                 HonoredAmount = row.HonoredAmount,
                 Status = EmployeeStatus.Active,
             };
-            _db.Employees.Add(employee);
+            db.Employees.Add(employee);
             return (employee, WasCreated: true);
         }
 

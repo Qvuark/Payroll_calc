@@ -25,7 +25,6 @@ public class ImportController(
     /// у пам'ять, тож роздутий/зловмисний файл поклав би процес по OOM.
     /// </summary>
     private const long MaxFileBytes = 10 * 1024 * 1024;
-
     /// <summary>
     /// Імпорт staff.xlsx — масове створення/оновлення Employee + EmployeePosition.
     /// Атомарність: одна транзакція на файл, будь-яка помилка БД → відкат усього.
@@ -73,7 +72,7 @@ public class ImportController(
     /// людину не створює (не знайдено → рядок у звіті). Пише лише відпрацьовано/заміна/нічні,
     /// гроші-one-offs з CRUD не чіпає. Атомарність: одна транзакція на файл.
     /// </summary>
-    /// <param name="file">xlsx за схемою TimesheetColumnMap (наш pre-filled шаблон, заповнений мамою).</param>
+    /// <param name="file">xlsx за схемою TimesheetColumnMap (наш pre-filled шаблон, заповнений бухгалтером).</param>
     /// <param name="year">Рік періоду.</param>
     /// <param name="month">Місяць періоду (1..12).</param>
     /// <param name="ct">Cancellation з боку клієнта.</param>
@@ -96,7 +95,7 @@ public class ImportController(
     }
 
     /// <summary>
-    /// Віддає порожній xlsx-шаблон staff: bold-заголовки (англ., ключі парсера) + рядок укр.описів для мами.
+    /// Віддає порожній xlsx-шаблон staff: bold-заголовки (англ., ключі парсера) + рядок укр.описів для бухгалтера.
     /// Мама заповнює і завантажує назад через POST /api/import/staff.
     /// </summary>
     /// <returns>200 + xlsx attachment (staff_template.xlsx).</returns>
@@ -112,7 +111,7 @@ public class ImportController(
     }
 
     /// <summary>
-    /// Віддає порожній xlsx-шаблон teachers: bold-заголовки (англ.) + рядок укр.описів для мами.
+    /// Віддає порожній xlsx-шаблон teachers: bold-заголовки (англ.) + рядок укр.описів для бухгалтера.
     /// </summary>
     /// <returns>200 + xlsx attachment (teachers_template.xlsx).</returns>
     [HttpGet("templates/teachers")]

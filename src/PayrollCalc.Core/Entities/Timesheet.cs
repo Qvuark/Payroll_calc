@@ -1,5 +1,7 @@
 namespace PayrollCalc.Core.Entities;
-
+/// <summary>
+/// табель обліку робочого часу за місяць по працівнику
+/// </summary>
 public class Timesheet
 {
     public int Id { get; set; }

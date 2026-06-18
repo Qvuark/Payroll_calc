@@ -67,7 +67,7 @@ export function TariffGradesTab() {
                       type="text"
                       className={dirty ? 'cell-input dirty' : 'cell-input'}
                       style={{ width: 140 }}
-                      value={draft ?? fmtMoney(g.monthlyRate).replace(/ /g, ' ')}
+                      value={draft ?? fmtMoney(g.monthlyRate).replace(/\s/g, ' ')}
                       onChange={e => setDrafts(d => ({ ...d, [g.id]: e.target.value }))}
                       onKeyDown={e => { if (e.key === 'Enter') commit(g.id) }}
                     />

@@ -1,15 +1,5 @@
 import { monthName } from '../lib/format'
-
-export interface Period {
-  year: number
-  month: number
-}
-
-/** Поточний місяць — стартове значення для табеля/розрахунку. */
-export function currentPeriod(): Period {
-  const d = new Date()
-  return { year: d.getFullYear(), month: d.getMonth() + 1 }
-}
+import type { Period } from '../lib/period'
 
 /**
  * Перемикач місяця «← Березень 2026 →». Стрілки переходять через межі року.

@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEmployee, useTariffGrades, useTitleTypes, usePositions, keys } from '../../api/hooks'
-import { createEmployeePosition, dismissEmployee, updateEmployee } from '../../api/endpoints'
+import { calculateOne, createEmployeePosition, dismissEmployee, updateEmployee } from '../../api/endpoints'
 import { Loading, LoadError, ErrorNote, Modal, Field, StatusBadge } from '../../components/ui'
+import { CalcBreakdown } from '../../components/CalcBreakdown'
+import { MonthPicker } from '../../components/MonthPicker'
+import { currentPeriod, type Period } from '../../lib/period'
 import { PositionCard } from './PositionCard'
 import { GRADE_RANGES, WORKER_CLASS_LABELS } from '../../api/types'
-import type { CreatePositionRequest, EmployeeDetail, WorkerClass } from '../../api/types'
-import { fmtDate, parseDec, todayIso } from '../../lib/format'
+import type { CreatePositionRequest, EmployeeDetail, UpdateEmployeeRequest, WorkerClass } from '../../api/types'
+import { fmtDate, fmtMoney, parseDec, todayIso } from '../../lib/format'
 
 export function EmployeeCardPage() {
   const { id } = useParams()
@@ -27,6 +30,9 @@ export function EmployeeCardPage() {
     return Number(b.isPrimary) - Number(a.isPrimary)
   })
   const hasActivePositions = data.positions.some(p => p.dismissalDate === null)
+  // Чи є серед активних ставок головна — для відновлення ставки: якщо головної нема,
+  // відновлена стає головною (тримаємо інваріант «рівно одна головна серед активних»).
+  const hasActivePrimary = data.positions.some(p => p.dismissalDate === null && p.isPrimary)
 
   return (
     <>
@@ -68,8 +74,11 @@ export function EmployeeCardPage() {
           key={`${p.id}:${+!!p.workload}${+!!p.admin}${+!!p.gpd}${+!!p.pkr}${+!!p.nonPedagogical}`}
           employeeId={employeeId}
           position={p}
+          hasActivePrimary={hasActivePrimary}
         />
       ))}
+
+      {positions.length > 0 && <SalaryPreview employeeId={employeeId} />}
 
       {addingPosition && (
         <AddPositionDialog
@@ -103,27 +112,40 @@ function PersonaCard({ employee }: { employee: EmployeeDetail }) {
   const [error, setError] = useState<unknown>(null)
   const [saved, setSaved] = useState(false)
 
+  // Тіло запиту з полів форми; статус і дату звільнення передаємо явно
+  // (бек вимагає: Active → DismissalDate null; Dismissed → дата обовʼязкова).
+  const body = (status: 0 | 1 | 2, dismissalDate: string | null): UpdateEmployeeRequest => ({
+    fullName: form.fullName.trim(),
+    taxId: form.taxId.trim(),
+    dismissalDate,
+    education: form.education.trim() || null,
+    generalExperienceYears: parseDec(form.generalExperienceYears) ?? 0,
+    pedExperienceYears: parseDec(form.pedExperienceYears) ?? 0,
+    socialBenefitPct: parseDec(form.socialBenefitPct),
+    status,
+    isHonored: form.isHonored,
+    honoredAmount: form.isHonored ? parseDec(form.honoredAmount) : null,
+  })
+
+  const onSaved = () => {
+    setError(null)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
+    qc.invalidateQueries({ queryKey: keys.employee(employee.id) })
+    qc.invalidateQueries({ queryKey: keys.employees })
+  }
+
   const save = useMutation({
-    mutationFn: () =>
-      updateEmployee(employee.id, {
-        fullName: form.fullName.trim(),
-        taxId: form.taxId.trim(),
-        dismissalDate: employee.dismissalDate,
-        education: form.education.trim() || null,
-        generalExperienceYears: parseDec(form.generalExperienceYears) ?? 0,
-        pedExperienceYears: parseDec(form.pedExperienceYears) ?? 0,
-        socialBenefitPct: parseDec(form.socialBenefitPct),
-        status: employee.status === 2 ? 2 : form.onLeave ? 1 : 0,
-        isHonored: form.isHonored,
-        honoredAmount: form.isHonored ? parseDec(form.honoredAmount) : null,
-      }),
-    onSuccess: () => {
-      setError(null)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
-      qc.invalidateQueries({ queryKey: keys.employee(employee.id) })
-      qc.invalidateQueries({ queryKey: keys.employees })
-    },
+    mutationFn: () => updateEmployee(employee.id, body(employee.status === 2 ? 2 : form.onLeave ? 1 : 0, employee.dismissalDate)),
+    onSuccess: onSaved,
+    onError: setError,
+  })
+
+  // Відновлення помилково звільненого: статус → Активний, дата звільнення → null.
+  // Закриті ставки лишаються закритими — їх відновлюють окремо в картці ставки.
+  const reactivate = useMutation({
+    mutationFn: () => updateEmployee(employee.id, body(0, null)),
+    onSuccess: onSaved,
     onError: setError,
   })
 
@@ -137,6 +159,11 @@ function PersonaCard({ employee }: { employee: EmployeeDetail }) {
         <h2>Особисті дані</h2>
         <div className="row">
           {saved && <span className="badge badge-green">Збережено</span>}
+          {employee.status === 2 && (
+            <button type="button" className="btn btn-sm" onClick={() => reactivate.mutate()} disabled={reactivate.isPending}>
+              Відновити працівника
+            </button>
+          )}
           <button type="button" className="btn btn-primary btn-sm" onClick={() => save.mutate()} disabled={save.isPending}>
             Зберегти
           </button>
@@ -333,5 +360,56 @@ function DismissDialog({ employee, onClose }: { employee: EmployeeDetail; onClos
         </button>
       </div>
     </Modal>
+  )
+}
+
+// ─── Превʼю зарплати ───
+
+/**
+ * Розрахунок зарплати однієї людини прямо в картці: обрати місяць → «Розрахувати» →
+ * нараховано/утримано/на руки + покомпонентний розклад. Швидкий зворотний звʼязок:
+ * правиш ставку — одразу бачиш ефект, без прогону всіх 74 на сторінці розрахунку.
+ */
+function SalaryPreview({ employeeId }: { employeeId: number }) {
+  const [period, setPeriod] = useState<Period>(currentPeriod)
+  const calc = useMutation({
+    mutationFn: () => calculateOne(employeeId, period.year, period.month),
+  })
+  const r = calc.data
+
+  return (
+    <div className="card mt16">
+      <div className="card-title">
+        <h2>Зарплата за місяць</h2>
+        <span className="muted">Превʼю однієї людини — без прогону всіх</span>
+      </div>
+      <div className="row mb16">
+        <MonthPicker value={period} onChange={p => { setPeriod(p); calc.reset() }} />
+        <button type="button" className="btn btn-primary btn-sm" onClick={() => calc.mutate()} disabled={calc.isPending}>
+          {calc.isPending ? 'Рахую…' : 'Розрахувати'}
+        </button>
+        {r && <span className="muted">Днів: {r.workedDays} / {r.normDays}</span>}
+      </div>
+      <ErrorNote error={calc.error} />
+      {r && (
+        <>
+          <div className="row mb16" style={{ gap: 32 }}>
+            <Stat label="Нараховано" value={fmtMoney(r.gross)} />
+            <Stat label="Утримано" value={fmtMoney(r.totalWithheld)} />
+            <Stat label="До виплати" value={fmtMoney(r.netPay)} strong />
+          </div>
+          <CalcBreakdown earnings={r.earnings} deductions={r.deductions} />
+        </>
+      )}
+    </div>
+  )
+}
+
+function Stat({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div>
+      <div className="hint">{label}</div>
+      <div style={{ fontSize: 18, fontWeight: strong ? 700 : 500 }}>{value}</div>
+    </div>
   )
 }

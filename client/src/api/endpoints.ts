@@ -110,6 +110,10 @@ export const upsertTimesheet = (body: TimesheetRequest) =>
 export const calculateAll = (year: number, month: number) =>
   api<CalcResult[]>(`/calculations/all?year=${year}&month=${month}`, { method: 'POST' })
 
+// Рахує одного працівника за місяць (POST зберігає чернетку в Calculation). 404 — працівника немає.
+export const calculateOne = (employeeId: number, year: number, month: number) =>
+  api<CalcResult>(`/calculations?employeeId=${employeeId}&year=${year}&month=${month}`, { method: 'POST' })
+
 // ─── Імпорт ───
 
 function postFile(path: string, file: File): Promise<ImportReport> {

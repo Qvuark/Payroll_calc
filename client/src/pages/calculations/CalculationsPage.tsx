@@ -1,24 +1,42 @@
 import { Fragment, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { calculateAll } from '../../api/endpoints'
+import { calculateAll, calculateOne } from '../../api/endpoints'
 import { ErrorNote } from '../../components/ui'
-import { MonthPicker, currentPeriod } from '../../components/MonthPicker'
-import type { Period } from '../../components/MonthPicker'
-import type { CalcComponent, CalcResult } from '../../api/types'
+import { CalcBreakdown } from '../../components/CalcBreakdown'
+import { MonthPicker } from '../../components/MonthPicker'
+import { currentPeriod, type Period } from '../../lib/period'
+import type { CalcResult } from '../../api/types'
 import { fmtMoney, monthName } from '../../lib/format'
 
 export function CalculationsPage() {
   const [period, setPeriod] = useState<Period>(currentPeriod)
   const [results, setResults] = useState<CalcResult[] | null>(null)
   const [openId, setOpenId] = useState<number | null>(null)
+  const [recalcingId, setRecalcingId] = useState<number | null>(null)
+  const [rowError, setRowError] = useState<string | null>(null)
 
   const run = useMutation({
     mutationFn: () => calculateAll(period.year, period.month),
     onSuccess: data => {
       setResults(data)
       setOpenId(null)
+      setRowError(null)
     },
   })
+
+  // Перерахунок однієї людини без прогону всіх: підміняє лише її рядок у списку.
+  const recalcOne = async (employeeId: number) => {
+    setRecalcingId(employeeId)
+    setRowError(null)
+    try {
+      const updated = await calculateOne(employeeId, period.year, period.month)
+      setResults(prev => (prev ? prev.map(r => (r.employeeId === employeeId ? updated : r)) : prev))
+    } catch (e) {
+      setRowError(e instanceof Error ? e.message : 'Помилка перерахунку')
+    } finally {
+      setRecalcingId(null)
+    }
+  }
 
   const totals = results?.reduce(
     (acc, r) => ({
@@ -47,6 +65,7 @@ export function CalculationsPage() {
       </div>
 
       <ErrorNote error={run.error} />
+      {rowError && <div className="note note-error mb16">{rowError}</div>}
 
       {results && results.length === 0 && (
         <div className="card empty">Немає активних працівників для розрахунку.</div>
@@ -62,6 +81,7 @@ export function CalculationsPage() {
                 <th className="num">Нараховано</th>
                 <th className="num">Утримано</th>
                 <th className="num">До виплати</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -73,11 +93,22 @@ export function CalculationsPage() {
                     <td className="num">{fmtMoney(r.gross)}</td>
                     <td className="num">{fmtMoney(r.totalWithheld)}</td>
                     <td className="num"><strong>{fmtMoney(r.netPay)}</strong></td>
+                    <td className="num">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-ghost"
+                        title="Перерахувати цього працівника"
+                        disabled={recalcingId === r.employeeId}
+                        onClick={e => { e.stopPropagation(); recalcOne(r.employeeId) }}
+                      >
+                        {recalcingId === r.employeeId ? '…' : '↻'}
+                      </button>
+                    </td>
                   </tr>
                   {openId === r.employeeId && (
                     <tr className="calc-detail">
-                      <td colSpan={5}>
-                        <ComponentsBreakdown earnings={r.earnings} deductions={r.deductions} />
+                      <td colSpan={6}>
+                        <CalcBreakdown earnings={r.earnings} deductions={r.deductions} />
                       </td>
                     </tr>
                   )}
@@ -91,6 +122,7 @@ export function CalculationsPage() {
                   <td className="num">{fmtMoney(totals.gross)}</td>
                   <td className="num">{fmtMoney(totals.withheld)}</td>
                   <td className="num">{fmtMoney(totals.net)}</td>
+                  <td></td>
                 </tr>
               </tfoot>
             )}
@@ -105,40 +137,5 @@ export function CalculationsPage() {
         </div>
       )}
     </>
-  )
-}
-
-function ComponentsBreakdown({ earnings, deductions }: {
-  earnings: CalcComponent[]
-  deductions: CalcComponent[]
-}) {
-  return (
-    <div className="row" style={{ alignItems: 'flex-start', gap: 32 }}>
-      <ComponentsTable title="Нарахування" components={earnings} />
-      <ComponentsTable title="Утримання" components={deductions} />
-    </div>
-  )
-}
-
-function ComponentsTable({ title, components }: { title: string; components: CalcComponent[] }) {
-  return (
-    <div style={{ flex: 1, minWidth: 320 }}>
-      <h3 className="mb16">{title}</h3>
-      {components.length === 0 ? (
-        <p className="muted">Немає</p>
-      ) : (
-        <table>
-          <tbody>
-            {components.map((c, i) => (
-              <tr key={i}>
-                <td>{c.name}</td>
-                <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtMoney(c.amount)}</td>
-                <td className="mono muted">{c.formula}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
   )
 }

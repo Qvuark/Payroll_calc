@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { downloadFile } from '../../api/client'
 import { ErrorNote } from '../../components/ui'
-import { MonthPicker, currentPeriod } from '../../components/MonthPicker'
-import type { Period } from '../../components/MonthPicker'
+import { MonthPicker } from '../../components/MonthPicker'
+import { currentPeriod, type Period } from '../../lib/period'
 
 export function DocumentsPage() {
   const [period, setPeriod] = useState<Period>(currentPeriod)

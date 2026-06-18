@@ -22,7 +22,11 @@ const inputToPct = (raw: string): number | null => {
  * Клас 1 — навантаження, педнадбавки, ГПД, ПКР; Клас 2 — без педнадбавок;
  * Класи 3/4 — лише непедагогічний блок.
  */
-export function PositionCard({ employeeId, position }: { employeeId: number; position: EmployeePosition }) {
+export function PositionCard({ employeeId, position, hasActivePrimary }: {
+  employeeId: number
+  position: EmployeePosition
+  hasActivePrimary: boolean
+}) {
   const qc = useQueryClient()
   const grades = useTariffGrades()
   const titles = useTitleTypes()
@@ -81,6 +85,30 @@ export function PositionCard({ employeeId, position }: { employeeId: number; pos
     onError: setError,
   })
 
+  // Відновлення помилково закритої ставки: знімаємо дату звільнення. Якщо у працівника
+  // нема активної головної — ця стає головною (інакше лишилися б активні ставки без головної).
+  const revive = useMutation({
+    mutationFn: () =>
+      updateEmployeePosition(employeeId, position.id, {
+        tariffGradeId: position.tariffGradeId,
+        rateCount: position.rateCount,
+        dismissalDate: null,
+        isPrimary: !hasActivePrimary,
+        hasMilitaryRecord: position.hasMilitaryRecord,
+        hasUnfavorable: position.hasUnfavorable,
+        positionStartDate: position.positionStartDate,
+        titleTypeId: position.titleTypeId,
+        complexityBonusPct: position.complexityBonusPct,
+        prestigeBonusPct: position.prestigeBonusPct,
+      }),
+    onSuccess: () => {
+      setError(null)
+      invalidate()
+    },
+    // Розгортаємо картку, щоб показати помилку (напр. 409: посаду вже пере-прийняли активною).
+    onError: e => { setExpanded(true); setError(e) },
+  })
+
   const gradeRange = GRADE_RANGES[position.workerClass]
   const allowedGrades = (grades.data ?? []).filter(g => g.grade >= gradeRange[0] && g.grade <= gradeRange[1])
   const allowedTitles = (titles.data ?? []).filter(t => t.workerClass === position.workerClass)
@@ -98,7 +126,19 @@ export function PositionCard({ employeeId, position }: { employeeId: number; pos
             {fmtNum(position.rateCount)} ст. · {fmtMoney(position.tariffMonthlyRate)} грн
           </span>
         </div>
-        <button type="button" className="btn btn-sm btn-ghost">{expanded ? 'Згорнути ▲' : 'Розгорнути ▼'}</button>
+        <div className="row">
+          {isDismissed && (
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={e => { e.stopPropagation(); revive.mutate() }}
+              disabled={revive.isPending}
+            >
+              Відновити ставку
+            </button>
+          )}
+          <button type="button" className="btn btn-sm btn-ghost">{expanded ? 'Згорнути ▲' : 'Розгорнути ▼'}</button>
+        </div>
       </div>
 
       {expanded && (

@@ -38,4 +38,12 @@ public record PayrollParams
     /// Доплата за нічні години, частка (0.40).
     /// </summary>
     public required decimal NightShifts { get; init; }
+    /// <summary>
+    /// Прожитковий мінімум для розрахунку пільги
+    /// </summary>
+    public required decimal SocialBenefitLivingMin { get; init; }
+    /// <summary>
+    /// Поріг доходу для отримання пільги
+    /// </summary>
+    public required decimal SocialBenefitCap { get; init; }
 }

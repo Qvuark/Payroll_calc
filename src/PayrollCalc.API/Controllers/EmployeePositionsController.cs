@@ -42,9 +42,9 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             return NotFound($"Тарифний розряд з id={request.TariffGradeId} не знайдений.");
         if (!EmployeeValidator.ValidateGradeForClass(position.WorkerClass, tariffGrade.Grade))
             return BadRequest($"Розряд {tariffGrade.Grade} не дозволено для класу '{position.WorkerClass}'.");
-        // Престижність — лише педагогам (Class 1).
-        if (request.PrestigeBonusPct.HasValue && position.WorkerClass != WorkerClass.Pedagogical)
-            return BadRequest($"Надбавку за престижність дозволено лише педагогам (Class 1), а не класу '{position.WorkerClass}'.");
+        // Престижність — лише педагогам (Class 1-2).
+        if (request.PrestigeBonusPct.HasValue && position.WorkerClass != WorkerClass.Pedagogical && position.WorkerClass != WorkerClass.AdminPedagogical)
+            return BadRequest($"Надбавку за престижність дозволено лише педагогам (Class 1-2), а не класу '{position.WorkerClass}'.");
         // Звання прив'язане до ставки — WorkerClass звання має збігатися з посадою.
         if (request.TitleTypeId.HasValue)
         {
@@ -103,9 +103,9 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         var pos = await context.Positions.FindAsync(position.PositionId);
         if (pos != null && !EmployeeValidator.ValidateGradeForClass(pos.WorkerClass, tariffGrade.Grade))
             return BadRequest($"Розряд {tariffGrade.Grade} не дозволено для класу '{pos.WorkerClass}'.");
-        // Престижність — лише педагогам (Class 1).
-        if (request.PrestigeBonusPct.HasValue && pos != null && pos.WorkerClass != WorkerClass.Pedagogical)
-            return BadRequest($"Надбавку за престижність дозволено лише педагогам (Class 1), а не класу '{pos.WorkerClass}'.");
+        // Престижність — лише педагогам (Class 1-2).
+        if (request.PrestigeBonusPct.HasValue && pos != null && pos.WorkerClass != WorkerClass.Pedagogical && pos.WorkerClass != WorkerClass.AdminPedagogical)
+            return BadRequest($"Надбавку за престижність дозволено лише педагогам (Class 1-2), а не класу '{pos.WorkerClass}'.");
         // Звання прив'язане до ставки — WorkerClass звання має збігатися з посадою.
         if (request.TitleTypeId.HasValue)
         {

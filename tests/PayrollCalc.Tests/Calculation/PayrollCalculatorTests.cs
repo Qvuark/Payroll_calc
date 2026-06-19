@@ -22,6 +22,8 @@ public class PayrollCalculatorTests
         UnfavorableBase = 2600m,
         Disinfectants = 0.10m,
         NightShifts = 0.40m,
+        SocialBenefitLivingMin = 3328m,
+        SocialBenefitCap = 4660m,
     };
 
     [Fact]
@@ -281,6 +283,41 @@ public class PayrollCalculatorTests
 
         result.Earnings.Single(e => e.Name == "Святкові").Amount.Should().Be(300m);
         result.Earnings.Single(e => e.Name == "Щорічна винагорода").Amount.Should().Be(1000m);
+    }
+
+    [Fact]
+    public void Pdfo_SocialBenefitBelowCap_ReducesBase()
+    {
+        // Дохід 2520 ≤ поріг 4660 → база ПДФО менша на пільгу (прожитковий мін 3328 × 50% = 1664).
+        var input = Input(22, 22, Teacher(oklad: 3600m, hours: 9m)) with { SocialBenefitPct = 0.50m };
+        var result = new PayrollCalculator().Calculate(input);
+
+        result.Gross.Should().Be(2520m);                 // 1800 оклад + 720 №1749
+        var pdfo = result.Deductions.Single(d => d.Name == "ПДФО");
+        pdfo.Amount.Should().Be(154.08m);                // (2520 − 1664) × 18%
+        pdfo.Formula.Should().Be("=(2520-1664)*18%");
+        // Військовий збір — з повного gross, пільга його не стосується.
+        result.Deductions.Single(d => d.Name == "Військовий збір").Amount.Should().Be(126m);   // 2520 × 5%
+    }
+
+    [Fact]
+    public void Pdfo_SocialBenefitAboveCap_NoReduction()
+    {
+        // Дохід 10000 > поріг 4660 → пільга не діє, ПДФО з повного gross.
+        var input = Input(22, 22, Mop(oklad: 10000m)) with { SocialBenefitPct = 0.50m };
+        var result = new PayrollCalculator().Calculate(input);
+
+        result.Gross.Should().Be(10000m);
+        result.Deductions.Single(d => d.Name == "ПДФО").Amount.Should().Be(1800m);   // 10000 × 18%, без пільги
+    }
+
+    [Fact]
+    public void Pdfo_NoSocialBenefit_BelowCap_NoReduction()
+    {
+        // Дохід низький (2520 ≤ поріг), але пільга не задана (null) → ПДФО з повного gross.
+        var result = new PayrollCalculator().Calculate(Input(22, 22, Teacher(oklad: 3600m, hours: 9m)));
+
+        result.Deductions.Single(d => d.Name == "ПДФО").Amount.Should().Be(453.6m);   // 2520 × 18%
     }
 
     // --- helpers: збирають мінімальний вхід, щоб тіло тесту лишалось коротким ---

@@ -18,6 +18,7 @@ public class VedomostExporterTests
     {
         Pdfo = 0.18m, Vz = 0.05m, Union = 0.01m, Bonus1749 = 0.40m,
         Mzp = 8647m, UnfavorableBase = 2600m, Disinfectants = 0.10m, NightShifts = 0.40m,
+        SocialBenefitLivingMin = 3328m, SocialBenefitCap = 4660m,
     };
 
     [Fact]

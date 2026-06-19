@@ -82,7 +82,7 @@ public static class EmployeeValidator
             case WorkerClass.AdminPedagogical:
                 return grade >= 8 && grade <= 18;
             case WorkerClass.Specialist:
-                return grade >= 4 && grade <= 13;
+                return grade >= 4 && grade <= 16;
             case WorkerClass.MOP:
                 return grade >= 1 && grade <= 8;
             default:

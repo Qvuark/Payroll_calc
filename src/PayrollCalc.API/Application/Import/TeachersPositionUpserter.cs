@@ -46,11 +46,11 @@ public class TeachersPositionUpserter(AppDbContext db)
                 $"Розряд {tariffGrade.Grade} не дозволено для класу '{position.WorkerClass}'"));
             return (null, false);
         }
-        // Надбавку за престижність мають лише педагоги (Class 1) — для інших класів % не має сенсу.
-        if (row.PrestigePct.HasValue && position.WorkerClass != WorkerClass.Pedagogical)
+        // Надбавку за престижність мають лише педагоги (Class 1-2) — для інших класів % не має сенсу.
+        if (row.PrestigePct.HasValue && position.WorkerClass != WorkerClass.Pedagogical && position.WorkerClass != WorkerClass.AdminPedagogical)
         {
             errors.Add(new ParserError(row.RowIndex, "PrestigePct",
-                $"Надбавку за престижність дозволено лише педагогам (Class 1), а не класу '{position.WorkerClass}'"));
+                $"Надбавку за престижність дозволено лише педагогам (Class 1-2), а не класу '{position.WorkerClass}'"));
             return (null, false);
         }
         // Існуючу ставку тягнемо разом з блоками (Include), інакше EF не побачить старий блок і вставить дубль.
@@ -152,7 +152,7 @@ public class TeachersPositionUpserter(AppDbContext db)
                 notebookRateId = notebookRate.Id;
         }
 
-        // Створюємо або оновлюємо ставку. PrestigeBonusPct — лише в потоці Teachers (Class 1).
+        // Створюємо або оновлюємо ставку. PrestigeBonusPct — лише в потоці Teachers (Class 1-2).
         bool wasCreated;
         if (ep is null)
         {

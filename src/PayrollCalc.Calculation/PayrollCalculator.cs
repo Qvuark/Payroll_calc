@@ -137,9 +137,20 @@ public sealed class PayrollCalculator : IPayrollCalculator
     {
         var p = input.Params;
         var m = input.Manual;
+
+        // Податкова соціальна пільга зменшує базу ПДФО, але лише якщо місячний дохід не вищий за поріг.
+        // Розмір (частка прожиткового мінімуму) — на працівнику; null → пільги немає, база = весь gross.
+        var socialBenefit = input.SocialBenefitPct is { } pct && gross <= p.SocialBenefitCap
+            ? p.SocialBenefitLivingMin * pct
+            : 0m;
+        var pdfoBase = gross - socialBenefit;
+        var pdfoFormula = socialBenefit != 0
+            ? $"=({Num(gross)}-{Num(socialBenefit)})*{Num(p.Pdfo * 100)}%"
+            : Pct(gross, p.Pdfo);
+
         var list = new List<CalcComponent>
         {
-            new(ComponentNames.Pdfo, gross * p.Pdfo, Pct(gross, p.Pdfo)),
+            new(ComponentNames.Pdfo, pdfoBase * p.Pdfo, pdfoFormula),
             new(ComponentNames.Vz, gross * p.Vz, Pct(gross, p.Vz)),
         };
 
@@ -194,5 +205,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
         ["unfavorable_base"] = p.UnfavorableBase,
         ["disinfectants"] = p.Disinfectants,
         ["night_shifts"] = p.NightShifts,
+        ["social_benefit_living_min"] = p.SocialBenefitLivingMin,
+        ["social_benefit_cap"] = p.SocialBenefitCap,
     };
 }

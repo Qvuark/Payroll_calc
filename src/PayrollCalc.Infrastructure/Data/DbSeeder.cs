@@ -37,6 +37,8 @@ public static class DbSeeder
             new SystemParam { Key = "workshop", Value = 0.20m, EffectiveDate = date },
             new SystemParam { Key = "gym", Value = 0.10m, EffectiveDate = date },
             new SystemParam { Key = "shooting_range", Value = 0.20m, EffectiveDate = date },
+            new SystemParam { Key = "social_benefit_living_min", Value = 3328m, EffectiveDate = date },
+            new SystemParam { Key = "social_benefit_cap", Value = 4660m, EffectiveDate = date },
             new SystemParam { Key = "computers", Value = 0.10m, EffectiveDate = date },
             new SystemParam { Key = "extracurricular", Value = 0.10m, EffectiveDate = date },
             new SystemParam { Key = "website", Value = 0.10m, EffectiveDate = date },

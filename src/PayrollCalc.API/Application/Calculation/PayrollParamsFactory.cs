@@ -18,6 +18,8 @@ public static class PayrollParamsFactory
         UnfavorableBase = Get(p, "unfavorable_base"),
         Disinfectants = Get(p, "disinfectants_rate"),
         NightShifts = Get(p, "night_shifts_rate"),
+        SocialBenefitLivingMin = Get(p, "social_benefit_living_min"),
+        SocialBenefitCap = Get(p, "social_benefit_cap"),
     };
 
     private static decimal Get(IReadOnlyDictionary<string, decimal> p, string key)

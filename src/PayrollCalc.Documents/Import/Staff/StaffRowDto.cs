@@ -35,7 +35,7 @@ public record StaffRowDto : IPersonaRow
     // ─── ГПД (Class 2 — група продовженого дня) ───
     // Grade nullable (не призначено = null), Hours decimal default 0 (0 годин = валідно).
     public int? GpdGrade { get; init; }
-    public decimal GpdHours { get; init; }
+    public decimal GpdRate { get; init; }
     // ─── ПКР (Class 2 — група короткотермінового перебування) ───
     public int? PkrGrade { get; init; }
     public decimal PkrHours { get; init; }

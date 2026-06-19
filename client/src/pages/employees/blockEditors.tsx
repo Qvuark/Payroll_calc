@@ -420,9 +420,9 @@ export function GpdEditor(props: { employeeId: number; position: EmployeePositio
       hint="група продовженого дня — оплата = оклад розряду × кількість ставок"
       hoursLabel="Ставок ГПД (0,5 чи 1 — НЕ години)"
       range={GPD_GRADE_RANGE}
-      block={gpd ? { tariffGradeId: gpd.tariffGradeId, hours: gpd.gpdHours } : null}
+      block={gpd ? { tariffGradeId: gpd.tariffGradeId, hours: gpd.gpdRate } : null}
       kind="gpd"
-      save={(empId, posId, hours, tariffGradeId) => putGpd(empId, posId, { gpdHours: hours, tariffGradeId })}
+      save={(empId, posId, hours, tariffGradeId) => putGpd(empId, posId, { gpdRate: hours, tariffGradeId })}
     />
   )
 }

@@ -22,11 +22,6 @@ public class Timesheet
     public decimal EnforcementOrders { get; set; } = decimal.Zero;
     public decimal AnnualBonus { get; set; } = decimal.Zero;
     /// <summary>
-    /// Легасі-поле без споживача (немає ні в запиті, ні в розрахунку). Дроп колонки — разом
-    /// з наступною міграцією-чисткою.
-    /// </summary>
-    public decimal OtherManual { get; set; } = decimal.Zero;
-    /// <summary>
     /// Позакласна робота з фізвиховання (відомість AC). Ручна сума.
     /// </summary>
     public decimal PhysEducation { get; set; } = decimal.Zero;

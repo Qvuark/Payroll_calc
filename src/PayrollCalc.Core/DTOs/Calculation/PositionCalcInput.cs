@@ -77,7 +77,7 @@ public record PositionCalcInput
     /// <summary>
     /// Ведення військового обліку — доплата 5% (відомість AJ).
     /// </summary>
-    public bool HasMilitaryRecord { get; init; }
+    public bool MaintainsMilitaryRecords { get; init; }
     /// <summary>
     /// Робота з дезінфікуючими засобами — доплата 10% (відомість AN).
     /// </summary>

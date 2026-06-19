@@ -35,9 +35,13 @@ public static class TitleTypeResolver
     {
         if (string.IsNullOrWhiteSpace(name))
             return null;
-        var titleType = await db.TitleTypes
-            .FirstOrDefaultAsync(t => t.Name == name && t.WorkerClass == workerClass, ct);
-        if (titleType is null)
+        // Резолв за назвою або синонімом у межах класу. Спершу звужуємо кандидатів по WorkerClass,
+        // далі AliasMatcher звіряє Name/ExcelAliases з нормалізацією.
+        var candidates = await db.TitleTypes
+            .Where(t => t.WorkerClass == workerClass)
+            .ToListAsync(ct);
+        var matches = AliasMatcher.Match(candidates, name);
+        if (matches.Count == 0)
         {
             errors.Add(new ParserError(
                 rowIndex,
@@ -45,6 +49,14 @@ public static class TitleTypeResolver
                 $"Звання '{name}' не знайдено для класу {workerClass}"));
             return null;
         }
-        return titleType.Id;
+        if (matches.Count > 1)
+        {
+            errors.Add(new ParserError(
+                rowIndex,
+                "TitleType",
+                $"Звання '{name}' неоднозначне для класу {workerClass} — збіг з кількома записами"));
+            return null;
+        }
+        return matches[0].Id;
     }
 }

@@ -148,21 +148,21 @@ public class StaffParserTests
         var (rows, errors) = new StaffParser().ParseSheet(sheet);
 
         errors.Should().BeEmpty();
-        rows[0].GpdHours.Should().Be(0m);
+        rows[0].GpdRate.Should().Be(0m);
         rows[0].PkrHours.Should().Be(0m);
     }
     [Fact]
-    public void GpdHoursInvalid_ErrorAndZero()
+    public void GpdRateInvalid_ErrorAndZero()
     {
         var row = StaffSheetBuilder.ValidRow();
-        row[StaffColumnMap.ColGpdHours] = "abc";
+        row[StaffColumnMap.ColGpdRate] = "abc";
         var sheet = StaffSheetBuilder.BuildValid(row);
 
         var (rows, errors) = new StaffParser().ParseSheet(sheet);
 
         rows.Should().HaveCount(1);
-        rows[0].GpdHours.Should().Be(0m);
-        errors.Should().ContainSingle().Which.Field.Should().Be("GpdHours");
+        rows[0].GpdRate.Should().Be(0m);
+        errors.Should().ContainSingle().Which.Field.Should().Be("GpdRate");
     }
     // ─── Bool: "так"/"ні" парсяться через BoolParser ───
     [Fact]

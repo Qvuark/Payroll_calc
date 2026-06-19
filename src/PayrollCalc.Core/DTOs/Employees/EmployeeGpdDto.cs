@@ -9,7 +9,7 @@ public class EmployeeGpdDto
 {
     public int EmployeePositionId { get; set; }
     public int TariffGradeId { get; set; }
-    public decimal GpdHours { get; set; }
+    public decimal GpdRate { get; set; }
 
     /// <summary>
     /// Маппінг entity → DTO. Plain field-by-field.
@@ -22,7 +22,7 @@ public class EmployeeGpdDto
         {
             EmployeePositionId = e.EmployeePositionId,
             TariffGradeId = e.TariffGradeId,
-            GpdHours = e.GpdHours
+            GpdRate = e.GpdRate
         };
     }
 }

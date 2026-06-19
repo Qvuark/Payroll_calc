@@ -1,11 +1,12 @@
 using PayrollCalc.Core.Entities.Enums;
+using PayrollCalc.Core.Interfaces;
 
 namespace PayrollCalc.Core.Entities;
 
 /// <summary>
 /// Звання працівника (посада з надбавкою: методист, старший учитель тощо).
 /// </summary>
-public class TitleType
+public class TitleType : IAliasable
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

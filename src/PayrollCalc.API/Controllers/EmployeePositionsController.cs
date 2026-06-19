@@ -137,7 +137,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         position.RateCount = request.RateCount;
         position.IsPrimary = request.IsPrimary;
         position.DismissalDate = request.DismissalDate;
-        position.HasMilitaryRecord = request.HasMilitaryRecord;
+        position.MaintainsMilitaryRecords = request.MaintainsMilitaryRecords;
         position.HasUnfavorable = request.HasUnfavorable;
         position.ComplexityBonusPct = request.ComplexityBonusPct;
         position.PrestigeBonusPct = request.PrestigeBonusPct;
@@ -331,7 +331,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         }
         else
         {
-            position.Gpd.GpdHours = request.GpdHours;
+            position.Gpd.GpdRate = request.GpdRate;
             position.Gpd.TariffGradeId = request.TariffGradeId;
         }
         await context.SaveChangesAsync();

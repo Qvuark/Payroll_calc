@@ -251,7 +251,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
     }
 
     /// <summary>
-    /// Class 2 "Вихователь" з ГПД-блоком: GpdGrade=12, GpdHours=20. Очікуємо що EmployeePosition
+    /// Class 2 "Вихователь" з ГПД-блоком: GpdGrade=12, GpdRate=20. Очікуємо що EmployeePosition
     /// створено + ep.Gpd створено з власним TariffGradeId (відрізняється від ep.TariffGradeId).
     /// </summary>
     [Fact]
@@ -264,7 +264,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
         row[StaffColumnMap.ColPosition] = "Вихователь";
         row[StaffColumnMap.ColTariffGrade] = 11;
         row[StaffColumnMap.ColGpdGrade] = 12;
-        row[StaffColumnMap.ColGpdHours] = 20.0;
+        row[StaffColumnMap.ColGpdRate] = 20.0;
 
         await using var xlsx = StaffXlsxBuilder.Build(row);
         var report = await importer.ImportAsync(xlsx);
@@ -278,7 +278,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
             .Include(p => p.TariffGrade)
             .SingleAsync();
         ep.Gpd.Should().NotBeNull();
-        ep.Gpd!.GpdHours.Should().Be(20.0m);
+        ep.Gpd!.GpdRate.Should().Be(20.0m);
         ep.Gpd.TariffGrade!.Grade.Should().Be(12);
         ep.TariffGrade!.Grade.Should().Be(11);
     }
@@ -377,7 +377,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
     }
 
     /// <summary>
-    /// Class 4 "Сторож" + GpdHours=20 — несумісна комбінація (МОП не може мати ГПД).
+    /// Class 4 "Сторож" + GpdRate=20 — несумісна комбінація (МОП не може мати ГПД).
     /// ValidateBlocks повертає помилку, рядок пропускається, orphan guard зрубає Employee
     /// (бо єдина позиція впала). У БД пусто, у звіті — помилка WorkerClass.
     /// </summary>
@@ -391,7 +391,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
         row[StaffColumnMap.ColPosition] = "Сторож";
         row[StaffColumnMap.ColTariffGrade] = 2;
         row[StaffColumnMap.ColGpdGrade] = 10;
-        row[StaffColumnMap.ColGpdHours] = 20.0;
+        row[StaffColumnMap.ColGpdRate] = 20.0;
 
         await using var xlsx = StaffXlsxBuilder.Build(row);
         var report = await importer.ImportAsync(xlsx);
@@ -407,7 +407,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
 
     /// <summary>
     /// Update path для блока: pre-seed Class 2 з ep.Gpd (10h). Повторний імпорт того ж TaxId+Position
-    /// з GpdHours=25 → блок ОНОВЛЕНО (count 1, не 2). Захист від EF-дублів через .Include() у upserter'і.
+    /// з GpdRate=25 → блок ОНОВЛЕНО (count 1, не 2). Захист від EF-дублів через .Include() у upserter'і.
     /// </summary>
     [Fact]
     public async Task Updates_existing_gpd_block_without_duplicating()
@@ -432,7 +432,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
                 RateCount = 1.0m,
                 HireDate = new DateOnly(2020, 9, 1),
                 EffectiveFrom = new DateOnly(2020, 9, 1),
-                Gpd = new EmployeeGpd { TariffGrade = gpdGrade, GpdHours = 10m },
+                Gpd = new EmployeeGpd { TariffGrade = gpdGrade, GpdRate = 10m },
             });
             seedDb.Employees.Add(emp);
             await seedDb.SaveChangesAsync();
@@ -445,7 +445,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
         row[StaffColumnMap.ColPosition] = "Вихователь";
         row[StaffColumnMap.ColTariffGrade] = 11;
         row[StaffColumnMap.ColGpdGrade] = 12;
-        row[StaffColumnMap.ColGpdHours] = 25.0;
+        row[StaffColumnMap.ColGpdRate] = 25.0;
 
         await using var xlsx = StaffXlsxBuilder.Build(row);
         var report = await importer.ImportAsync(xlsx);
@@ -457,7 +457,7 @@ public class StaffImporterTests : IClassFixture<PostgresFixture>, IAsyncLifetime
         await using var readDb = _fx.CreateContext();
         var gpds = await readDb.Set<EmployeeGpd>().ToListAsync();
         gpds.Should().HaveCount(1);
-        gpds[0].GpdHours.Should().Be(25m);
+        gpds[0].GpdRate.Should().Be(25m);
     }
 
     /// <summary>

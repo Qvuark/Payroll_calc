@@ -42,7 +42,7 @@ public class EmployeePositionDto
     /// <summary>
     /// Перебуває на військовому обліку на цій ставці (надбавка 5%).
     /// </summary>
-    public bool HasMilitaryRecord { get; set; }
+    public bool MaintainsMilitaryRecords { get; set; }
     /// <summary>
     /// Шкідливі умови праці на цій ставці. Формула/відсоток уточнюється з бухгалтером.
     /// </summary>
@@ -91,7 +91,7 @@ public class EmployeePositionDto
             DismissalDate = e.DismissalDate,
             PositionStartDate = e.PositionStartDate,
             EffectiveFrom = e.EffectiveFrom,
-            HasMilitaryRecord = e.HasMilitaryRecord,
+            MaintainsMilitaryRecords = e.MaintainsMilitaryRecords,
             HasUnfavorable = e.HasUnfavorable,
             ComplexityBonusPct = e.ComplexityBonusPct,
             PrestigeBonusPct = e.PrestigeBonusPct,

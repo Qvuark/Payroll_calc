@@ -24,13 +24,21 @@ public class PositionUpserter(AppDbContext db)
         List<ParserError> errors,
         CancellationToken ct = default)
     {
-        var position = await db.Positions.FirstOrDefaultAsync(p => p.Name == staffRow.Position, ct);
-        if (position is null)
+        // Резолв за назвою або синонімом (ExcelAliases). Довідник малий — тягнемо весь у пам'ять.
+        var positionMatches = AliasMatcher.Match(await db.Positions.ToListAsync(ct), staffRow.Position);
+        if (positionMatches.Count == 0)
         {
             errors.Add(new ParserError(staffRow.RowIndex, "Position",
                 $"Посада '{staffRow.Position}' не знайдена в довіднику"));
             return (null, false);
         }
+        if (positionMatches.Count > 1)
+        {
+            errors.Add(new ParserError(staffRow.RowIndex, "Position",
+                $"Назва посади '{staffRow.Position}' неоднозначна — збіг з кількома записами довідника"));
+            return (null, false);
+        }
+        var position = positionMatches[0];
         var tariffGrade = await db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == staffRow.TariffGrade, ct);
         if (tariffGrade is null)
         {
@@ -56,7 +64,7 @@ public class PositionUpserter(AppDbContext db)
                 .FirstOrDefaultAsync(x => x.EmployeeId == employee.Id && x.PositionId == position.Id, ct);
         }
         // Блок присутній якщо в рядку є його дані: Gpd/Pkr — години > 0, NonPedagogical — будь-яка сума чи прапор.
-        var hasGpd = staffRow.GpdHours > 0;
+        var hasGpd = staffRow.GpdRate > 0;
         var hasPkr = staffRow.PkrHours > 0;
         var hasNonPedagogical = staffRow.MentorAmount.HasValue ||
                                 staffRow.LibraryMgmtAmount.HasValue ||
@@ -145,7 +153,7 @@ public class PositionUpserter(AppDbContext db)
                 HireDate = staffRow.HireDate!.Value,
                 PositionStartDate = staffRow.PositionStartDate,
                 EffectiveFrom = staffRow.PositionStartDate ?? staffRow.HireDate!.Value,
-                HasMilitaryRecord = staffRow.HasMilitary,
+                MaintainsMilitaryRecords = staffRow.HasMilitary,
                 HasUnfavorable = staffRow.HasUnfavorable,
                 ComplexityBonusPct = staffRow.ComplexityPct,
             };
@@ -160,7 +168,7 @@ public class PositionUpserter(AppDbContext db)
             ep.HireDate = staffRow.HireDate!.Value;
             ep.PositionStartDate = staffRow.PositionStartDate;
             ep.EffectiveFrom = staffRow.PositionStartDate ?? staffRow.HireDate!.Value;
-            ep.HasMilitaryRecord = staffRow.HasMilitary;
+            ep.MaintainsMilitaryRecords = staffRow.HasMilitary;
             ep.HasUnfavorable = staffRow.HasUnfavorable;
             ep.ComplexityBonusPct = staffRow.ComplexityPct;
             wasCreated = false;
@@ -181,12 +189,12 @@ public class PositionUpserter(AppDbContext db)
                 ep.Gpd = new EmployeeGpd
                 {
                     TariffGradeId = gpdGrade!.Id,
-                    GpdHours = staffRow.GpdHours
+                    GpdRate = staffRow.GpdRate
                 };
             else
             {
                 ep.Gpd.TariffGradeId = gpdGrade!.Id;
-                ep.Gpd.GpdHours = staffRow.GpdHours;
+                ep.Gpd.GpdRate = staffRow.GpdRate;
             }
         }
 

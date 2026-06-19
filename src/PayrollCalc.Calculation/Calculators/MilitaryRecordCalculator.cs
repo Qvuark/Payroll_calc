@@ -5,7 +5,7 @@ namespace PayrollCalc.Calculation.Calculators;
 
 /// <summary>
 /// Доплата за ведення військового обліку — 5% від окладу (відомість AJ), з пропорцією за неповний місяць.
-/// База — голий оклад (без №1749). Прапорець зі ставки (HasMilitaryRecord); false → доплати немає.
+/// База — голий оклад (без №1749). Прапорець зі ставки (MaintainsMilitaryRecords); false → доплати немає.
 /// </summary>
 public static class MilitaryRecordCalculator
 {
@@ -13,7 +13,7 @@ public static class MilitaryRecordCalculator
 
     public static CalcComponent? Calc(PositionCalcInput pos, int normDays, decimal workedDays)
     {
-        if (!pos.HasMilitaryRecord)
+        if (!pos.MaintainsMilitaryRecords)
             return null;
 
         var amount = pos.Oklad * Pct;

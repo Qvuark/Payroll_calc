@@ -16,5 +16,5 @@ public class EmployeeGpd
     /// <summary>
     /// Кількість СТАВОК ГПД (0.5 / 1.0), не годин: оплата = оклад розряду × це число.
     /// </summary>
-    public decimal GpdHours { get; set; } = decimal.Zero;
+    public decimal GpdRate { get; set; } = decimal.Zero;
 }

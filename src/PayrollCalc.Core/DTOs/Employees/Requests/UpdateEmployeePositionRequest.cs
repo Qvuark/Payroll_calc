@@ -20,7 +20,7 @@ public class UpdateEmployeePositionRequest
     /// </summary>
     public DateOnly? DismissalDate { get; set; }
     public bool IsPrimary { get; set; }
-    public bool HasMilitaryRecord { get; set; }
+    public bool MaintainsMilitaryRecords { get; set; }
     public bool HasUnfavorable { get; set; }
     /// <summary>
     /// Дата початку роботи на цій посаді (для versioning). Null → береться HireDate.
@@ -31,5 +31,5 @@ public class UpdateEmployeePositionRequest
     /// </summary>
     public int? TitleTypeId { get; set; }
     [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
-    [Range(0.05, 0.25)] public decimal? PrestigeBonusPct { get; set; }
+    [Range(0.05, 0.30)] public decimal? PrestigeBonusPct { get; set; }
 }

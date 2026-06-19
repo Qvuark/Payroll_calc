@@ -1,4 +1,5 @@
 using PayrollCalc.Core.Entities.Enums;
+using PayrollCalc.Core.Interfaces;
 
 namespace PayrollCalc.Core.Entities;
 
@@ -7,7 +8,7 @@ namespace PayrollCalc.Core.Entities;
 /// Носить WorkerClass — фундаментальну приналежність до однієї з 4 категорій,
 /// яка визначає які блоки надбавок дозволені на ставці цієї посади.
 /// </summary>
-public class Position
+public class Position : IAliasable
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

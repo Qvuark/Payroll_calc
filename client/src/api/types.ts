@@ -153,7 +153,7 @@ export interface EmployeeAdmin {
 export interface EmployeeGpd {
   employeePositionId: number
   tariffGradeId: number
-  gpdHours: number
+  gpdRate: number
 }
 
 export interface EmployeePkr {
@@ -190,7 +190,7 @@ export interface EmployeePosition {
   dismissalDate: string | null
   positionStartDate: string | null
   effectiveFrom: string
-  hasMilitaryRecord: boolean
+  maintainsMilitaryRecords: boolean
   hasUnfavorable: boolean
   complexityBonusPct: number | null
   prestigeBonusPct: number | null
@@ -254,7 +254,7 @@ export interface CreatePositionRequest {
   rateCount: number
   hireDate: string
   isPrimary: boolean
-  hasMilitaryRecord: boolean
+  maintainsMilitaryRecords: boolean
   hasUnfavorable: boolean
   complexityBonusPct: number | null
   prestigeBonusPct: number | null
@@ -267,7 +267,7 @@ export interface UpdatePositionRequest {
   rateCount: number
   dismissalDate: string | null
   isPrimary: boolean
-  hasMilitaryRecord: boolean
+  maintainsMilitaryRecords: boolean
   hasUnfavorable: boolean
   positionStartDate: string | null
   titleTypeId: number | null
@@ -304,7 +304,7 @@ export interface AdminRequest {
 }
 
 export interface GpdRequest {
-  gpdHours: number
+  gpdRate: number
   tariffGradeId: number
 }
 

@@ -10,9 +10,9 @@ namespace PayrollCalc.Core.DTOs.Employees.Requests;
 public class EmployeeGpdRequest
 {
     /// <summary>
-    /// Кількість годин ГПД на тиждень.
+    /// Кількість ставок ГПД (0.5 / 1) — оплата = оклад розряду × це число, не години.
     /// </summary>
-    [Range(0.0, 30.0)] public decimal GpdHours { get; set; }
+    [Range(0.0, 2.0)] public decimal GpdRate { get; set; }
     /// <summary>
     /// FK на TariffGrade — тарифний розряд саме для ГПД.
     /// </summary>
@@ -27,7 +27,7 @@ public class EmployeeGpdRequest
     {
         return new EmployeeGpd
         {
-            GpdHours = request.GpdHours,
+            GpdRate = request.GpdRate,
             TariffGradeId = request.TariffGradeId
         };
     }

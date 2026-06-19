@@ -108,7 +108,7 @@ public class StaffParser
 
         // ─── ГПД/ПКР: Grade як int? (не призначено = null), Hours як decimal default 0 ───
         var gpdGrade = ExcelFieldReader.GetOptionalInt(row, StaffColumnMap.ColGpdGrade, "GpdGrade", rowNumber, errors);
-        var gpdHours = ExcelFieldReader.GetOptionalHours(row, StaffColumnMap.ColGpdHours, "GpdHours", rowNumber, errors);
+        var gpdRate = ExcelFieldReader.GetOptionalHours(row, StaffColumnMap.ColGpdRate, "GpdRate", rowNumber, errors);
         var pkrGrade = ExcelFieldReader.GetOptionalInt(row, StaffColumnMap.ColPkrGrade, "PkrGrade", rowNumber, errors);
         var pkrHours = ExcelFieldReader.GetOptionalHours(row, StaffColumnMap.ColPkrHours, "PkrHours", rowNumber, errors);
 
@@ -140,7 +140,7 @@ public class StaffParser
             HasMilitary = hasMilitary,
             HasUnfavorable = hasUnfavorable,
             GpdGrade = gpdGrade,
-            GpdHours = gpdHours,
+            GpdRate = gpdRate,
             PkrGrade = pkrGrade,
             PkrHours = pkrHours,
             MentorAmount = mentorAmount,

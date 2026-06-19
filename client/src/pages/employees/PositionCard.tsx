@@ -40,7 +40,7 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
     tariffGradeId: position.tariffGradeId,
     rateCount: fmtNum(position.rateCount),
     isPrimary: position.isPrimary,
-    hasMilitaryRecord: position.hasMilitaryRecord,
+    maintainsMilitaryRecords: position.maintainsMilitaryRecords,
     hasUnfavorable: position.hasUnfavorable,
     positionStartDate: position.positionStartDate ?? '',
     titleTypeId: position.titleTypeId ?? 0,
@@ -60,7 +60,7 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
         rateCount: parseDec(form.rateCount) ?? position.rateCount,
         dismissalDate: position.dismissalDate,
         isPrimary: form.isPrimary,
-        hasMilitaryRecord: form.hasMilitaryRecord,
+        maintainsMilitaryRecords: form.maintainsMilitaryRecords,
         hasUnfavorable: form.hasUnfavorable,
         positionStartDate: form.positionStartDate || null,
         titleTypeId: form.titleTypeId || null,
@@ -94,7 +94,7 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
         rateCount: position.rateCount,
         dismissalDate: null,
         isPrimary: !hasActivePrimary,
-        hasMilitaryRecord: position.hasMilitaryRecord,
+        maintainsMilitaryRecords: position.maintainsMilitaryRecords,
         hasUnfavorable: position.hasUnfavorable,
         positionStartDate: position.positionStartDate,
         titleTypeId: position.titleTypeId,
@@ -222,8 +222,8 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
             <label className="check">
               <input
                 type="checkbox"
-                checked={form.hasMilitaryRecord}
-                onChange={e => setForm(f => ({ ...f, hasMilitaryRecord: e.target.checked }))}
+                checked={form.maintainsMilitaryRecords}
+                onChange={e => setForm(f => ({ ...f, maintainsMilitaryRecords: e.target.checked }))}
                 disabled={isDismissed}
               />
               Військовий облік (+5%)

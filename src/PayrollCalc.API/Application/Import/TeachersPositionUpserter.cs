@@ -26,13 +26,21 @@ public class TeachersPositionUpserter(AppDbContext db)
         List<ParserError> errors,
         CancellationToken ct = default)
     {
-        var position = await db.Positions.FirstOrDefaultAsync(p => p.Name == row.Position, ct);
-        if (position is null)
+        // Резолв за назвою або синонімом (ExcelAliases). Довідник малий — тягнемо весь у пам'ять.
+        var positionMatches = AliasMatcher.Match(await db.Positions.ToListAsync(ct), row.Position);
+        if (positionMatches.Count == 0)
         {
             errors.Add(new ParserError(row.RowIndex, "Position",
                 $"Посада '{row.Position}' не знайдена в довіднику"));
             return (null, false);
         }
+        if (positionMatches.Count > 1)
+        {
+            errors.Add(new ParserError(row.RowIndex, "Position",
+                $"Назва посади '{row.Position}' неоднозначна — збіг з кількома записами довідника"));
+            return (null, false);
+        }
+        var position = positionMatches[0];
         var tariffGrade = await db.TariffGrades.FirstOrDefaultAsync(t => t.Grade == row.TariffGrade, ct);
         if (tariffGrade is null)
         {
@@ -166,7 +174,7 @@ public class TeachersPositionUpserter(AppDbContext db)
                 HireDate = row.HireDate!.Value,
                 PositionStartDate = row.PositionStartDate,
                 EffectiveFrom = row.PositionStartDate ?? row.HireDate!.Value,
-                HasMilitaryRecord = row.HasMilitary,
+                MaintainsMilitaryRecords = row.HasMilitary,
                 HasUnfavorable = row.HasUnfavorable,
                 ComplexityBonusPct = row.ComplexityPct,
                 PrestigeBonusPct = row.PrestigePct,
@@ -182,20 +190,18 @@ public class TeachersPositionUpserter(AppDbContext db)
             ep.HireDate = row.HireDate!.Value;
             ep.PositionStartDate = row.PositionStartDate;
             ep.EffectiveFrom = row.PositionStartDate ?? row.HireDate!.Value;
-            ep.HasMilitaryRecord = row.HasMilitary;
+            ep.MaintainsMilitaryRecords = row.HasMilitary;
             ep.HasUnfavorable = row.HasUnfavorable;
             ep.ComplexityBonusPct = row.ComplexityPct;
             ep.PrestigeBonusPct = row.PrestigePct;
             wasCreated = false;
         }
-
         // Звання резолвимо лише коли воно задане: пуста колонка означає "не чіпати наявне", а не "очистити".
         if (!string.IsNullOrWhiteSpace(row.TitleType))
         {
             ep.TitleTypeId = await TitleTypeResolver.ResolveTitleTypeIdAsync(
                 db, row.TitleType, position.WorkerClass, row.RowIndex, errors, ct);
         }
-
         // ??= створює блок лише коли його ще нема, інакше перезаписує поля.
         // Порожнє поле не очищає блок — імпорт тільки доповнює, не видаляє.
         if (hasWorkload)

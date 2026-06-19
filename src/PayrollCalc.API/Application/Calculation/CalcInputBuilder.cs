@@ -140,7 +140,7 @@ public class CalcInputBuilder(AppDbContext db)
             HasComputerMaintenance = admin?.HasComputers ?? false,
             HasWebsite = admin?.HasWebsite ?? false,
             IsMentor = nonPed?.HasMentor ?? false,
-            HasMilitaryRecord = ep.HasMilitaryRecord,
+            MaintainsMilitaryRecords = ep.MaintainsMilitaryRecords,
             HasDisinfectants = nonPed?.HasDisinfectants ?? false,
             IsLibraryHead = nonPed?.HasLibraryMgmt ?? false,
             HasTextbooks = nonPed?.HasTextbooks ?? false,
@@ -157,7 +157,7 @@ public class CalcInputBuilder(AppDbContext db)
 
     /// <summary>
     /// Блок позаурочної роботи (ГПД/ПКР) ставки → ExtendedActivityInput. Пріоритет ПКР, далі ГПД; null — немає жодного.
-    /// База: ПКР — тариф/18×год; ГПД — оклад×ставка (Divisor=1, GpdHours = к-сть ставок ГПД). Проре по днях.
+    /// База: ПКР — тариф/18×год; ГПД — оклад×ставка (Divisor=1, GpdRate = к-сть ставок ГПД). Проре по днях.
     /// Викликається з MapPosition.
     /// </summary>
     private static ExtendedActivityInput? MapExtendedActivity(EmployeePosition ep, decimal tenurePct)
@@ -181,7 +181,7 @@ public class CalcInputBuilder(AppDbContext db)
                 Kind = ExtendedActivityKind.Gpd,
                 Tariff = gpd.TariffGrade!.MonthlyRate,
                 Divisor = 1m,
-                Hours = gpd.GpdHours,            // к-сть ставок ГПД (0.5 / 1.0), не години
+                Hours = gpd.GpdRate,            // к-сть ставок ГПД (0.5 / 1.0), не години
                 TenurePct = tenurePct,
                 ProrateByDays = true,
             };

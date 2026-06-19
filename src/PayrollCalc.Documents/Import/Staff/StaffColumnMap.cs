@@ -35,7 +35,7 @@ public class StaffColumnMap : IExcelColumnMap
     public const int ColHasMilitary = 17;
     public const int ColHasUnfavorable = 18;
     public const int ColGpdGrade = 19;
-    public const int ColGpdHours = 20;
+    public const int ColGpdRate = 20;
     public const int ColPkrGrade = 21;
     public const int ColPkrHours = 22;
     public const int ColMentorAmount = 23;
@@ -66,7 +66,7 @@ public class StaffColumnMap : IExcelColumnMap
         { 17, "HasMilitary" },
         { 18, "HasUnfavorable" },
         { 19, "GpdGrade" },
-        { 20, "GpdHours" },
+        { 20, "GpdRate" },
         { 21, "PkrGrade" },
         { 22, "PkrHours" },
         { 23, "MentorAmount" },
@@ -85,7 +85,7 @@ public class StaffColumnMap : IExcelColumnMap
         { 3, "Дата прийняття" },
         { 4, "Освіта" },
         { 5, "Звання (тільки Class 2)" },
-        { 6, "Заслужений працівник освіти (так/ні)" },
+        { 6, "Заслужений працівник освіти (+ якщо так)" },
         { 7, "Сума надбавки 'Заслужений' (грн)" },
         { 8, "Пед.стаж (років)" },
         { 9, "Загальний стаж (років)" },
@@ -95,9 +95,9 @@ public class StaffColumnMap : IExcelColumnMap
         { 13, "Дата прийняття на посаду (якщо ≠ HireDate)" },
         { 14, "Тарифний розряд (діапазон по посаді)" },
         { 15, "К-сть ставок (0.5/1.0/1.5)" },
-        { 16, "Головна ставка (так/ні)" },
-        { 17, "Військовий облік (так/ні)" },
-        { 18, "Шкідливі умови (так/ні)" },
+        { 16, "Головна ставка (+ якщо так)" },
+        { 17, "Військовий облік (+ якщо так)" },
+        { 18, "Шкідливі умови (+ якщо так)" },
         { 19, "Розряд ГПД (10-14)" },
         { 20, "Ставок ГПД (0.5 чи 1, НЕ години)" },
         { 21, "Розряд ПКР (10-12)" },
@@ -105,7 +105,7 @@ public class StaffColumnMap : IExcelColumnMap
         { 23, "Сума за наставництво (грн)" },
         { 24, "Сума за бібліотеку (грн)" },
         { 25, "Сума за підручники (грн)" },
-        { 26, "Дезінфектант (так/ні, +10%)" },
-        { 27, "Нічні зміни (так/ні, +40%)" },
+        { 26, "Дезінфектант (+ якщо так, +10%)" },
+        { 27, "Нічні зміни (+ якщо так, +40%)" },
     };
 }

@@ -48,7 +48,7 @@ public class EmployeePosition
     /// <summary>
     /// Чи перебуває на військовому обліку на цій ставці (надбавка 5% за наказом).
     /// </summary>
-    public bool HasMilitaryRecord { get; set; }
+    public bool MaintainsMilitaryRecords { get; set; }
     /// <summary>
     /// Чи є шкідливі умови праці на цій ставці.
     /// Формула/відсоток відкладено до уточнення у бухгалтера.

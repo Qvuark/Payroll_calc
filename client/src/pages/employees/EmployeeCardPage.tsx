@@ -251,7 +251,7 @@ function AddPositionDialog({ employeeId, suggestPrimary, onClose }: {
         rateCount: parseDec(rateCount) ?? 1,
         hireDate,
         isPrimary,
-        hasMilitaryRecord: false,
+        maintainsMilitaryRecords: false,
         hasUnfavorable: false,
         complexityBonusPct: null,
         prestigeBonusPct: null,

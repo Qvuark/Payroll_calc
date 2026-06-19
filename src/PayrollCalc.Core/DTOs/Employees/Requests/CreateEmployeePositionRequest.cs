@@ -30,7 +30,7 @@ public class CreateEmployeePositionRequest
     /// <summary>
     /// Перебуває на військовому обліку (надбавка 5%).
     /// </summary>
-    public bool HasMilitaryRecord { get; set; } = false;
+    public bool MaintainsMilitaryRecords { get; set; } = false;
     /// <summary>
     /// Шкідливі умови праці (постанова КМУ №1298). Конкретний відсоток уточнюється з бухгалтером.
     /// </summary>
@@ -40,9 +40,9 @@ public class CreateEmployeePositionRequest
     /// </summary>
     [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
     /// <summary>
-    /// Ставка надбавки за престижність праці (вчитель 20%, дир-гілка 25%).
+    /// Ставка надбавки за престижність праці, 5-30% (типово вчитель 20%, дир-гілка 25%).
     /// </summary>
-    [Range(0.05, 0.25)] public decimal? PrestigeBonusPct { get; set; }
+    [Range(0.05, 0.30)] public decimal? PrestigeBonusPct { get; set; }
     /// <summary>
     /// Дата початку роботи на цій посаді. Якщо не задано — використовується Employee.HireDate.
     /// </summary>
@@ -69,7 +69,7 @@ public class CreateEmployeePositionRequest
             PositionStartDate = r.PositionStartDate,
             EffectiveFrom = r.PositionStartDate ?? r.HireDate,
             IsPrimary = r.IsPrimary,
-            HasMilitaryRecord = r.HasMilitaryRecord,
+            MaintainsMilitaryRecords = r.MaintainsMilitaryRecords,
             HasUnfavorable = r.HasUnfavorable,
             ComplexityBonusPct = r.ComplexityBonusPct,
             PrestigeBonusPct = r.PrestigeBonusPct,

@@ -22,6 +22,12 @@ import type {
   UpdatePositionRequest,
   WorkCalendarMonth,
   WorkloadRequest,
+  SickLeave,
+  Vacation,
+  TrainingLeave,
+  CreateSickLeaveRequest,
+  CreateVacationRequest,
+  CreateTrainingLeaveRequest,
 } from './types'
 
 // ─── Довідники ───
@@ -97,6 +103,35 @@ export const putNonPedagogical = (employeeId: number, posId: number, body: NonPe
 export type BlockKind = 'workload' | 'admin' | 'gpd' | 'pkr' | 'nonpedagogical'
 export const deleteBlock = (employeeId: number, posId: number, kind: BlockKind) =>
   api<void>(`${posBase(employeeId)}/${posId}/${kind}`, { method: 'DELETE' })
+
+// ─── Відсутності (середньоденна) ───
+
+const sickBase = (employeeId: number) => `/employees/${employeeId}/sick-leaves`
+export const getSickLeaves = (employeeId: number) => api<SickLeave[]>(sickBase(employeeId))
+export const createSickLeave = (employeeId: number, body: CreateSickLeaveRequest) =>
+  api<SickLeave>(sickBase(employeeId), { method: 'POST', body: JSON.stringify(body) })
+export const updateSickLeave = (employeeId: number, id: number, body: CreateSickLeaveRequest) =>
+  api<SickLeave>(`${sickBase(employeeId)}/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+export const deleteSickLeave = (employeeId: number, id: number) =>
+  api<void>(`${sickBase(employeeId)}/${id}`, { method: 'DELETE' })
+
+const vacationBase = (employeeId: number) => `/employees/${employeeId}/vacations`
+export const getVacations = (employeeId: number) => api<Vacation[]>(vacationBase(employeeId))
+export const createVacation = (employeeId: number, body: CreateVacationRequest) =>
+  api<Vacation>(vacationBase(employeeId), { method: 'POST', body: JSON.stringify(body) })
+export const updateVacation = (employeeId: number, id: number, body: CreateVacationRequest) =>
+  api<Vacation>(`${vacationBase(employeeId)}/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+export const deleteVacation = (employeeId: number, id: number) =>
+  api<void>(`${vacationBase(employeeId)}/${id}`, { method: 'DELETE' })
+
+const trainingBase = (employeeId: number) => `/employees/${employeeId}/training-leaves`
+export const getTrainingLeaves = (employeeId: number) => api<TrainingLeave[]>(trainingBase(employeeId))
+export const createTrainingLeave = (employeeId: number, body: CreateTrainingLeaveRequest) =>
+  api<TrainingLeave>(trainingBase(employeeId), { method: 'POST', body: JSON.stringify(body) })
+export const updateTrainingLeave = (employeeId: number, id: number, body: CreateTrainingLeaveRequest) =>
+  api<TrainingLeave>(`${trainingBase(employeeId)}/${id}`, { method: 'PUT', body: JSON.stringify(body) })
+export const deleteTrainingLeave = (employeeId: number, id: number) =>
+  api<void>(`${trainingBase(employeeId)}/${id}`, { method: 'DELETE' })
 
 // ─── Табель ───
 

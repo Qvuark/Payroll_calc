@@ -8,6 +8,7 @@ import { CalcBreakdown } from '../../components/CalcBreakdown'
 import { MonthPicker } from '../../components/MonthPicker'
 import { currentPeriod, type Period } from '../../lib/period'
 import { PositionCard } from './PositionCard'
+import { AbsencesSection } from './AbsencesSection'
 import { GRADE_RANGES, WORKER_CLASS_LABELS } from '../../api/types'
 import type { CreatePositionRequest, EmployeeDetail, UpdateEmployeeRequest, WorkerClass } from '../../api/types'
 import { fmtDate, fmtMoney, parseDec, todayIso } from '../../lib/format'
@@ -77,6 +78,8 @@ export function EmployeeCardPage() {
           hasActivePrimary={hasActivePrimary}
         />
       ))}
+
+      <AbsencesSection employeeId={employeeId} />
 
       {positions.length > 0 && <SalaryPreview employeeId={employeeId} />}
 

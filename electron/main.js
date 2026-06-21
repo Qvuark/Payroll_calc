@@ -176,6 +176,9 @@ async function start() {
     webPreferences: { contextIsolation: true },
   })
   win.removeMenu?.()
+  // Чистимо кеш перед завантаженням: інакше Chromium може віддати стару збірку SPA
+  // після оновлення wwwroot (і у мами після апдейту програми — щоб бачила новий UI).
+  await win.webContents.session.clearCache()
   await win.loadURL(API_URL)
   splash.destroy()
 }

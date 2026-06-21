@@ -16,6 +16,9 @@ export const keys = {
   employeesList: (includeDismissed: boolean) => ['employees', { includeDismissed }] as const,
   employee: (id: number) => ['employee', id] as const,
   timesheets: (year: number, month: number) => ['timesheets', year, month] as const,
+  sickLeaves: (employeeId: number) => ['sickLeaves', employeeId] as const,
+  vacations: (employeeId: number) => ['vacations', employeeId] as const,
+  trainingLeaves: (employeeId: number) => ['trainingLeaves', employeeId] as const,
 }
 
 export const useDepartments = () =>
@@ -51,3 +54,12 @@ export const useEmployee = (id: number) =>
 
 export const useTimesheets = (year: number, month: number) =>
   useQuery({ queryKey: keys.timesheets(year, month), queryFn: () => ep.getTimesheets(year, month) })
+
+export const useSickLeaves = (employeeId: number) =>
+  useQuery({ queryKey: keys.sickLeaves(employeeId), queryFn: () => ep.getSickLeaves(employeeId) })
+
+export const useVacations = (employeeId: number) =>
+  useQuery({ queryKey: keys.vacations(employeeId), queryFn: () => ep.getVacations(employeeId) })
+
+export const useTrainingLeaves = (employeeId: number) =>
+  useQuery({ queryKey: keys.trainingLeaves(employeeId), queryFn: () => ep.getTrainingLeaves(employeeId) })

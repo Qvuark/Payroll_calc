@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using PayrollCalc.API.Application.AvgSalary;
 using PayrollCalc.API.Application.Calculation;
 using PayrollCalc.API.Application.Import;
 using PayrollCalc.API.Middleware;
@@ -37,6 +38,7 @@ try
     builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(dataSource));
     builder.Services.AddImportServices();
     builder.Services.AddCalculationServices();
+    builder.Services.AddAvgSalaryServices();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 

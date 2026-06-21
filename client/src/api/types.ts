@@ -54,6 +54,18 @@ export const CABINET_TYPE_LABELS: Record<CabinetType, string> = {
   2: 'Майстерня',
 }
 
+export type VacationType = 0 | 1 | 2 | 3 | 4
+export const VacationType = { Annual: 0, Study: 1, Unpaid: 2, ChildCare: 3, Compensation: 4 } as const
+export const VACATION_TYPE_LABELS: Record<VacationType, string> = {
+  0: 'Щорічна',
+  1: 'Навчальна',
+  2: 'Без збереження зарплати',
+  3: 'По догляду за дитиною',
+  4: 'Компенсація за невикористану',
+}
+// Неоплачувані типи — база не потрібна, виплати нема (форма ховає поля бази).
+export const UNPAID_VACATION_TYPES: VacationType[] = [2, 3]
+
 // ─── Довідники ───
 
 export interface Department {
@@ -322,6 +334,97 @@ export interface NonPedagogicalRequest {
   libraryMgmtAmount: number
   hasTextbooks: boolean
   textbooksAmount: number
+}
+
+// ─── Відсутності (середньоденна) ───
+
+export interface SickLeave {
+  id: number
+  employeeId: number
+  startDate: string
+  endDate: string
+  daysTotal: number
+  daysEmployer: number
+  daysFss: number
+  insuranceSeniorityYrs: number
+  paymentPct: number
+  baseAmount: number
+  baseExcludedDays: number
+  baseDays: number
+  averageDaily: number
+  amountEmployer: number
+  amountFss: number
+  totalAmount: number
+  efssNumber: string | null
+  notes: string | null
+  createdAt: string
+}
+
+export interface Vacation {
+  id: number
+  employeeId: number
+  vacationType: VacationType
+  startDate: string
+  endDate: string
+  calendarDays: number
+  workingDaysAbsent: number
+  baseAmount: number | null
+  baseDays: number | null
+  averageDaily: number | null
+  totalAmount: number | null
+  isCarryOver: boolean
+  orderNumber: string | null
+  notes: string | null
+  createdAt: string
+}
+
+export interface TrainingLeave {
+  id: number
+  employeeId: number
+  startDate: string
+  endDate: string
+  workingDaysAbsent: number
+  baseAmount: number
+  baseWorkingDays: number
+  averageDaily: number
+  totalAmount: number
+  institutionName: string | null
+  notes: string | null
+  createdAt: string
+}
+
+export interface CreateSickLeaveRequest {
+  startDate: string
+  endDate: string
+  daysTotal: number
+  baseAmount: number
+  baseExcludedDays: number
+  insuranceSeniorityYrs: number
+  paymentPct: number
+  efssNumber: string | null
+  notes: string | null
+}
+
+export interface CreateVacationRequest {
+  vacationType: VacationType
+  startDate: string
+  endDate: string
+  calendarDays: number
+  workingDaysAbsent: number
+  baseAmount: number | null
+  baseDays: number | null
+  orderNumber: string | null
+  notes: string | null
+}
+
+export interface CreateTrainingLeaveRequest {
+  startDate: string
+  endDate: string
+  workingDaysAbsent: number
+  baseAmount: number
+  baseWorkingDays: number
+  institutionName: string | null
+  notes: string | null
 }
 
 // ─── Табель ───

@@ -32,9 +32,14 @@ public record CalcInput
     /// </summary>
     public required IReadOnlyList<PositionCalcInput> Positions { get; init; }
     /// <summary>
-    /// Ручні разові суми за місяць (премія, аванс, лікарняні, відпускні тощо).
+    /// Ручні разові суми за місяць (премія, аванс, перерахунок, святкові тощо).
     /// </summary>
     public required ManualAdjustments Manual { get; init; }
+    /// <summary>
+    /// Суми подій відсутності (лікарняні/відпускні/курси) за місяць, пораховані середньоденною.
+    /// Порожнє за замовчуванням — місяць без відсутностей.
+    /// </summary>
+    public AbsenceAmounts Absences { get; init; } = new();
     /// <summary>
     /// Системні параметри — знімок SystemParams на цей місяць.
     /// </summary>

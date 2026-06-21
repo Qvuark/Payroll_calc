@@ -75,6 +75,7 @@ public class CalcInputBuilder(AppDbContext db)
             SocialBenefitPct = employee.SocialBenefitPct,
             Positions = activePositions,
             Manual = MapManual(timesheet),
+            Absences = await LoadAbsencesAsync(employeeId, periodStart, ct),
             Params = PayrollParamsFactory.From(paramMap),
         };
     }
@@ -93,6 +94,35 @@ public class CalcInputBuilder(AppDbContext db)
         return rows
             .GroupBy(sp => sp.Key)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(sp => sp.EffectiveDate).First().Value);
+    }
+
+    /// <summary>
+    /// Тягне події відсутності працівника, що починаються в цьому місяці, і складає їх уже
+    /// пораховані суми (рахував їх сервіс при вводі — тут лише читаємо). Дні не чіпаємо: вони
+    /// лишаються в табелі. Компенсація відпустки йде окремо — у відомості це інша колонка.
+    /// Викликається з BuildAsync, результат → CalcInput.Absences.
+    /// </summary>
+    private async Task<AbsenceAmounts> LoadAbsencesAsync(int employeeId, DateOnly periodStart, CancellationToken ct)
+    {
+        var periodEnd = periodStart.AddMonths(1);
+        var sick = await db.SickLeaves
+            .Where(s => s.EmployeeId == employeeId && s.StartDate >= periodStart && s.StartDate < periodEnd)
+            .ToListAsync(ct);
+        var vacations = await db.Vacations
+            .Where(v => v.EmployeeId == employeeId && v.StartDate >= periodStart && v.StartDate < periodEnd)
+            .ToListAsync(ct);
+        var training = await db.TrainingLeaves
+            .Where(t => t.EmployeeId == employeeId && t.StartDate >= periodStart && t.StartDate < periodEnd)
+            .ToListAsync(ct);
+
+        return new AbsenceAmounts
+        {
+            SickEmployer = sick.Sum(s => s.AmountEmployer),
+            SickFss = sick.Sum(s => s.AmountFss),
+            Vacation = vacations.Where(v => v.VacationType != VacationType.Compensation).Sum(v => v.TotalAmount ?? 0m),
+            VacationCompensation = vacations.Where(v => v.VacationType == VacationType.Compensation).Sum(v => v.TotalAmount ?? 0m),
+            Courses = training.Sum(t => t.TotalAmount),
+        };
     }
 
     /// <summary>

@@ -42,6 +42,10 @@ public class CreateEmployeeRequest
     /// </summary>
     public decimal? HonoredAmount { get; set; }
     /// <summary>
+    /// Член профспілки — чи утримувати внесок 1%. За замовчуванням true.
+    /// </summary>
+    public bool IsUnionMember { get; set; } = true;
+    /// <summary>
     /// Маппінг Request → entity Employee. Status за замовчуванням Active —
     /// зміна статусу можлива тільки через PUT (server-controlled state).
     /// </summary>
@@ -61,6 +65,7 @@ public class CreateEmployeeRequest
             SocialBenefitPct = r.SocialBenefitPct,
             IsHonored = r.IsHonored,
             HonoredAmount = r.HonoredAmount,
+            IsUnionMember = r.IsUnionMember,
             Status = EmployeeStatus.Active
         };
     }

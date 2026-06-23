@@ -14,7 +14,7 @@ namespace PayrollCalc.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/employees/{employeeId}/training-leaves")]
-public class TrainingLeavesController(AppDbContext db, AvgSalaryService avg) : ControllerBase
+public class TrainingLeavesController(AppDbContext db, AvgSalaryService avg, AvgBaseAutoFiller filler) : ControllerBase
 {
     /// <summary>
     /// Список курсів працівника, новіші зверху.
@@ -35,21 +35,24 @@ public class TrainingLeavesController(AppDbContext db, AvgSalaryService avg) : C
     {
         if (!await db.Employees.AnyAsync(e => e.Id == employeeId))
             return NotFound($"Працівник з id={employeeId} не знайдений.");
-        var error = Validate(request);
+        var error = Validate(request, request.BaseCalculationMode);
         if (error != null)
             return BadRequest(error);
         var training = new TrainingLeave
         {
             EmployeeId = employeeId,
-            BaseCalculationMode = CalcMode.Manual,
+            BaseCalculationMode = request.BaseCalculationMode,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             WorkingDaysAbsent = request.WorkingDaysAbsent,
             BaseAmount = request.BaseAmount,
             BaseWorkingDays = request.BaseWorkingDays,
+            OverrideTotalAmount = request.OverrideTotalAmount,
             InstitutionName = request.InstitutionName,
             Notes = request.Notes
         };
+        if (await filler.FillTrainingAsync(training) is false && training.BaseCalculationMode == CalcMode.Auto)
+            return BadRequest(InsufficientHistory);
         avg.ApplyTraining(training);
         db.TrainingLeaves.Add(training);
         await db.SaveChangesAsync();
@@ -64,16 +67,20 @@ public class TrainingLeavesController(AppDbContext db, AvgSalaryService avg) : C
         var training = await db.TrainingLeaves.FirstOrDefaultAsync(t => t.Id == id && t.EmployeeId == employeeId);
         if (training == null)
             return NotFound($"Курси з id={id} не належать працівнику.");
-        var error = Validate(request);
+        var error = Validate(request, request.BaseCalculationMode);
         if (error != null)
             return BadRequest(error);
+        training.BaseCalculationMode = request.BaseCalculationMode;
         training.StartDate = request.StartDate;
         training.EndDate = request.EndDate;
         training.WorkingDaysAbsent = request.WorkingDaysAbsent;
         training.BaseAmount = request.BaseAmount;
         training.BaseWorkingDays = request.BaseWorkingDays;
+        training.OverrideTotalAmount = request.OverrideTotalAmount;
         training.InstitutionName = request.InstitutionName;
         training.Notes = request.Notes;
+        if (await filler.FillTrainingAsync(training) is false && training.BaseCalculationMode == CalcMode.Auto)
+            return BadRequest(InsufficientHistory);
         avg.ApplyTraining(training);
         await db.SaveChangesAsync();
         return Ok(training);
@@ -91,17 +98,26 @@ public class TrainingLeavesController(AppDbContext db, AvgSalaryService avg) : C
         await db.SaveChangesAsync();
         return NoContent();
     }
+    private const string InsufficientHistory =
+        "Недостатньо підписаної історії (потрібно 2 місяці) для авто-розрахунку. Перемкніть на ручний режим і введіть базу.";
+
     /// <summary>
-    /// Перевірка вхідних чисел. base_working_days &gt; 0 критично — інакше ділення на нуль.
+    /// Перевірка вхідних чисел. У режимі Auto база й робочі дні приходять з історії — не перевіряємо
+    /// (заповнить filler). У Manual base_working_days &gt; 0 критично — інакше ділення на нуль.
     /// </summary>
-    private static string? Validate(CreateTrainingLeaveRequest r)
+    private static string? Validate(CreateTrainingLeaveRequest r, CalcMode mode)
     {
-        if (r.BaseAmount <= 0)
-            return "База має бути більшою за 0.";
-        if (r.BaseWorkingDays <= 0)
-            return "Кількість робочих днів бази має бути більшою за 0.";
+        if (mode == CalcMode.Manual)
+        {
+            if (r.BaseAmount <= 0)
+                return "База має бути більшою за 0.";
+            if (r.BaseWorkingDays <= 0)
+                return "Кількість робочих днів бази має бути більшою за 0.";
+        }
         if (r.WorkingDaysAbsent <= 0)
             return "Кількість робочих днів на курсах має бути більшою за 0.";
+        if (r.OverrideTotalAmount < 0)
+            return "Ручна сума не може бути відʼємною.";
         return null;
     }
 }
@@ -111,5 +127,7 @@ public record CreateTrainingLeaveRequest(
     int WorkingDaysAbsent,
     decimal BaseAmount,
     int BaseWorkingDays,
+    decimal? OverrideTotalAmount = null,
     string? InstitutionName = null,
-    string? Notes = null);
+    string? Notes = null,
+    CalcMode BaseCalculationMode = CalcMode.Manual);

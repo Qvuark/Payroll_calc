@@ -15,21 +15,9 @@ public record ManualAdjustments
     /// </summary>
     public decimal Advance { get; init; }
     /// <summary>
-    /// Лікарняні за рахунок роботодавця, перші дні (відомість AL).
-    /// </summary>
-    public decimal SickEmployer { get; init; }
-    /// <summary>
-    /// Лікарняні за рахунок ФСС (відомість AM). Зменшує базу профспілкового внеску.
-    /// </summary>
-    public decimal SickFss { get; init; }
-    /// <summary>
     /// Перерахунок за минулі періоди (відомість AS).
     /// </summary>
     public decimal Recalculation { get; init; }
-    /// <summary>
-    /// Відпускні (відомість AZ).
-    /// </summary>
-    public decimal Vacation { get; init; }
     /// <summary>
     /// Святкові (відомість AP). Ручна сума; авто-розрахунок від святкових годин — пізніше.
     /// </summary>
@@ -47,19 +35,17 @@ public record ManualAdjustments
     /// </summary>
     public decimal PhysEducation { get; init; }
     /// <summary>
-    /// Компенсація за невикористану відпустку (відомість AQ).
-    /// </summary>
-    public decimal VacationCompensation { get; init; }
-    /// <summary>
     /// Оплата простою (відомість AR).
     /// </summary>
     public decimal Downtime { get; init; }
     /// <summary>
-    /// Оплата за час курсів підвищення кваліфікації (відомість AT).
-    /// </summary>
-    public decimal Courses { get; init; }
-    /// <summary>
     /// Індексація зарплати (відомість AV). Зараховується в базу доплати до МЗП.
     /// </summary>
     public decimal Indexation { get; init; }
+    /// <summary>
+    /// Доплата за несприятливі умови праці — ручна надбавка понад почасову (відомість AY).
+    /// Для індивідуальних рішень бухгалтера: плоска 2600, її частина (2600/2, 2600/4) тощо.
+    /// Сумується з почасовою доплатою у тій самій колонці AY.
+    /// </summary>
+    public decimal UnfavorableManual { get; init; }
 }

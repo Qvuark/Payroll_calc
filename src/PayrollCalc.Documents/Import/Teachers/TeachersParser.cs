@@ -128,6 +128,7 @@ public class TeachersParser
         var inclusive1To4 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours1To4, "InclusiveHours1To4", rowNumber, errors);
         var inclusive5To9 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours5To9, "InclusiveHours5To9", rowNumber, errors);
         var inclusive10To11 = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColInclusiveHours10To11, "InclusiveHours10To11", rowNumber, errors);
+        var additionalHours = ExcelFieldReader.GetOptionalHours(row, TeachersColumnMap.ColAdditionalHours, "AdditionalHours", rowNumber, errors);
 
         return new TeachersRowDto
         {
@@ -165,6 +166,7 @@ public class TeachersParser
             InclusiveHours1To4 = inclusive1To4,
             InclusiveHours5To9 = inclusive5To9,
             InclusiveHours10To11 = inclusive10To11,
+            AdditionalHours = additionalHours,
             ClassMgmt = classMgmt,
             CabinetType = cabinetType,
             Gym = gym,

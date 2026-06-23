@@ -48,6 +48,8 @@ public record TeachersRowDto : IPersonaRow
     public decimal InclusiveHours1To4 { get; init; }
     public decimal InclusiveHours5To9 { get; init; }
     public decimal InclusiveHours10To11 { get; init; }
+    /// <summary>Надтарифні години (понад ставку) — додаються до педнавантаження у формулі окладу.</summary>
+    public decimal AdditionalHours { get; init; }
     // ─── Педагогічні надбавки (Strategy B — тільки teachers.xlsx) ───
     // ENUM як string ("1-4" / "5-11" / null), Importer резолвить.
     public string? ClassMgmt { get; init; }

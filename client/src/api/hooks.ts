@@ -12,6 +12,7 @@ export const keys = {
   workCalendar: (year: number) => ['workCalendar', year] as const,
   titleTypes: ['titleTypes'] as const,
   notebookRates: ['notebookRates'] as const,
+  inclusionRules: ['inclusionRules'] as const,
   employees: ['employees'] as const,
   employeesList: (includeDismissed: boolean) => ['employees', { includeDismissed }] as const,
   employee: (id: number) => ['employee', id] as const,
@@ -41,6 +42,9 @@ export const useTitleTypes = () =>
 
 export const useNotebookRates = () =>
   useQuery({ queryKey: keys.notebookRates, queryFn: ep.getNotebookRates })
+
+export const useInclusionRules = () =>
+  useQuery({ queryKey: keys.inclusionRules, queryFn: ep.getInclusionRules })
 
 // Ключ вкладений під 'employees' — invalidate keys.employees скидає обидва варіанти списку.
 export const useEmployees = (includeDismissed = false) =>

@@ -56,7 +56,9 @@ public class VedomostExporterTests
         // Підсумки — живі формули.
         ws.Cell("BC3").FormulaA1.Should().Be("SUM(J3:BB3)");
         ws.Cell("BD3").FormulaA1.Should().Be("BC3*18%");
-        ws.Cell("BK3").FormulaA1.Should().Be("BC3-BJ3");
+        // BL = чиста сума лікарняних за рах. ПФУ (AM−ПДФО−ВЗ); BK = на руки від установи, мінус BL.
+        ws.Cell("BL3").FormulaA1.Should().Be("AM3-AM3*18%-AM3*5%");
+        ws.Cell("BK3").FormulaA1.Should().Be("BC3-BJ3-BL3");
 
         // Рядок «Разом» одразу під єдиним працівником (рядок 4).
         ws.Cell("B4").GetString().Should().Be("Разом");

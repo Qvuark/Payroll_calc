@@ -35,4 +35,8 @@ public class UpdateEmployeeRequest
     /// Сума надбавки за звання. Null коли IsHonored=false.
     /// </summary>
     public decimal? HonoredAmount { get; set; }
+    /// <summary>
+    /// Член профспілки — чи утримувати внесок 1%.
+    /// </summary>
+    public bool IsUnionMember { get; set; } = true;
 }

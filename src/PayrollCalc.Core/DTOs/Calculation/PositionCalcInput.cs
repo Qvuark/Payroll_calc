@@ -30,6 +30,11 @@ public record PositionCalcInput
     /// </summary>
     public required decimal RateCount { get; init; }
     /// <summary>
+    /// Головна (штатна) ставка працівника. Впливає на 2600: основна ставка дає повну доплату
+    /// навіть за неповне навантаження (&lt;18 год), додаткова/сумісництво — лише пропорційно годинам.
+    /// </summary>
+    public bool IsPrimary { get; init; }
+    /// <summary>
     /// % від окладу директора для залежних посад: заступник 0.95, головбух 0.90.
     /// Оклад тоді = Oklad × DirectorPct (формула "=10410*95%"). null — незалежна посада.
     /// </summary>
@@ -38,6 +43,11 @@ public record PositionCalcInput
     /// Звання: % підвищення окладу (TitleType.Pct). 0 якщо звання немає.
     /// </summary>
     public decimal TitlePct { get; init; }
+    /// <summary>
+    /// Надбавка «Заслужений» — фіксована сума від бухгалтера (не %), лягає в колонку звання. 0 — немає.
+    /// На працівника одна; білдер ставить її на першу педагогічну/адмін-пед ставку.
+    /// </summary>
+    public decimal HonoredAmount { get; init; }
     /// <summary>
     /// Вислуга: % надбавки за стаж. 0 якщо немає (Class 4 MOP не має вислуги).
     /// </summary>

@@ -1,7 +1,10 @@
 import { api } from './client'
 import type {
   AdminRequest,
+  AvgBasePreview,
+  AvgSalaryInclusionRule,
   CalcResult,
+  MonthSignStatus,
   CreateEmployeeRequest,
   CreatePositionRequest,
   Department,
@@ -66,6 +69,13 @@ export const updateCalendarMonth = (year: number, month: number, workDays: numbe
 export const getTitleTypes = () => api<TitleType[]>('/titletypes')
 export const getNotebookRates = () => api<NotebookRate[]>('/notebookrates')
 
+// Правила «що входить у базу середньоденної» — список + правка 4 галочок на рядок.
+export const getInclusionRules = () => api<AvgSalaryInclusionRule[]>('/inclusion-rules')
+export const updateInclusionRule = (
+  id: number,
+  flags: Pick<AvgSalaryInclusionRule, 'includeSick' | 'includeVacation' | 'includeTraining' | 'includeCompensation'>,
+) => api<void>(`/inclusion-rules/${id}`, { method: 'PUT', body: JSON.stringify(flags) })
+
 // ─── Працівники ───
 
 export const getEmployees = (includeDismissed = false) =>
@@ -124,6 +134,10 @@ export const updateVacation = (employeeId: number, id: number, body: CreateVacat
 export const deleteVacation = (employeeId: number, id: number) =>
   api<void>(`${vacationBase(employeeId)}/${id}`, { method: 'DELETE' })
 
+// Прев'ю авто-бази для події (kind: sick|vacation|training) за датою події — без запису.
+export const avgBasePreview = (employeeId: number, year: number, month: number, kind: string) =>
+  api<AvgBasePreview>(`/employees/${employeeId}/avg-base-preview?year=${year}&month=${month}&kind=${kind}`)
+
 const trainingBase = (employeeId: number) => `/employees/${employeeId}/training-leaves`
 export const getTrainingLeaves = (employeeId: number) => api<TrainingLeave[]>(trainingBase(employeeId))
 export const createTrainingLeave = (employeeId: number, body: CreateTrainingLeaveRequest) =>
@@ -148,6 +162,18 @@ export const calculateAll = (year: number, month: number) =>
 // Рахує одного працівника за місяць (POST зберігає чернетку в Calculation). 404 — працівника немає.
 export const calculateOne = (employeeId: number, year: number, month: number) =>
   api<CalcResult>(`/calculations?employeeId=${employeeId}&year=${year}&month=${month}`, { method: 'POST' })
+
+// Підпис місяця: усі чернетки → Signed (їх суми йдуть в авто-базу середньоденної).
+export const signMonth = (year: number, month: number) =>
+  api<{ signed: number }>(`/calculations/sign-month?year=${year}&month=${month}`, { method: 'POST' })
+
+// Зняти підпис місяця (аварійний клапан): усі Signed → Draft.
+export const unsignMonth = (year: number, month: number) =>
+  api<{ unsigned: number }>(`/calculations/unsign-month?year=${year}&month=${month}`, { method: 'POST' })
+
+// Стан підпису місяця: скільки всього розрахунків і скільки підписано.
+export const monthStatus = (year: number, month: number) =>
+  api<MonthSignStatus>(`/calculations/month-status?year=${year}&month=${month}`)
 
 // ─── Імпорт ───
 

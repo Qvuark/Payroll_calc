@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace PayrollCalc.API.Middleware;
 
@@ -28,9 +29,15 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         // Detail лише для "своїх" InvalidOperationException — їх повідомлення українські й
         // призначені користувачу (нема календаря, не налаштований параметр). Для решти Detail
         // не віддаємо: текст Npgsql/EF несе нутрощі схеми (імена constraint'ів, ключі).
+        // DbUpdateException розрізняємо за кодом PostgreSQL: 23505 — дубль unique, 23503 — FK
+        // (запис ще використовується), решта порушень цілісності — спільне повідомлення.
         var (statusCode, title, detail) = exception switch
         {
-            DbUpdateException => (StatusCodes.Status409Conflict, "Дані вже існують", (string?)null),
+            DbUpdateException { InnerException: PostgresException { SqlState: "23505" } }
+                => (StatusCodes.Status409Conflict, "Такий запис уже існує", (string?)null),
+            DbUpdateException { InnerException: PostgresException { SqlState: "23503" } }
+                => (StatusCodes.Status409Conflict, "Не можна видалити: на запис є посилання", null),
+            DbUpdateException => (StatusCodes.Status409Conflict, "Порушення цілісності даних", null),
             InvalidOperationException => (StatusCodes.Status400BadRequest, "Некоректний запит або дані", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "Внутрішня помилка сервера", null),
         };

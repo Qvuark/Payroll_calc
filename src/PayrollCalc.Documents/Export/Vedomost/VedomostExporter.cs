@@ -125,12 +125,25 @@ public sealed class VedomostExporter
         var union = Pct(r.ParamsSnapshot, "union");
 
         ws.Cell($"BC{row}").FormulaA1 = $"SUM(J{row}:BB{row})";
-        ws.Cell($"BD{row}").FormulaA1 = $"BC{row}*{pdfo}%";
+        // ПДФО від gross, але якщо є податкова соц.пільга й дохід у межах стелі — база зменшується
+        // на пільгу (як у рушії). Стеля нижча за МЗП, тож для повного місяця пільга = 0 і формула = BC×%.
+        var benefit = SocialBenefit(r);
+        ws.Cell($"BD{row}").FormulaA1 = benefit > 0
+            ? $"(BC{row}-{Money(benefit)})*{pdfo}%"
+            : $"BC{row}*{pdfo}%";
         ws.Cell($"BE{row}").FormulaA1 = $"BC{row}*{vz}%";
-        // Профспілка береться з gross мінус лікарняні ФСС (колонка AM) — як в еталоні.
-        ws.Cell($"BF{row}").FormulaA1 = $"BC{row}*{union}%-AM{row}*{union}%";
+        // Профспілка береться з gross мінус лікарняні ПФУ (колонка AM) — як в еталоні.
+        // Лише з членів профспілки; не член → внеску немає (0).
+        if (r.IsUnionMember)
+            ws.Cell($"BF{row}").FormulaA1 = $"BC{row}*{union}%-AM{row}*{union}%";
+        else
+            ws.Cell($"BF{row}").Value = 0;
         ws.Cell($"BJ{row}").FormulaA1 = $"BD{row}+BE{row}+BF{row}+BG{row}+BI{row}";
-        ws.Cell($"BK{row}").FormulaA1 = $"BC{row}-BJ{row}";
+        // Лікарняні за рах. ПФУ (дні 6+, колонка AM) фонд платить окремо. BL — їх чиста сума
+        // (мінус ПДФО+ВЗ, без профспілки бо AM з її бази вже виключено): 1000−180−50=770.
+        ws.Cell($"BL{row}").FormulaA1 = $"AM{row}-AM{row}*{pdfo}%-AM{row}*{vz}%";
+        // На руки від установи = gross − утримано − частина ПФУ (її людина отримує від фонду, не від школи).
+        ws.Cell($"BK{row}").FormulaA1 = $"BC{row}-BJ{row}-BL{row}";
     }
 
     private static void WriteTotals(IXLWorksheet ws, int firstDataRow, int lastDataRow)
@@ -145,14 +158,14 @@ public sealed class VedomostExporter
     private static void StyleGrid(IXLWorksheet ws, int lastRow)
     {
         // Сітка: Times New Roman 9 + тонкі рамки на всю таблицю (шапка + дані + Разом).
-        var grid = ws.Range($"A2:BK{lastRow}");
+        var grid = ws.Range($"A2:BL{lastRow}");
         grid.Style.Font.FontName = Font;
         grid.Style.Font.FontSize = 9;
         grid.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
         grid.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
         // Шапка — вертикальний текст із переносом, як в еталоні.
-        var header = ws.Range("A2:BK2");
+        var header = ws.Range("A2:BL2");
         header.Style.Alignment.TextRotation = 90;
         header.Style.Alignment.WrapText = true;
         header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -182,4 +195,21 @@ public sealed class VedomostExporter
     private static string Pct(IReadOnlyDictionary<string, decimal> snapshot, string key)
         => (snapshot.TryGetValue(key, out var v) ? v * 100m : 0m)
             .ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// Сума податкової соц.пільги для зменшення бази ПДФО — дзеркалить рушій: пільга×коефіцієнт,
+    /// але лише коли gross у межах стелі. Параметри беремо зі знімка цього розрахунку. 0 — пільги немає.
+    /// </summary>
+    private static decimal SocialBenefit(CalcResult r)
+    {
+        var cap = r.ParamsSnapshot.GetValueOrDefault("social_benefit_cap");
+        var livingMin = r.ParamsSnapshot.GetValueOrDefault("social_benefit_living_min");
+        return r.SocialBenefitPct is { } pct && r.Gross <= cap ? livingMin * pct : 0m;
+    }
+
+    /// <summary>
+    /// Число для тексту формули — крапка-роздільник, без хвостових нулів.
+    /// </summary>
+    private static string Money(decimal value)
+        => value.ToString("0.############", System.Globalization.CultureInfo.InvariantCulture);
 }

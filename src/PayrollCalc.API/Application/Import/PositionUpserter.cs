@@ -156,6 +156,7 @@ public class PositionUpserter(AppDbContext db)
                 MaintainsMilitaryRecords = staffRow.HasMilitary,
                 HasUnfavorable = staffRow.HasUnfavorable,
                 ComplexityBonusPct = staffRow.ComplexityPct,
+                DirectorPct = staffRow.DirectorPct,
             };
             db.EmployeePositions.Add(ep);
             wasCreated = true;
@@ -171,6 +172,7 @@ public class PositionUpserter(AppDbContext db)
             ep.MaintainsMilitaryRecords = staffRow.HasMilitary;
             ep.HasUnfavorable = staffRow.HasUnfavorable;
             ep.ComplexityBonusPct = staffRow.ComplexityPct;
+            ep.DirectorPct = staffRow.DirectorPct;
             wasCreated = false;
         }
 

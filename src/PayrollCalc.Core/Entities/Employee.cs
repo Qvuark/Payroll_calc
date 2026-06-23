@@ -31,9 +31,9 @@ public class Employee
     /// </summary>
     public int GeneralExperienceYears { get; set; } = 0;
     /// <summary>
-    /// Відсоток податкової соц.пільги. Null якщо пільги немає. Вводиться вручну.
-    /// Зараз лише друкується в шапці розрахункового листа; зменшення бази ПДФО
-    /// не реалізовано — правило застосування уточнюється в бухгалтера.
+    /// Коефіцієнт податкової соц.пільги (частка: 1.0 = базова 100%, 1.5, 2.0). Null якщо пільги немає.
+    /// Зменшує базу ПДФО на SocialBenefitLivingMin×коефіцієнт, але лише коли місячний дохід ≤ стелі
+    /// (SocialBenefitCap). Стеля нижча за МЗП, тож на практиці спрацьовує лише в неповний місяць.
     /// </summary>
     public decimal? SocialBenefitPct { get; set; }
     public EmployeeStatus Status { get; set; }
@@ -48,6 +48,11 @@ public class Employee
     /// Застосовується тільки для Class 1 і Class 2. Null якщо IsHonored=false.
     /// </summary>
     public decimal? HonoredAmount { get; set; }
+    /// <summary>
+    /// Член профспілки. Якщо так — утримується внесок 1% (база gross мінус лікарняні ПФУ).
+    /// Не член → внесок 0. За замовчуванням true (більшість працівників — члени).
+    /// </summary>
+    public bool IsUnionMember { get; set; } = true;
     /// <summary>
     /// Усі ставки працівника (директор + вчитель + ...). Несуть тарифний розряд,
     /// навантаження та per-position блоки надбавок.

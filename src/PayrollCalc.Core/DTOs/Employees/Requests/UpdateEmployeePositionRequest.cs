@@ -32,4 +32,9 @@ public class UpdateEmployeePositionRequest
     public int? TitleTypeId { get; set; }
     [Range(0.05, 0.5)] public decimal? ComplexityBonusPct { get; set; }
     [Range(0.05, 0.30)] public decimal? PrestigeBonusPct { get; set; }
+    /// <summary>
+    /// Частка від окладу директора для директорозалежних посад (заступник 0.95, головбух 0.90).
+    /// Оклад = оклад_директора × DirectorPct. Null = посада рахується від власного розряду.
+    /// </summary>
+    [Range(0.01, 1.0)] public decimal? DirectorPct { get; set; }
 }

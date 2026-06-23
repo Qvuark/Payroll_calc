@@ -14,7 +14,7 @@ namespace PayrollCalc.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/employees/{employeeId}/vacations")]
-public class VacationsController(AppDbContext db, AvgSalaryService avg) : ControllerBase
+public class VacationsController(AppDbContext db, AvgSalaryService avg, AvgBaseAutoFiller filler) : ControllerBase
 {
     /// <summary>
     /// Список відпусток працівника, новіші зверху.
@@ -35,13 +35,13 @@ public class VacationsController(AppDbContext db, AvgSalaryService avg) : Contro
     {
         if (!await db.Employees.AnyAsync(e => e.Id == employeeId))
             return NotFound($"Працівник з id={employeeId} не знайдений.");
-        var error = Validate(request);
+        var error = Validate(request, request.BaseCalculationMode);
         if (error != null)
             return BadRequest(error);
         var vacation = new Vacation
         {
             EmployeeId = employeeId,
-            BaseCalculationMode = CalcMode.Manual,
+            BaseCalculationMode = request.BaseCalculationMode,
             VacationType = request.VacationType,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
@@ -49,9 +49,12 @@ public class VacationsController(AppDbContext db, AvgSalaryService avg) : Contro
             WorkingDaysAbsent = request.WorkingDaysAbsent,
             BaseAmount = request.BaseAmount,
             BaseDays = request.BaseDays,
+            OverrideTotalAmount = request.OverrideTotalAmount,
             OrderNumber = request.OrderNumber,
             Notes = request.Notes
         };
+        if (await filler.FillVacationAsync(vacation) is false && RequiresAutoBase(vacation))
+            return BadRequest(InsufficientHistory);
         avg.ApplyVacation(vacation);
         db.Vacations.Add(vacation);
         await db.SaveChangesAsync();
@@ -66,9 +69,10 @@ public class VacationsController(AppDbContext db, AvgSalaryService avg) : Contro
         var vacation = await db.Vacations.FirstOrDefaultAsync(v => v.Id == id && v.EmployeeId == employeeId);
         if (vacation == null)
             return NotFound($"Відпустка з id={id} не належить працівнику.");
-        var error = Validate(request);
+        var error = Validate(request, request.BaseCalculationMode);
         if (error != null)
             return BadRequest(error);
+        vacation.BaseCalculationMode = request.BaseCalculationMode;
         vacation.VacationType = request.VacationType;
         vacation.StartDate = request.StartDate;
         vacation.EndDate = request.EndDate;
@@ -76,8 +80,11 @@ public class VacationsController(AppDbContext db, AvgSalaryService avg) : Contro
         vacation.WorkingDaysAbsent = request.WorkingDaysAbsent;
         vacation.BaseAmount = request.BaseAmount;
         vacation.BaseDays = request.BaseDays;
+        vacation.OverrideTotalAmount = request.OverrideTotalAmount;
         vacation.OrderNumber = request.OrderNumber;
         vacation.Notes = request.Notes;
+        if (await filler.FillVacationAsync(vacation) is false && RequiresAutoBase(vacation))
+            return BadRequest(InsufficientHistory);
         avg.ApplyVacation(vacation);
         await db.SaveChangesAsync();
         return Ok(vacation);
@@ -96,20 +103,37 @@ public class VacationsController(AppDbContext db, AvgSalaryService avg) : Contro
         return NoContent();
     }
 
+    private const string InsufficientHistory =
+        "Недостатньо підписаної історії (потрібно 12 місяців) для авто-розрахунку. Перемкніть на ручний режим і введіть базу.";
+
     /// <summary>
-    /// Перевірка вхідних чисел. Неоплачувані типи бази не потребують — для них перевіряємо
-    /// лише календарні дні. Для оплачуваних база і дні бази обовʼязкові (інакше нема з чого рахувати).
+    /// Чи треба для цієї відпустки авто-база: лише оплачувані типи в режимі Auto.
+    /// Неоплачувані (без збереження, по догляду) виплат не дають — база їм не потрібна.
     /// </summary>
-    private static string? Validate(CreateVacationRequest r)
+    private static bool RequiresAutoBase(Vacation v) =>
+        v.BaseCalculationMode == CalcMode.Auto
+        && v.VacationType != VacationType.Unpaid
+        && v.VacationType != VacationType.ChildCare;
+
+    /// <summary>
+    /// Перевірка вхідних чисел. Неоплачувані типи бази не потребують. У режимі Auto база й дні
+    /// приходять з історії — для оплачуваних їх не перевіряємо (заповнить filler).
+    /// </summary>
+    private static string? Validate(CreateVacationRequest r, CalcMode mode)
     {
         if (r.CalendarDays <= 0)
             return "Кількість календарних днів відпустки має бути більшою за 0.";
+        if (r.OverrideTotalAmount < 0)
+            return "Ручна сума не може бути відʼємною.";
         if (r.VacationType == VacationType.Unpaid || r.VacationType == VacationType.ChildCare)
             return null;
-        if (r.BaseAmount is not > 0)
-            return "Для оплачуваної відпустки база має бути більшою за 0.";
-        if (r.BaseDays is not > 0)
-            return "Для оплачуваної відпустки кількість днів бази має бути більшою за 0.";
+        if (mode == CalcMode.Manual)
+        {
+            if (r.BaseAmount is not > 0)
+                return "Для оплачуваної відпустки база має бути більшою за 0.";
+            if (r.BaseDays is not > 0)
+                return "Для оплачуваної відпустки кількість днів бази має бути більшою за 0.";
+        }
         return null;
     }
 }
@@ -121,5 +145,7 @@ public record CreateVacationRequest(
     int WorkingDaysAbsent,
     decimal? BaseAmount = null,
     int? BaseDays = null,
+    decimal? OverrideTotalAmount = null,
     string? OrderNumber = null,
-    string? Notes = null);
+    string? Notes = null,
+    CalcMode BaseCalculationMode = CalcMode.Manual);

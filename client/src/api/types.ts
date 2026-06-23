@@ -66,6 +66,10 @@ export const VACATION_TYPE_LABELS: Record<VacationType, string> = {
 // Неоплачувані типи — база не потрібна, виплати нема (форма ховає поля бази).
 export const UNPAID_VACATION_TYPES: VacationType[] = [2, 3]
 
+// Звідки береться база середньоденної: Auto — рахується з підписаної історії, Manual — вводиться руками.
+export type CalcMode = 0 | 1
+export const CalcMode = { Auto: 0, Manual: 1 } as const
+
 // ─── Довідники ───
 
 export interface Department {
@@ -147,6 +151,7 @@ export interface EmployeeWorkload {
   inclusiveHours5To9: number
   inclusiveHours10To11: number
   notebookRateId: number | null
+  additionalHours: number
 }
 
 export interface EmployeeAdmin {
@@ -208,6 +213,7 @@ export interface EmployeePosition {
   prestigeBonusPct: number | null
   titleTypeId: number | null
   titleTypeName: string | null
+  directorPct: number | null
   workload: EmployeeWorkload | null
   admin: EmployeeAdmin | null
   gpd: EmployeeGpd | null
@@ -229,6 +235,7 @@ export interface EmployeeDetail {
   socialBenefitPct: number | null
   isHonored: boolean
   honoredAmount: number | null
+  isUnionMember: boolean
   positions: EmployeePosition[]
 }
 
@@ -245,6 +252,7 @@ export interface CreateEmployeeRequest {
   socialBenefitPct: number | null
   isHonored: boolean
   honoredAmount: number | null
+  isUnionMember: boolean
 }
 
 export interface UpdateEmployeeRequest {
@@ -258,6 +266,7 @@ export interface UpdateEmployeeRequest {
   status: EmployeeStatus
   isHonored: boolean
   honoredAmount: number | null
+  isUnionMember: boolean
 }
 
 export interface CreatePositionRequest {
@@ -272,6 +281,7 @@ export interface CreatePositionRequest {
   prestigeBonusPct: number | null
   positionStartDate: string | null
   titleTypeId: number | null
+  directorPct: number | null
 }
 
 export interface UpdatePositionRequest {
@@ -285,6 +295,7 @@ export interface UpdatePositionRequest {
   titleTypeId: number | null
   complexityBonusPct: number | null
   prestigeBonusPct: number | null
+  directorPct: number | null
 }
 
 export interface WorkloadRequest {
@@ -301,6 +312,7 @@ export interface WorkloadRequest {
   inclusiveHours5To9: number
   inclusiveHours10To11: number
   notebookRateId: number | null
+  additionalHours: number
 }
 
 export interface AdminRequest {
@@ -341,11 +353,13 @@ export interface NonPedagogicalRequest {
 export interface SickLeave {
   id: number
   employeeId: number
+  baseCalculationMode: CalcMode
   startDate: string
   endDate: string
   daysTotal: number
   daysEmployer: number
   daysFss: number
+  workingDaysAbsent: number
   insuranceSeniorityYrs: number
   paymentPct: number
   baseAmount: number
@@ -355,6 +369,8 @@ export interface SickLeave {
   amountEmployer: number
   amountFss: number
   totalAmount: number
+  overrideAmountEmployer: number | null
+  overrideAmountFss: number | null
   efssNumber: string | null
   notes: string | null
   createdAt: string
@@ -363,6 +379,7 @@ export interface SickLeave {
 export interface Vacation {
   id: number
   employeeId: number
+  baseCalculationMode: CalcMode
   vacationType: VacationType
   startDate: string
   endDate: string
@@ -372,6 +389,7 @@ export interface Vacation {
   baseDays: number | null
   averageDaily: number | null
   totalAmount: number | null
+  overrideTotalAmount: number | null
   isCarryOver: boolean
   orderNumber: string | null
   notes: string | null
@@ -381,6 +399,7 @@ export interface Vacation {
 export interface TrainingLeave {
   id: number
   employeeId: number
+  baseCalculationMode: CalcMode
   startDate: string
   endDate: string
   workingDaysAbsent: number
@@ -388,24 +407,30 @@ export interface TrainingLeave {
   baseWorkingDays: number
   averageDaily: number
   totalAmount: number
+  overrideTotalAmount: number | null
   institutionName: string | null
   notes: string | null
   createdAt: string
 }
 
 export interface CreateSickLeaveRequest {
+  baseCalculationMode: CalcMode
   startDate: string
   endDate: string
   daysTotal: number
+  workingDaysAbsent: number
   baseAmount: number
   baseExcludedDays: number
   insuranceSeniorityYrs: number
   paymentPct: number
+  overrideAmountEmployer: number | null
+  overrideAmountFss: number | null
   efssNumber: string | null
   notes: string | null
 }
 
 export interface CreateVacationRequest {
+  baseCalculationMode: CalcMode
   vacationType: VacationType
   startDate: string
   endDate: string
@@ -413,16 +438,19 @@ export interface CreateVacationRequest {
   workingDaysAbsent: number
   baseAmount: number | null
   baseDays: number | null
+  overrideTotalAmount: number | null
   orderNumber: string | null
   notes: string | null
 }
 
 export interface CreateTrainingLeaveRequest {
+  baseCalculationMode: CalcMode
   startDate: string
   endDate: string
   workingDaysAbsent: number
   baseAmount: number
   baseWorkingDays: number
+  overrideTotalAmount: number | null
   institutionName: string | null
   notes: string | null
 }
@@ -445,15 +473,11 @@ export interface Timesheet {
   enforcementOrders: number
   annualBonus: number
   bonus: number
-  sickEmployer: number
-  sickFss: number
-  vacation: number
   recalculation: number
   physEducation: number
-  vacationCompensation: number
   downtime: number
-  courses: number
   indexation: number
+  unfavorableManual: number
 }
 
 export interface TimesheetRequest {
@@ -469,15 +493,11 @@ export interface TimesheetRequest {
   enforcementOrders: number
   annualBonus: number
   bonus: number
-  sickEmployer: number
-  sickFss: number
-  vacation: number
   recalculation: number
   physEducation: number
-  vacationCompensation: number
   downtime: number
-  courses: number
   indexation: number
+  unfavorableManual: number
 }
 
 // ─── Розрахунок ───
@@ -510,6 +530,31 @@ export interface CalcResult {
   totalWithheld: number
   netPay: number
   paramsSnapshot: Record<string, number>
+}
+
+// Стан підпису місяця: усього збережених розрахунків і скільки підписано.
+export interface MonthSignStatus {
+  total: number
+  signed: number
+}
+
+// Прев'ю авто-бази: чи вистачає підписаної історії для події і скільки нарахувань вона дає.
+export interface AvgBasePreview {
+  signedMonths: number
+  requiredMonths: number
+  enough: boolean
+  amount: number
+}
+
+// Правило «що входить у базу середньоденної»: виплата + 4 галочки на кожен випадок.
+export interface AvgSalaryInclusionRule {
+  id: number
+  fieldKey: string
+  label: string
+  includeSick: boolean
+  includeVacation: boolean
+  includeTraining: boolean
+  includeCompensation: boolean
 }
 
 // ─── Імпорт ───

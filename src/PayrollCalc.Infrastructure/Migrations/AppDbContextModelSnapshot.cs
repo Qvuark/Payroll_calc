@@ -161,6 +161,35 @@ namespace PayrollCalc.Infrastructure.Migrations
                     b.ToTable("Calculations");
                 });
 
+            modelBuilder.Entity("PayrollCalc.Core.Entities.CalculationComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<int>("CalculationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FieldKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalculationId");
+
+                    b.ToTable("CalculationComponents");
+                });
+
             modelBuilder.Entity("PayrollCalc.Core.Entities.CalculationPeriod", b =>
                 {
                     b.Property<int>("Id")
@@ -245,6 +274,9 @@ namespace PayrollCalc.Infrastructure.Migrations
                         .HasColumnType("numeric(18,4)");
 
                     b.Property<bool>("IsHonored")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsUnionMember")
                         .HasColumnType("boolean");
 
                     b.Property<int>("PedExperienceYears")
@@ -675,6 +707,14 @@ namespace PayrollCalc.Infrastructure.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("OverrideAmountEmployer")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal?>("OverrideAmountFss")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
                     b.Property<decimal>("PaymentPct")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
@@ -685,6 +725,9 @@ namespace PayrollCalc.Infrastructure.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
+
+                    b.Property<int>("WorkingDaysAbsent")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -766,10 +809,6 @@ namespace PayrollCalc.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
-                    b.Property<decimal>("Courses")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
-
                     b.Property<decimal>("Downtime")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
@@ -808,19 +847,7 @@ namespace PayrollCalc.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
-                    b.Property<decimal>("SickEmployer")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
-
-                    b.Property<decimal>("SickFss")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
-
-                    b.Property<decimal>("Vacation")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
-
-                    b.Property<decimal>("VacationCompensation")
+                    b.Property<decimal>("UnfavorableManual")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
@@ -913,6 +940,10 @@ namespace PayrollCalc.Infrastructure.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("OverrideTotalAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
@@ -979,6 +1010,10 @@ namespace PayrollCalc.Infrastructure.Migrations
                     b.Property<string>("OrderNumber")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("OverrideTotalAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
@@ -1033,6 +1068,17 @@ namespace PayrollCalc.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("PayrollCalc.Core.Entities.CalculationComponent", b =>
+                {
+                    b.HasOne("PayrollCalc.Core.Entities.Calculation", "Calculation")
+                        .WithMany("Components")
+                        .HasForeignKey("CalculationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Calculation");
                 });
 
             modelBuilder.Entity("PayrollCalc.Core.Entities.CalculationPeriod", b =>
@@ -1225,6 +1271,8 @@ namespace PayrollCalc.Infrastructure.Migrations
 
             modelBuilder.Entity("PayrollCalc.Core.Entities.Calculation", b =>
                 {
+                    b.Navigation("Components");
+
                     b.Navigation("Periods");
                 });
 

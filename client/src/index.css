@@ -73,6 +73,27 @@ a { color: var(--accent); text-decoration: none; }
   font-weight: 500;
   cursor: pointer;
 }
+/* Тумблер котів притиснутий донизу сайдбару (margin-top:auto з'їдає вільний простір). */
+.cats-toggle {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+.cats-toggle input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+/* Фото котів під тумблером, на всю ширину сайдбару. */
+.sidebar-cats {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
 .nav-item:hover { background: var(--bg); }
 .nav-item.active { background: var(--accent-soft); color: var(--accent); }
 .nav-item svg { flex-shrink: 0; }
@@ -223,8 +244,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 tfoot td { font-weight: 650; border-top: 2px solid var(--border-strong); background: var(--bg); }
 
-/* Редаговані клітинки табеля */
-.cell-input {
+/* Редаговані клітинки табеля.
+   Селектор з тегом input — щоб перебити глобальне input[type=text]{width:100%},
+   інакше інпут тягнеться по ширині колонки і вузькі «Дні»/«Год.» обрізаються. */
+input.cell-input {
   width: 84px;
   padding: 5px 8px;
   text-align: right;

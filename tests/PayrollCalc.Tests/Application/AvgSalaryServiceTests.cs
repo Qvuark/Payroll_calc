@@ -111,6 +111,48 @@ public class AvgSalaryServiceTests
     }
 
     [Fact]
+    public void ApplySick_OverrideAmounts_WinOverFormula()
+    {
+        // ФСС прислав свою цифру, школа теж уточнила — ручні суми мають перемогти формулу,
+        // а середньоденна лишитися довідковою (від формули).
+        var e = new SickLeave
+        {
+            BaseAmount = 123236.58m,
+            BaseExcludedDays = 11,
+            DaysTotal = 10,
+            InsuranceSeniorityYrs = 8,
+            OverrideAmountEmployer = 1800m,
+            OverrideAmountFss = 1500m
+        };
+
+        _service.ApplySick(e);
+
+        e.AmountEmployer.Should().Be(1800m);
+        e.AmountFss.Should().Be(1500m);
+        e.TotalAmount.Should().Be(3300m);
+        Math.Round(e.AverageDaily, 2, MidpointRounding.AwayFromZero).Should().Be(348.13m);
+    }
+
+    [Fact]
+    public void ApplySick_OverrideOnlyFss_KeepsFormulaEmployer()
+    {
+        // Перебили лише ФСС — роботодавець лишається з формули (кожна сума незалежна).
+        var e = new SickLeave
+        {
+            BaseAmount = 100000m,
+            BaseExcludedDays = 0,
+            DaysTotal = 10,
+            InsuranceSeniorityYrs = 8,
+            OverrideAmountFss = 999m
+        };
+
+        _service.ApplySick(e);
+
+        e.AmountFss.Should().Be(999m);
+        e.AmountEmployer.Should().Be(e.AverageDaily * e.DaysEmployer);
+    }
+
+    [Fact]
     public void ApplyTraining_MapsCalculatorResultIntoEntity()
     {
         var e = new TrainingLeave { BaseAmount = 70000m, BaseWorkingDays = 42, WorkingDaysAbsent = 10 };
@@ -119,5 +161,39 @@ public class AvgSalaryServiceTests
 
         Math.Round(e.AverageDaily, 2, MidpointRounding.AwayFromZero).Should().Be(1666.67m);
         e.TotalAmount.Should().Be(e.AverageDaily * 10);
+    }
+
+    [Fact]
+    public void ApplyVacation_OverrideTotal_WinsOverFormula()
+    {
+        var e = new Vacation
+        {
+            VacationType = VacationType.Annual,
+            BaseAmount = 272077.34m,
+            BaseDays = 365,
+            CalendarDays = 56,
+            OverrideTotalAmount = 40000m
+        };
+
+        _service.ApplyVacation(e);
+
+        e.TotalAmount.Should().Be(40000m);
+        Math.Round(e.AverageDaily!.Value, 2, MidpointRounding.AwayFromZero).Should().Be(745.42m);
+    }
+
+    [Fact]
+    public void ApplyTraining_OverrideTotal_WinsOverFormula()
+    {
+        var e = new TrainingLeave
+        {
+            BaseAmount = 70000m,
+            BaseWorkingDays = 42,
+            WorkingDaysAbsent = 10,
+            OverrideTotalAmount = 15000m
+        };
+
+        _service.ApplyTraining(e);
+
+        e.TotalAmount.Should().Be(15000m);
     }
 }

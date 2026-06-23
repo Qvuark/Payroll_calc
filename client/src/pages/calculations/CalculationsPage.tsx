@@ -1,11 +1,11 @@
 import { Fragment, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { calculateAll, calculateOne } from '../../api/endpoints'
+import { calculateAll, calculateOne, monthStatus, signMonth, unsignMonth } from '../../api/endpoints'
 import { ErrorNote } from '../../components/ui'
 import { CalcBreakdown } from '../../components/CalcBreakdown'
 import { MonthPicker } from '../../components/MonthPicker'
 import { currentPeriod, type Period } from '../../lib/period'
-import type { CalcResult } from '../../api/types'
+import type { CalcResult, MonthSignStatus } from '../../api/types'
 import { fmtMoney, monthName } from '../../lib/format'
 
 export function CalculationsPage() {
@@ -14,6 +14,13 @@ export function CalculationsPage() {
   const [openId, setOpenId] = useState<number | null>(null)
   const [recalcingId, setRecalcingId] = useState<number | null>(null)
   const [rowError, setRowError] = useState<string | null>(null)
+  const [status, setStatus] = useState<MonthSignStatus | null>(null)
+  const [signing, setSigning] = useState(false)
+
+  // Стан підпису місяця — щоб показати «підписано N/усього» і потрібну кнопку. Тихо ігноруємо збій.
+  const refreshStatus = async () => {
+    try { setStatus(await monthStatus(period.year, period.month)) } catch { /* нема даних — не критично */ }
+  }
 
   const run = useMutation({
     mutationFn: () => calculateAll(period.year, period.month),
@@ -21,8 +28,24 @@ export function CalculationsPage() {
       setResults(data)
       setOpenId(null)
       setRowError(null)
+      refreshStatus()
     },
   })
+
+  // Підпис: якщо весь місяць підписаний — знімаємо, інакше підписуємо (чернетки → Signed).
+  const allSigned = status != null && status.total > 0 && status.signed === status.total
+  const toggleSign = async () => {
+    setSigning(true)
+    try {
+      if (allSigned) await unsignMonth(period.year, period.month)
+      else await signMonth(period.year, period.month)
+      await refreshStatus()
+    } catch (e) {
+      setRowError(e instanceof Error ? e.message : 'Помилка підпису')
+    } finally {
+      setSigning(false)
+    }
+  }
 
   // Перерахунок однієї людини без прогону всіх: підміняє лише її рядок у списку.
   const recalcOne = async (employeeId: number) => {
@@ -57,7 +80,7 @@ export function CalculationsPage() {
       </div>
 
       <div className="row mb16">
-        <MonthPicker value={period} onChange={p => { setPeriod(p); setResults(null) }} />
+        <MonthPicker value={period} onChange={p => { setPeriod(p); setResults(null); setStatus(null) }} />
         <button type="button" className="btn btn-primary" onClick={() => run.mutate()} disabled={run.isPending}>
           {run.isPending ? 'Рахую…' : `Розрахувати за ${monthName(period.month).toLowerCase()}`}
         </button>
@@ -66,6 +89,28 @@ export function CalculationsPage() {
 
       <ErrorNote error={run.error} />
       {rowError && <div className="note note-error mb16">{rowError}</div>}
+
+      {results && results.length > 0 && status && status.total > 0 && (
+        <div className="row mb16" style={{ gap: 12, alignItems: 'center' }}>
+          <span style={{ fontWeight: 600 }}>
+            {allSigned ? '🔒 Місяць підписано' : `Підписано ${status.signed}/${status.total}`}
+          </span>
+          <span className="hint">
+            {allSigned
+              ? 'Суми заморожено — йдуть в авто-базу середньоденної.'
+              : 'Підпишіть перевірений місяць, щоб суми кормили авто-базу.'}
+          </span>
+          <span className="spacer" />
+          <button
+            type="button"
+            className={`btn btn-sm ${allSigned ? '' : 'btn-primary'}`}
+            onClick={toggleSign}
+            disabled={signing}
+          >
+            {signing ? '…' : allSigned ? '🔓 Зняти підпис' : '🔒 Підписати місяць'}
+          </button>
+        </div>
+      )}
 
       {results && results.length === 0 && (
         <div className="card empty">Немає активних працівників для розрахунку.</div>

@@ -44,7 +44,7 @@ public class CalcInputBuilderTests : IClassFixture<PostgresFixture>, IAsyncLifet
         pos.HasUnfavorable2600.Should().BeTrue();
         pos.ReplacementHours.Should().Be(5m);
         pos.IsHourly.Should().BeFalse();
-        pos.NightHours.Should().Be(0m);              // нічні лише на погодинній ставці
+        pos.NightHours.Should().Be(0m);              // нічні лише з прапором нічних змін (вчитель без нього)
     }
 
     /// <summary>

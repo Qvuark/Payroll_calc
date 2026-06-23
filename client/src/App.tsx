@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
 import { ReferencesPage } from './pages/references/ReferencesPage'
 import { EmployeesPage } from './pages/employees/EmployeesPage'
@@ -15,6 +16,16 @@ const NAV = [
 ]
 
 export default function App() {
+  // Тумблер котів. Дефолт — вимкнено (перед техлідом не світити). Стан у localStorage.
+  const [showCats, setShowCats] = useState(() => localStorage.getItem('showCats') === '1')
+  const toggleCats = () => {
+    setShowCats(prev => {
+      const next = !prev
+      localStorage.setItem('showCats', next ? '1' : '0')
+      return next
+    })
+  }
+
   return (
     <div className="layout">
       <aside className="sidebar">
@@ -32,6 +43,11 @@ export default function App() {
             <span>{item.label}</span>
           </NavLink>
         ))}
+        <label className="cats-toggle">
+          <input type="checkbox" checked={showCats} onChange={toggleCats} />
+          <span>Котики</span>
+        </label>
+        {showCats && <img className="sidebar-cats" src="/cats.jpg" alt="" />}
       </aside>
       <main className="main">
         <div className="page">

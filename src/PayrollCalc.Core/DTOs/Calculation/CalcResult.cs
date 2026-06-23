@@ -33,6 +33,10 @@ public record CalcResult
     /// </summary>
     public decimal? SocialBenefitPct { get; init; }
     /// <summary>
+    /// Член профспілки — для відомості (колонка BF: внесок або 0). За замовчуванням true.
+    /// </summary>
+    public bool IsUnionMember { get; init; } = true;
+    /// <summary>
     /// Нарахування — кожна надбавка окремим компонентом (відповідає колонкам J:BB відомості).
     /// </summary>
     public required IReadOnlyList<CalcComponent> Earnings { get; init; }

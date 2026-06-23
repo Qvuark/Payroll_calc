@@ -108,6 +108,7 @@ public class EmployeesController(AppDbContext context) : ControllerBase
         employee.GeneralExperienceYears = request.GeneralExperienceYears;
         employee.IsHonored = request.IsHonored;
         employee.HonoredAmount = request.HonoredAmount;
+        employee.IsUnionMember = request.IsUnionMember;
         await context.SaveChangesAsync();
         return Ok(EmployeeDetailDto.FromEntity(employee));
     }

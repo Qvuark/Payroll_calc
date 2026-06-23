@@ -111,6 +111,7 @@ function PersonaCard({ employee }: { employee: EmployeeDetail }) {
     onLeave: employee.status === 1,
     isHonored: employee.isHonored ?? false,
     honoredAmount: employee.honoredAmount == null ? '' : String(employee.honoredAmount).replace('.', ','),
+    isUnionMember: employee.isUnionMember ?? true,
   })
   const [error, setError] = useState<unknown>(null)
   const [saved, setSaved] = useState(false)
@@ -128,6 +129,7 @@ function PersonaCard({ employee }: { employee: EmployeeDetail }) {
     status,
     isHonored: form.isHonored,
     honoredAmount: form.isHonored ? parseDec(form.honoredAmount) : null,
+    isUnionMember: form.isUnionMember,
   })
 
   const onSaved = () => {
@@ -212,6 +214,10 @@ function PersonaCard({ employee }: { employee: EmployeeDetail }) {
             onChange={e => setForm(f => ({ ...f, honoredAmount: e.target.value }))}
           />
         )}
+        <label className="check">
+          <input type="checkbox" checked={form.isUnionMember} onChange={e => setForm(f => ({ ...f, isUnionMember: e.target.checked }))} />
+          Член профспілки (внесок 1%)
+        </label>
       </div>
       <ErrorNote error={error} />
     </div>
@@ -258,6 +264,7 @@ function AddPositionDialog({ employeeId, suggestPrimary, onClose }: {
         hasUnfavorable: false,
         complexityBonusPct: null,
         prestigeBonusPct: null,
+        directorPct: null,
         positionStartDate: null,
         titleTypeId: titleTypeId || null,
       }

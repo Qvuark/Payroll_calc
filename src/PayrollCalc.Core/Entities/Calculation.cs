@@ -32,4 +32,5 @@ public class Calculation
     [Column(TypeName = "jsonb")] public string ParamsSnapshot { get; set; } = "{}";
     public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
     public List<CalculationPeriod> Periods { get; set; } = [];
+    public List<CalculationComponent> Components { get; set; } = [];
 }

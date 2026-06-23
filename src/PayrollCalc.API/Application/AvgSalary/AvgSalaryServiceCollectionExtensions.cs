@@ -10,6 +10,8 @@ public static class AvgSalaryServiceCollectionExtensions
         // Зараз stateless (чисті маппери), але етап 5 додасть DbContext (авто-база) → реєструємо
         // Scoped наперед, щоб уникнути captive dependency, коли Singleton триматиме Scoped DbContext.
         services.AddScoped<AvgSalaryService>();
+        services.AddScoped<AvgBaseBuilder>();
+        services.AddScoped<AvgBaseAutoFiller>();
         return services;
     }
 }

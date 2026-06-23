@@ -56,6 +56,7 @@ public class TeachersColumnMap : IExcelColumnMap
     public const int ColComputers = 37;
     public const int ColExtracurricular = 38;
     public const int ColWebsite = 39;
+    public const int ColAdditionalHours = 40;
 
     // Технічні заголовки row 0 — англійською, парсер по них валідує структуру файлу.
     private static readonly Dictionary<int, string> Headers = new()
@@ -100,6 +101,7 @@ public class TeachersColumnMap : IExcelColumnMap
         { 37, "Computers" },
         { 38, "Extracurricular" },
         { 39, "Website" },
+        { 40, "AdditionalHours" },
     };
 
     // Описи row 1 українською — бухгалтер бачить що куди вписувати.
@@ -117,8 +119,8 @@ public class TeachersColumnMap : IExcelColumnMap
         { 8, "Пед.стаж (років)" },
         { 9, "Загальний стаж (років)" },
         { 10, "Соц.пільга % (50/100/150)" },
-        { 11, "Складність % (5-50)" },
-        { 12, "Престижність % (5-30, Class 1-2)" },
+        { 11, "Складність часткою (0.05-0.50, напр. 0.2 = 20%)" },
+        { 12, "Престижність часткою (0.05-0.30, напр. 0.2 = 20%; Class 1-2)" },
         { 13, "Посада (зазвичай 'Вчитель')" },
         { 14, "Дата прийняття на посаду (якщо ≠ HireDate)" },
         { 15, "Предмет (математика / укр.мова / ...)" },
@@ -146,5 +148,6 @@ public class TeachersColumnMap : IExcelColumnMap
         { 37, "Комп'ютерний клас (+ якщо так)" },
         { 38, "Позакласна (+ якщо так)" },
         { 39, "Сайт школи (+ якщо так)" },
+        { 40, "Надтарифні години (понад ставку)" },
     };
 }

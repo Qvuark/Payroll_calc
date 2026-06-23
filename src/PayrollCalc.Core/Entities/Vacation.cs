@@ -17,6 +17,10 @@ public class Vacation
     public int? BaseDays { get; set; }
     public decimal? AverageDaily { get; set; }
     public decimal? TotalAmount { get; set; }
+    /// <summary>
+    /// Ручна підсумкова сума замість формули — коли факт розійшовся з розрахунком. Null = береться формула.
+    /// </summary>
+    public decimal? OverrideTotalAmount { get; set; }
     public bool IsCarryOver { get; set; } = false;
     public int? CarryOverYear { get; set; }
     public int? CarryOverMonth { get; set; }

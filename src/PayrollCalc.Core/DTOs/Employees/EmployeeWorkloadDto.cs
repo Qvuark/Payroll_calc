@@ -25,6 +25,10 @@ public class EmployeeWorkloadDto
     /// FK на NotebookRate — окремий розряд для оплати перевірки зошитів (не основний розряд ставки).
     /// </summary>
     public int? NotebookRateId { get; set; }
+    /// <summary>
+    /// Надтарифні години (понад ставку) — додаються до педнавантаження у формулі окладу.
+    /// </summary>
+    public decimal AdditionalHours { get; set; } = decimal.Zero;
 
     /// <summary>
     /// Маппінг entity → DTO. Plain field-by-field, без обчислень.
@@ -48,7 +52,8 @@ public class EmployeeWorkloadDto
             InclusiveHours1To4 = e.InclusiveHours1To4,
             InclusiveHours5To9 = e.InclusiveHours5To9,
             InclusiveHours10To11 = e.InclusiveHours10To11,
-            NotebookRateId = e.NotebookRateId
+            NotebookRateId = e.NotebookRateId,
+            AdditionalHours = e.AdditionalHours
         };
     }
 }

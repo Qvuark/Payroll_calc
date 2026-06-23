@@ -26,6 +26,11 @@ public class EmployeeWorkloadRequest
     /// Null якщо вчитель зошитів не перевіряє.
     /// </summary>
     public int? NotebookRateId { get; set; }
+    /// <summary>
+    /// Надтарифні години (понад ставку) — додаються до педнавантаження у формулі окладу.
+    /// 0 якщо вчитель не має годин понад тарифну ставку.
+    /// </summary>
+    [Range(0, 60)] public decimal AdditionalHours { get; set; } = decimal.Zero;
 
     /// <summary>
     /// Маппінг Request → entity. EmployeePositionId виставляє контролер.
@@ -48,6 +53,7 @@ public class EmployeeWorkloadRequest
             InclusiveHours1To4 = request.InclusiveHours1To4,
             InclusiveHours5To9 = request.InclusiveHours5To9,
             NotebookRateId = request.NotebookRateId,
+            AdditionalHours = request.AdditionalHours,
             InclusiveHours10To11 = request.InclusiveHours10To11
         };
     }

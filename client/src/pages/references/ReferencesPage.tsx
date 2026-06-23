@@ -4,6 +4,7 @@ import { TariffGradesTab } from './TariffGradesTab'
 import { CalendarTab } from './CalendarTab'
 import { DepartmentsTab } from './DepartmentsTab'
 import { PositionsTab } from './PositionsTab'
+import { InclusionRulesTab } from './InclusionRulesTab'
 
 const TABS = [
   { id: 'params', label: 'Параметри системи' },
@@ -11,6 +12,7 @@ const TABS = [
   { id: 'calendar', label: 'Виробничий календар' },
   { id: 'departments', label: 'Підрозділи' },
   { id: 'positions', label: 'Посади' },
+  { id: 'inclusion', label: 'База середньоденної' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -42,6 +44,7 @@ export function ReferencesPage() {
       {tab === 'calendar' && <CalendarTab />}
       {tab === 'departments' && <DepartmentsTab />}
       {tab === 'positions' && <PositionsTab />}
+      {tab === 'inclusion' && <InclusionRulesTab />}
     </>
   )
 }

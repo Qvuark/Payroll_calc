@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<TariffGrade> TariffGrades => Set<TariffGrade>();
     public DbSet<CalculationPeriod> CalculationPeriods => Set<CalculationPeriod>();
     public DbSet<Calculation> Calculations => Set<Calculation>();
+    public DbSet<CalculationComponent> CalculationComponents => Set<CalculationComponent>();
     public DbSet<EmployeeWorkload> EmployeeWorkloads => Set<EmployeeWorkload>();
     public DbSet<EmployeeGpd> EmployeeGpds => Set<EmployeeGpd>();
     public DbSet<EmployeeNonPedagogical> EmployeeNonPedagogical => Set<EmployeeNonPedagogical>();
@@ -79,6 +80,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TrainingLeave>().HasOne(t => t.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Calculation>().HasOne(c => c.Employee).WithMany().OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<CalculationPeriod>().HasOne(cp => cp.Calculation).WithMany(c => c.Periods).HasForeignKey(cp => cp.CalculationId).OnDelete(DeleteBehavior.Cascade);
+        // Покомпонентний розклад розрахунку (нарахування/утримання рядками) — діти Calculation,
+        // мертві без нього (Cascade). Індекс по CalculationId — швидко дістати всіх дітей розрахунку.
+        modelBuilder.Entity<CalculationComponent>().HasOne(cc => cc.Calculation).WithMany(c => c.Components).HasForeignKey(cc => cc.CalculationId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<CalculationComponent>().HasIndex(cc => cc.CalculationId);
 
         // Унікальні індекси
         modelBuilder.Entity<Employee>().HasIndex(e => e.TaxId).IsUnique();

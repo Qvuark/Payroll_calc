@@ -78,7 +78,8 @@ public class TeachersPositionUpserter(AppDbContext db)
             row.Hours5To9 > 0 || row.IndividualHours5To9 > 0 ||
             row.Hours10To11 > 0 || row.IndividualHours10To11 > 0 ||
             row.NotebookHours1To4 > 0 || row.NotebookHours5To9 > 0 || row.NotebookHours10To11 > 0 ||
-            row.InclusiveHours1To4 > 0 || row.InclusiveHours5To9 > 0 || row.InclusiveHours10To11 > 0;
+            row.InclusiveHours1To4 > 0 || row.InclusiveHours5To9 > 0 || row.InclusiveHours10To11 > 0 ||
+            row.AdditionalHours > 0;
         var hasAdmin =
             !string.IsNullOrWhiteSpace(row.ClassMgmt) ||
             !string.IsNullOrWhiteSpace(row.CabinetType) ||
@@ -220,6 +221,7 @@ public class TeachersPositionUpserter(AppDbContext db)
             w.InclusiveHours1To4 = row.InclusiveHours1To4;
             w.InclusiveHours5To9 = row.InclusiveHours5To9;
             w.InclusiveHours10To11 = row.InclusiveHours10To11;
+            w.AdditionalHours = row.AdditionalHours;
             w.NotebookRateId = notebookRateId;
         }
 

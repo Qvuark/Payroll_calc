@@ -32,6 +32,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
             NormDays = input.NormDays,
             WorkedDays = input.WorkedDays,
             SocialBenefitPct = input.SocialBenefitPct,
+            IsUnionMember = input.IsUnionMember,
             Positions = input.Positions,
             Earnings = earnings,
             Gross = gross,
@@ -63,6 +64,8 @@ public sealed class PayrollCalculator : IPayrollCalculator
 
             var title = TitleCalculator.Calc(pos, oklad.Amount);
             AddIfAny(posList, title);
+            // «Заслужений» — фіксована сума у ту саму колонку звання (не входить у базу вислуги/престижу).
+            AddIfAny(posList, HonoredCalculator.Calc(pos));
 
             // Оклад з підвищенням — база похідних надбавок (вислуга, престиж...): оклад + №1749 + звання.
             var raisedBase = oklad.Amount + (bonus1749?.Amount ?? 0m) + (title?.Amount ?? 0m);
@@ -117,16 +120,21 @@ public sealed class PayrollCalculator : IPayrollCalculator
 
         // Мануальні суми — на працівника за місяць (не на ставку).
         AddManual(list, ComponentNames.Bonus, m.Bonus);
-        AddManual(list, ComponentNames.Vacation, m.Vacation);
-        AddManual(list, ComponentNames.SickEmployer, m.SickEmployer);
-        AddManual(list, ComponentNames.SickFss, m.SickFss);
         AddManual(list, ComponentNames.Recalculation, m.Recalculation);
         AddManual(list, ComponentNames.Holiday, m.Holiday);
         AddManual(list, ComponentNames.AnnualBonus, m.AnnualBonus);
         AddManual(list, ComponentNames.PhysEducation, m.PhysEducation);
-        AddManual(list, ComponentNames.VacationCompensation, m.VacationCompensation);
         AddManual(list, ComponentNames.Downtime, m.Downtime);
-        AddManual(list, ComponentNames.Courses, m.Courses);
+        // Ручна надбавка за несприятливі умови — лягає в AY поверх почасової (індивідуальні рішення бухгалтера).
+        AddManual(list, ComponentNames.Unfavorable2600, m.UnfavorableManual);
+
+        // Лікарняні / відпускні / курси — із подій відсутності (середньоденна порахована при вводі).
+        var a = input.Absences;
+        AddManual(list, ComponentNames.SickEmployer, a.SickEmployer);
+        AddManual(list, ComponentNames.SickFss, a.SickFss);
+        AddManual(list, ComponentNames.Vacation, a.Vacation);
+        AddManual(list, ComponentNames.VacationCompensation, a.VacationCompensation);
+        AddManual(list, ComponentNames.Courses, a.Courses);
         return list;
     }
     /// <summary>
@@ -137,6 +145,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
     {
         var p = input.Params;
         var m = input.Manual;
+        var a = input.Absences;
 
         // Податкова соціальна пільга зменшує базу ПДФО, але лише якщо місячний дохід не вищий за поріг.
         // Розмір (частка прожиткового мінімуму) — на працівнику; null → пільги немає, база = весь gross.
@@ -154,11 +163,15 @@ public sealed class PayrollCalculator : IPayrollCalculator
             new(ComponentNames.Vz, gross * p.Vz, Pct(gross, p.Vz)),
         };
 
-        var unionBase = gross - m.SickFss;
-        var unionFormula = m.SickFss != 0
-            ? $"=({Num(gross)}-{Num(m.SickFss)})*{Num(p.Union * 100)}%"
-            : Pct(gross, p.Union);
-        list.Add(new CalcComponent(ComponentNames.UnionFee, unionBase * p.Union, unionFormula));
+        // Внесок утримується лише з членів профспілки. База = gross мінус лікарняні ПФУ.
+        if (input.IsUnionMember)
+        {
+            var unionBase = gross - a.SickFss;
+            var unionFormula = a.SickFss != 0
+                ? $"=({Num(gross)}-{Num(a.SickFss)})*{Num(p.Union * 100)}%"
+                : Pct(gross, p.Union);
+            list.Add(new CalcComponent(ComponentNames.UnionFee, unionBase * p.Union, unionFormula));
+        }
 
         AddManual(list, ComponentNames.Advance, m.Advance);
         AddManual(list, ComponentNames.EnforcementOrders, m.EnforcementOrders);

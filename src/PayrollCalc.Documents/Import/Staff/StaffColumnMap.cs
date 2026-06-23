@@ -43,6 +43,7 @@ public class StaffColumnMap : IExcelColumnMap
     public const int ColTextbooksAmount = 25;
     public const int ColDisinfectants = 26;
     public const int ColNightShifts = 27;
+    public const int ColDirectorPct = 28;
     // Технічні заголовки row 0 — англійською, парсер по них валідує структуру файлу.
     private static readonly Dictionary<int, string> Headers = new()
     {
@@ -74,6 +75,7 @@ public class StaffColumnMap : IExcelColumnMap
         { 25, "TextbooksAmount" },
         { 26, "Disinfectants" },
         { 27, "NightShifts" },
+        { 28, "DirectorPct" },
     };
     // Описи row 1 українською — бухгалтер бачить що куди вписувати.
     // TemplateGenerator пише їх у шаблон під заголовками.
@@ -90,7 +92,7 @@ public class StaffColumnMap : IExcelColumnMap
         { 8, "Пед.стаж (років)" },
         { 9, "Загальний стаж (років)" },
         { 10, "Соц.пільга % (50/100/150)" },
-        { 11, "Складність % (5-50)" },
+        { 11, "Складність часткою (0.05-0.50, напр. 0.2 = 20%)" },
         { 12, "Посада з довідника" },
         { 13, "Дата прийняття на посаду (якщо ≠ HireDate)" },
         { 14, "Тарифний розряд (діапазон по посаді)" },
@@ -107,5 +109,6 @@ public class StaffColumnMap : IExcelColumnMap
         { 25, "Сума за підручники (грн)" },
         { 26, "Дезінфектант (+ якщо так, +10%)" },
         { 27, "Нічні зміни (+ якщо так, +40%)" },
+        { 28, "Частка від директора (0.95 заступник, 0.90 головбух; порожньо = власний розряд)" },
     };
 }

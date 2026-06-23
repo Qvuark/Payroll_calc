@@ -114,18 +114,20 @@ public class PayrollCalculatorTests
     }
 
     [Fact]
-    public void Manual_AllAmounts_NamedComponents_SickFssReducesUnion()
+    public void Earnings_ManualPlusAbsences_NamedComponents_SickFssReducesUnion()
     {
-        // Усі 7 ручних сум разом. Імена компонентів = контракт із PersistAsync (він шукає їх по цих рядках).
+        // Ручні суми (премія/перерахунок) + суми подій відсутності (лікарняні/відпускні) разом.
+        // Імена компонентів = контракт із PersistAsync і відомістю. Лікарняні/відпускні тепер
+        // приходять з Absences (події), не з табеля; профспілка не включає лікарняні ФСС.
         var input = Input(
             normDays: 22,
             workedDays: 22,
             positions: [Mop(oklad: 10000m)],
             manual: new ManualAdjustments
             {
-                Bonus = 5000m, Vacation = 3000m, SickEmployer = 1000m, SickFss = 2000m,
-                Recalculation = 500m, EnforcementOrders = 700m, Advance = 8000m,
-            });
+                Bonus = 5000m, Recalculation = 500m, EnforcementOrders = 700m, Advance = 8000m,
+            },
+            absences: new AbsenceAmounts { Vacation = 3000m, SickEmployer = 1000m, SickFss = 2000m });
 
         var result = new PayrollCalculator().Calculate(input);
 
@@ -351,7 +353,7 @@ public class PayrollCalculatorTests
     private static CalcInput Input(int normDays, decimal workedDays, params PositionCalcInput[] positions)
         => Input(normDays, workedDays, positions, new ManualAdjustments());
 
-    private static CalcInput Input(int normDays, decimal workedDays, PositionCalcInput[] positions, ManualAdjustments manual) => new()
+    private static CalcInput Input(int normDays, decimal workedDays, PositionCalcInput[] positions, ManualAdjustments manual, AbsenceAmounts? absences = null) => new()
     {
         EmployeeId = 1,
         FullName = "Тест Тестович",
@@ -361,6 +363,7 @@ public class PayrollCalculatorTests
         WorkedDays = workedDays,
         Positions = positions,
         Manual = manual,
+        Absences = absences ?? new(),
         Params = DefaultParams,
     };
 }

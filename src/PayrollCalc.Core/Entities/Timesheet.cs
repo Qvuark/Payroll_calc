@@ -26,17 +26,9 @@ public class Timesheet
     /// </summary>
     public decimal PhysEducation { get; set; } = decimal.Zero;
     /// <summary>
-    /// Компенсація за невикористану відпустку (відомість AQ).
-    /// </summary>
-    public decimal VacationCompensation { get; set; } = decimal.Zero;
-    /// <summary>
     /// Оплата простою (відомість AR).
     /// </summary>
     public decimal Downtime { get; set; } = decimal.Zero;
-    /// <summary>
-    /// Оплата за час курсів підвищення кваліфікації (відомість AT).
-    /// </summary>
-    public decimal Courses { get; set; } = decimal.Zero;
     /// <summary>
     /// Індексація зарплати (відомість AV). Зараховується в базу доплати до МЗП.
     /// </summary>
@@ -46,15 +38,8 @@ public class Timesheet
     /// </summary>
     public decimal Bonus { get; set; } = decimal.Zero;
     /// <summary>
-    /// Лікарняні за рахунок роботодавця, перші 5 днів (відомість AL).
+    /// Доплата за несприятливі умови праці — ручна надбавка понад почасову (відомість AY).
+    /// Індивідуальні рішення бухгалтера: плоска 2600, її частина тощо.
     /// </summary>
-    public decimal SickEmployer { get; set; } = decimal.Zero;
-    /// <summary>
-    /// Лікарняні за рахунок ФСС (відомість AM). Зменшує базу профспілкового внеску.
-    /// </summary>
-    public decimal SickFss { get; set; } = decimal.Zero;
-    /// <summary>
-    /// Відпускні (відомість AZ).
-    /// </summary>
-    public decimal Vacation { get; set; } = decimal.Zero;
+    public decimal UnfavorableManual { get; set; } = decimal.Zero;
 }

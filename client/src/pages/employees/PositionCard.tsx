@@ -46,6 +46,7 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
     titleTypeId: position.titleTypeId ?? 0,
     complexityBonusPct: pctToInput(position.complexityBonusPct),
     prestigeBonusPct: pctToInput(position.prestigeBonusPct),
+    directorPct: pctToInput(position.directorPct),
   })
 
   const invalidate = () => {
@@ -66,6 +67,7 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
         titleTypeId: form.titleTypeId || null,
         complexityBonusPct: inputToPct(form.complexityBonusPct),
         prestigeBonusPct: inputToPct(form.prestigeBonusPct),
+        directorPct: inputToPct(form.directorPct),
       }),
     onSuccess: () => {
       setError(null)
@@ -100,6 +102,7 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
         titleTypeId: position.titleTypeId,
         complexityBonusPct: position.complexityBonusPct,
         prestigeBonusPct: position.prestigeBonusPct,
+        directorPct: position.directorPct,
       }),
     onSuccess: () => {
       setError(null)
@@ -113,6 +116,8 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
   const allowedGrades = (grades.data ?? []).filter(g => g.grade >= gradeRange[0] && g.grade <= gradeRange[1])
   const allowedTitles = (titles.data ?? []).filter(t => t.workerClass === position.workerClass)
   const showPrestige = position.workerClass === 1 || position.workerClass === 2
+  // Директорозалежність — для адмінів/спеціалістів (заступник, головбух), не для вчителів і МОП.
+  const showDirector = position.workerClass === 2 || position.workerClass === 3
 
   return (
     <div className="card" style={isDismissed ? { opacity: 0.65 } : undefined}>
@@ -203,6 +208,16 @@ export function PositionCard({ employeeId, position, hasActivePrimary }: {
                   type="text"
                   value={form.prestigeBonusPct}
                   onChange={e => setForm(f => ({ ...f, prestigeBonusPct: e.target.value }))}
+                  disabled={isDismissed}
+                />
+              </Field>
+            )}
+            {showDirector && (
+              <Field label="% від окладу директора" hint="заступник 95, головбух 90; порожньо = власний розряд">
+                <input
+                  type="text"
+                  value={form.directorPct}
+                  onChange={e => setForm(f => ({ ...f, directorPct: e.target.value }))}
                   disabled={isDismissed}
                 />
               </Field>

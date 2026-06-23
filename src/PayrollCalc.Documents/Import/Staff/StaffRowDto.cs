@@ -46,4 +46,6 @@ public record StaffRowDto : IPersonaRow
     // ─── МОП-флаги (Class 4) ───
     public bool Disinfectants { get; init; }
     public bool NightShifts { get; init; }
+    /// <summary>Частка від окладу директора (0.95 заступник, 0.90 головбух). Null = власний розряд.</summary>
+    public decimal? DirectorPct { get; init; }
 }

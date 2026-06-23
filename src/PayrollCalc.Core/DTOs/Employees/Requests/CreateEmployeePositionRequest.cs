@@ -52,6 +52,11 @@ public class CreateEmployeePositionRequest
     /// </summary>
     public int? TitleTypeId { get; set; }
     /// <summary>
+    /// Частка від окладу директора для директорозалежних посад (заступник 0.95, головбух 0.90).
+    /// Тоді оклад = оклад_директора × DirectorPct. Null = посада рахується від власного розряду.
+    /// </summary>
+    [Range(0.01, 1.0)] public decimal? DirectorPct { get; set; }
+    /// <summary>
     /// Маппінг Request → entity. EmployeeId передається окремо бо він приходить з URL.
     /// </summary>
     /// <param name="r">Дані запиту.</param>
@@ -73,7 +78,8 @@ public class CreateEmployeePositionRequest
             HasUnfavorable = r.HasUnfavorable,
             ComplexityBonusPct = r.ComplexityBonusPct,
             PrestigeBonusPct = r.PrestigeBonusPct,
-            TitleTypeId = r.TitleTypeId
+            TitleTypeId = r.TitleTypeId,
+            DirectorPct = r.DirectorPct
         };
     }
 }

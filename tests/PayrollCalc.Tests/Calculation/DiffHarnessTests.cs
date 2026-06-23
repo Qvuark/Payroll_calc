@@ -16,7 +16,7 @@ public class DiffHarnessTests
     {
         Pdfo = 0.18m, Vz = 0.05m, Union = 0.01m, Bonus1749 = 0.40m,
         Mzp = 8647m, UnfavorableBase = 2600m, Disinfectants = 0.10m, NightShifts = 0.40m,
-        SocialBenefitLivingMin = 3328m, SocialBenefitCap = 4660m,
+        SocialBenefitLivingMin = 1514m, SocialBenefitCap = 4240m,
     };
 
     [Fact]
@@ -59,13 +59,15 @@ public class DiffHarnessTests
     [Fact]
     public void Skyrda_r3_FullGrossMatchesEtalon()
     {
-        // Скирда: директор(J)+вчитель(N). Після відповідей мами весь рядок збігається з еталоном:
+        // Скирда: директор(J)+вчитель(N). Весь рядок збігається з еталоном:
         // ядро + зошити + інклюзив (адмін flat) + заміни (авто-ставка) + 2600.
+        // AY = основна ставка директора 2600 (повна, без годин) + вчитель 2600/18×9 = 1300; разом 3900.
         var director = new PositionCalcInput
         {
             WorkerClass = WorkerClass.AdminPedagogical, PositionName = "Директор",
             Oklad = 10410m, RateCount = 1m, TenurePct = 0.30m, PrestigePct = 0.25m, ComplexityPct = 0.50m,
             InclusiveHours = 1m,                                             // U: прапорець участі (адмін — flat 20%)
+            HasUnfavorable2600 = true, IsPrimary = true,                     // AY: основна ставка → повна 2600
         };
         var teacher = new PositionCalcInput
         {
@@ -81,7 +83,7 @@ public class DiffHarnessTests
         Component(result, "Престижність").Should().Be(4945.035m);
         Component(result, "Складність і напруженість").Should().Be(5205m);
         Component(result, "За перевірку зошитів").Should().Be(867.69m);              // S
-        Component(result, "Несприятливі умови (2600)").Should().Be(3900m);           // AY
+        Component(result, "Несприятливі умови (2600)").Should().BeApproximately(3900m, 0.001m); // AY: 2600 + 1300
         Component(result, "Інклюзивні класи").Should().Be(2914.8m);                  // U: (10410+40%)×20%
         Component(result, "Заміни").Should().BeApproximately(2049.66m, 0.01m);       // AW: авто-ставка 256.21×8
 

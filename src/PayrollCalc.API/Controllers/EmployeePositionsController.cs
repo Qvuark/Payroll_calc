@@ -144,6 +144,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
         position.PositionStartDate = request.PositionStartDate;
         position.EffectiveFrom = request.PositionStartDate ?? position.HireDate;
         position.TitleTypeId = request.TitleTypeId;
+        position.DirectorPct = request.DirectorPct;
         await context.SaveChangesAsync();
         var saved = await LoadFullPositionAsync(posId);
         return Ok(EmployeePositionDto.FromEntity(saved!));
@@ -232,6 +233,7 @@ public class EmployeePositionsController(AppDbContext context) : ControllerBase
             position.Workload.InclusiveHours5To9 = request.InclusiveHours5To9;
             position.Workload.InclusiveHours10To11 = request.InclusiveHours10To11;
             position.Workload.NotebookRateId = request.NotebookRateId;
+            position.Workload.AdditionalHours = request.AdditionalHours;
         }
         await context.SaveChangesAsync();
         var saved = await LoadFullPositionAsync(posId);

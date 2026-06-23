@@ -15,7 +15,8 @@ public class AvgSalaryService
     /// <summary>
     /// Лікарняний за КМУ №1266. Відсоток виплати: ручний override, якщо заданий,
     /// інакше виводиться зі страхового стажу. base_days = 365 − виключені дні рахуємо тут
-    /// (калькулятор його не повертає).
+    /// (калькулятор його не повертає). Якщо суму роботодавця/ФСС вписали руками
+    /// (факт розійшовся з формулою) — беремо ручну; середньоденна лишається довідковою.
     /// </summary>
     public void ApplySick(SickLeave e)
     {
@@ -26,9 +27,9 @@ public class AvgSalaryService
         e.AverageDaily = r.AverageDaily;
         e.DaysEmployer = r.DaysEmployer;
         e.DaysFss = r.DaysFss;
-        e.AmountEmployer = r.AmountEmployer;
-        e.AmountFss = r.AmountFss;
-        e.TotalAmount = r.Total;
+        e.AmountEmployer = e.OverrideAmountEmployer ?? r.AmountEmployer;
+        e.AmountFss = e.OverrideAmountFss ?? r.AmountFss;
+        e.TotalAmount = e.AmountEmployer + e.AmountFss;
     }
     /// <summary>
     /// Відпустка / компенсація за КМУ №100. Неоплачувані типи (без збереження зарплати,
@@ -49,9 +50,8 @@ public class AvgSalaryService
         }
         var r = VacationCalculator.Calc(e.BaseAmount ?? 0m, e.BaseDays ?? 0, e.CalendarDays);
         e.AverageDaily = r.AverageDaily;
-        e.TotalAmount = r.Total;
+        e.TotalAmount = e.OverrideTotalAmount ?? r.Total;
     }
-
     /// <summary>
     /// Курси підвищення кваліфікації за КМУ №100: період 2 місяці, знаменник у робочих днях.
     /// </summary>
@@ -59,6 +59,6 @@ public class AvgSalaryService
     {
         var r = TrainingCalculator.Calc(e.BaseAmount, e.BaseWorkingDays, e.WorkingDaysAbsent);
         e.AverageDaily = r.AverageDaily;
-        e.TotalAmount = r.Total;
+        e.TotalAmount = e.OverrideTotalAmount ?? r.Total;
     }
 }

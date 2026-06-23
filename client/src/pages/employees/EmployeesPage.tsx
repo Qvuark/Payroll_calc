@@ -150,6 +150,7 @@ function CreateEmployeeDialog({ onClose }: { onClose: () => void }) {
         socialBenefitPct: null,
         isHonored: false,
         honoredAmount: null,
+        isUnionMember: true,
       }
       return createEmployee(body)
     },

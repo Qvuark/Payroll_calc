@@ -60,6 +60,10 @@ public class EmployeePositionDto
     /// </summary>
     public int? TitleTypeId { get; set; }
     public string? TitleTypeName { get; set; }
+    /// <summary>
+    /// Частка від окладу директора (заступник 0.95, головбух 0.90). Null = власний розряд.
+    /// </summary>
+    public decimal? DirectorPct { get; set; }
     public EmployeeWorkloadDto? Workload { get; set; }
     public EmployeeAdminDto? Admin { get; set; }
     public EmployeeGpdDto? Gpd { get; set; }
@@ -97,6 +101,7 @@ public class EmployeePositionDto
             PrestigeBonusPct = e.PrestigeBonusPct,
             TitleTypeId = e.TitleTypeId,
             TitleTypeName = e.TitleType?.Name,
+            DirectorPct = e.DirectorPct,
             Workload = e.Workload != null ? EmployeeWorkloadDto.FromEntity(e.Workload) : null,
             Admin = e.Admin != null ? EmployeeAdminDto.FromEntity(e.Admin) : null,
             Gpd = e.Gpd != null ? EmployeeGpdDto.FromEntity(e.Gpd) : null,

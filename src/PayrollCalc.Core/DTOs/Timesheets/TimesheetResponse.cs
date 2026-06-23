@@ -23,15 +23,11 @@ public class TimesheetResponse
     public decimal EnforcementOrders { get; set; } = decimal.Zero;
     public decimal AnnualBonus { get; set; } = decimal.Zero;
     public decimal Bonus { get; set; } = decimal.Zero;
-    public decimal SickEmployer { get; set; } = decimal.Zero;
-    public decimal SickFss { get; set; } = decimal.Zero;
-    public decimal Vacation { get; set; } = decimal.Zero;
     public decimal Recalculation { get; set; } = decimal.Zero;
     public decimal PhysEducation { get; set; } = decimal.Zero;
-    public decimal VacationCompensation { get; set; } = decimal.Zero;
     public decimal Downtime { get; set; } = decimal.Zero;
-    public decimal Courses { get; set; } = decimal.Zero;
     public decimal Indexation { get; set; } = decimal.Zero;
+    public decimal UnfavorableManual { get; set; } = decimal.Zero;
     /// <summary>
     /// Маппінг entity → DTO. Потребує завантаженого Employee (ПІБ, таб.номер).
     /// </summary>
@@ -56,15 +52,11 @@ public class TimesheetResponse
             EnforcementOrders = entity.EnforcementOrders,
             AnnualBonus = entity.AnnualBonus,
             Bonus = entity.Bonus,
-            SickEmployer = entity.SickEmployer,
-            SickFss = entity.SickFss,
-            Vacation = entity.Vacation,
             Recalculation = entity.Recalculation,
             PhysEducation = entity.PhysEducation,
-            VacationCompensation = entity.VacationCompensation,
             Downtime = entity.Downtime,
-            Courses = entity.Courses,
-            Indexation = entity.Indexation
+            Indexation = entity.Indexation,
+            UnfavorableManual = entity.UnfavorableManual
         };
     }
     /// <summary>

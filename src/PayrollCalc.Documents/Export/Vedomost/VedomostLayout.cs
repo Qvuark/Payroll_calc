@@ -65,7 +65,7 @@ internal static class VedomostLayout
         new("AR", "Простій", true),
         new("AS", "Перерахунок", true),
         new("AT", "Курси", true),
-        new("AU", "За несприятдіві умови праці", true),
+        new("AU", "За несприятливі умови праці", true),
         new("AV", "Індексація", true),
         new("AW", "Заміни", true),
         new("AX", "Щорічна винагорода вчителям (ст.57 ЗУ \"Про освіту\")", true),
@@ -82,6 +82,7 @@ internal static class VedomostLayout
         new("BI", "Аванс", true),
         new("BJ", "всього утримано", true),
         new("BK", "сума до видачі", true),
+        new("BL", "сума до видачі за рах.ПФУ", true),
     ];
 
     /// <summary>

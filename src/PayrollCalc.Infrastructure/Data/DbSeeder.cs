@@ -15,6 +15,7 @@ public static class DbSeeder
         await SeedNotebookRates(context);
         await SeedDepartments(context);
         await SeedPositions(context);
+        await SeedAvgSalaryInclusionRules(context);
     }
 
     private static async Task SeedSystemParams(AppDbContext context)
@@ -37,8 +38,9 @@ public static class DbSeeder
             new SystemParam { Key = "workshop", Value = 0.20m, EffectiveDate = date },
             new SystemParam { Key = "gym", Value = 0.10m, EffectiveDate = date },
             new SystemParam { Key = "shooting_range", Value = 0.20m, EffectiveDate = date },
-            new SystemParam { Key = "social_benefit_living_min", Value = 3328m, EffectiveDate = date },
-            new SystemParam { Key = "social_benefit_cap", Value = 4660m, EffectiveDate = date },
+            // ПСП: пільга 1514 (50% прожиткового мінімуму), стеля доходу 4240 — з еталона (колонка BP).
+            new SystemParam { Key = "social_benefit_living_min", Value = 1514m, EffectiveDate = date },
+            new SystemParam { Key = "social_benefit_cap", Value = 4240m, EffectiveDate = date },
             new SystemParam { Key = "computers", Value = 0.10m, EffectiveDate = date },
             new SystemParam { Key = "extracurricular", Value = 0.10m, EffectiveDate = date },
             new SystemParam { Key = "website", Value = 0.10m, EffectiveDate = date },
@@ -95,10 +97,9 @@ public static class DbSeeder
     {
         if (context.WorkCalendars.Any()) return;
 
-        // Робочі дні 2026, укр. виробничий календар. Воєнний стан: скасовано майже всі свята,
-        // лишились 3 (24.08 пн, 01.10 чт, 25.12 пт) — їх віднято. Решта (1.01/8.03/Великдень/
-        // 1.05/8.05/Трійця/28.06/15.07) тепер робочі. Звірити з бухгалтером Серпень/Жовтень/Грудень.
-        var days = new[] { 22, 20, 22, 22, 21, 22, 23, 20, 22, 21, 21, 22 };
+        // Робочі дні 2026, укр. виробничий календар (підтверджено бухгалтером 2026-06).
+        // Воєнний стан: майже всі свята скасовано — робочі. Серпень 21, Жовтень 22, Грудень 23.
+        var days = new[] { 22, 20, 22, 22, 21, 22, 23, 21, 22, 22, 21, 23 };
         for (var month = 1; month <= 12; month++)
             context.WorkCalendars.Add(new WorkCalendar { Year = 2026, Month = month, WorkDays = days[month - 1] });
 
@@ -345,6 +346,60 @@ public static class DbSeeder
                 ExcelAliases = new() { "двірник" }
             }
         );
+        await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Стартовий стан довідника «що входить у базу середньоденної» (одне правило на компонент).
+    /// FieldKey = імʼя компонента, яке кладе рушій (ключ JOIN із покомпонентним розкладом).
+    /// Дефолти: базова зарплата й регулярні доплати увімкнені; премія/щорічна — лише в лікарняні;
+    /// самі події вимкнені (подія не входить у власну базу). Бухгалтер змінює галочки в UI.
+    /// </summary>
+    private static async Task SeedAvgSalaryInclusionRules(AppDbContext context)
+    {
+        if (context.AvgSalaryInclusionRules.Any()) return;
+
+        var date = new DateOnly(2026, 1, 1);
+        // Постійні компоненти + регулярні доплати — у базу всіх 4 випадків (увімкнено за замовчуванням).
+        string[] always =
+        [
+            "Оклад", "За звання", "Надбавка №1749", "Підвищення №22", "Складність і напруженість",
+            "Вислуга років", "Вислуга ГПД/ПКР", "Вислуга бібліотекаря", "Вислуга медпрацівника",
+            "Престижність", "Престижність ГПД/ПКР",
+            "Класне керівництво", "За перевірку зошитів", "За ГПД", "За ПКР", "Кабінет",
+            "Інклюзивні класи", "Обслуговування комп'ютерної техніки", "Вебсайт",
+            "Наставництво", "Завідування бібліотекою", "За підручники", "Військовий облік",
+            "Несприятливі умови (2600)", "Доплата до МЗП", "Заміни", "Доплата за нічні", "Дезінфікуючі засоби",
+            "Індексація", "Перерахунок", "Святкові", "Простій", "Позакласна робота з фізвиховання"
+        ];
+        // Премія і щорічна — лише в базу лікарняних; у відпускні/курси/компенсацію вимкнені за замовчуванням.
+        string[] sickOnly = ["Премія", "Щорічна винагорода"];
+        // Самі події — вимкнені скрізь за замовчуванням (подія не входить у власну базу, інакше середня роздувається).
+        string[] eventsOff =
+        [
+            "Лікарняні (роботодавець)", "Лікарняні (ФСС)", "Відпускні",
+            "Компенсація за невикористану відпустку", "Курси"
+        ];
+
+        foreach (var key in always)
+            context.AvgSalaryInclusionRules.Add(new AvgSalaryInclusionRule
+            {
+                FieldKey = key, Label = key, EffectiveDate = date,
+                IncludeSick = true, IncludeVacation = true, IncludeTraining = true, IncludeCompensation = true
+            });
+        foreach (var key in sickOnly)
+            context.AvgSalaryInclusionRules.Add(new AvgSalaryInclusionRule
+            {
+                FieldKey = key, Label = key, EffectiveDate = date,
+                IncludeSick = true, IncludeVacation = false, IncludeTraining = false, IncludeCompensation = false
+            });
+        foreach (var key in eventsOff)
+            context.AvgSalaryInclusionRules.Add(new AvgSalaryInclusionRule
+            {
+                FieldKey = key, Label = key, EffectiveDate = date,
+                IncludeSick = false, IncludeVacation = false, IncludeTraining = false, IncludeCompensation = false
+            });
+
         await context.SaveChangesAsync();
     }
 }

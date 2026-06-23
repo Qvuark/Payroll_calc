@@ -35,37 +35,101 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
     /// </summary>
     public async Task<IReadOnlyList<CalcResult>> RunAllAsync(int year, int month, CancellationToken ct = default)
     {
-        var periodStart = new DateOnly(year, month, 1);
-        var ids = await db.Employees
-            .Where(e => e.Status != EmployeeStatus.Dismissed
-                || (e.DismissalDate != null && e.DismissalDate >= periodStart))
-            .OrderBy(e => EF.Functions.Collate(e.FullName, "uk-UA-x-icu"))
-            .Select(e => e.Id)
-            .ToListAsync(ct);
+        // Гуртова збірка входів (кілька запитів на весь місяць) замість запиту-на-людину — рушій
+        // далі чистий CPU, тож вузьке місце прогону зникає. Порядок — український алфавіт (з білдера).
+        var inputs = await builder.BuildAllAsync(year, month, ct);
 
         // Одна транзакція на весь прогін: збій на 40-му працівнику відкочує все,
         // інакше в БД лишилася б половина місяця з новими параметрами, половина зі старими.
         await using var tx = await db.Database.BeginTransactionAsync(ct);
-        var results = new List<CalcResult>(ids.Count);
-        foreach (var id in ids)
+        var results = new List<CalcResult>(inputs.Count);
+        foreach (var input in inputs)
         {
-            var r = await RunAsync(id, year, month, ct);
-            if (r is not null)
-                results.Add(r);
+            var result = calculator.Calculate(input);
+            await PersistAsync(result, ct);
+            results.Add(result);
         }
         await tx.CommitAsync(ct);
         return results;
     }
 
     /// <summary>
-    /// Upsert зведення за (EmployeeId, Year, Month): gross/податки/на руки + ручні суми + знімок параметрів + час.
-    /// Повний покомпонентний розклад надбавок у БД не лягає (для відомості/листів його дає рушій наживо);
-    /// ручні суми зберігаємо завжди — це аудит того, що бухгалтер вписала в цей розрахунок.
+    /// Підписує розрахунок: фіксує місяць як факт — його суми йдуть в авто-базу середньоденної,
+    /// і перепрогон більше його не перетирає (замок у PersistAsync). false — розрахунку з таким id немає.
+    /// </summary>
+    public async Task<bool> SignAsync(int calculationId, CancellationToken ct = default)
+    {
+        var calc = await db.Calculations.FirstOrDefaultAsync(c => c.Id == calculationId, ct);
+        if (calc is null)
+            return false;
+        calc.Status = CalculationStatus.Signed;
+        await db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    /// <summary>
+    /// Знімає підпис (аварійний клапан): повертає місяць у чернетку, дозволяючи перепрогон/правку.
+    /// На совісті бухгалтера — для зданого державі періоду правильний шлях перерахунок. false — немає такого id.
+    /// </summary>
+    public async Task<bool> UnsignAsync(int calculationId, CancellationToken ct = default)
+    {
+        var calc = await db.Calculations.FirstOrDefaultAsync(c => c.Id == calculationId, ct);
+        if (calc is null)
+            return false;
+        calc.Status = CalculationStatus.Draft;
+        await db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    /// <summary>
+    /// Підписує весь місяць: усі чернетки за (Year, Month) → Signed. Підпис = «місяць перевірено»;
+    /// з цього моменту суми йдуть в авто-базу середньоденної. Повертає, скільки розрахунків підписано.
+    /// </summary>
+    public async Task<int> SignMonthAsync(int year, int month, CancellationToken ct = default)
+    {
+        return await db.Calculations
+            .Where(c => c.Year == year && c.Month == month && c.Status == CalculationStatus.Draft)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Status, CalculationStatus.Signed), ct);
+    }
+
+    /// <summary>
+    /// Знімає підпис з усього місяця (аварійний клапан): усі Signed за (Year, Month) → Draft,
+    /// дозволяючи перепрогон/правку. Повертає, скільки розрахунків розблоковано.
+    /// </summary>
+    public async Task<int> UnsignMonthAsync(int year, int month, CancellationToken ct = default)
+    {
+        return await db.Calculations
+            .Where(c => c.Year == year && c.Month == month && c.Status == CalculationStatus.Signed)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Status, CalculationStatus.Draft), ct);
+    }
+
+    /// <summary>
+    /// Стан підпису місяця: скільки всього розрахунків збережено й скільки з них підписано.
+    /// UI показує «підписано N/усього» і яку кнопку давати (підписати чи зняти).
+    /// </summary>
+    public async Task<MonthSignStatus> GetMonthStatusAsync(int year, int month, CancellationToken ct = default)
+    {
+        var total = await db.Calculations.CountAsync(c => c.Year == year && c.Month == month, ct);
+        var signed = await db.Calculations.CountAsync(c => c.Year == year && c.Month == month && c.Status == CalculationStatus.Signed, ct);
+        return new MonthSignStatus(total, signed);
+    }
+
+    /// <summary>
+    /// Upsert зведення за (EmployeeId, Year, Month): gross/податки/на руки + ручні суми + знімок параметрів + час,
+    /// плюс повний покомпонентний розклад рядками (звідси авто-база середньоденної бере суми минулих місяців).
+    /// Підписаний місяць — заморожений факт: перепрогон його не чіпає (помилку правлять перерахунком далі).
     /// </summary>
     private async Task PersistAsync(CalcResult r, CancellationToken ct)
     {
         var calc = await db.Calculations
+            .Include(c => c.Components)
             .FirstOrDefaultAsync(c => c.EmployeeId == r.EmployeeId && c.Year == r.Year && c.Month == r.Month, ct);
+
+        // Замок: підписаний місяць заморожений — не перетираємо. Без нього перепрогон відомості
+        // затер би факт, з якого рахується середньоденна.
+        if (calc is { Status: CalculationStatus.Signed })
+            return;
+
         if (calc is null)
         {
             calc = new Core.Entities.Calculation { EmployeeId = r.EmployeeId, Year = r.Year, Month = r.Month };
@@ -87,6 +151,15 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
             + Amount(r.Earnings, ComponentNames.Holiday)
             + Amount(r.Earnings, ComponentNames.AnnualBonus);
 
+        // Покомпонентний розклад: знести старі рядки й записати поточні (перепрогон чернетки
+        // дає чистий розклад без задвоєння). Агрегати вище лишаємо — їх читає експорт відомості.
+        db.CalculationComponents.RemoveRange(calc.Components);
+        calc.Components.Clear();
+        foreach (var c in r.Earnings)
+            calc.Components.Add(new Core.Entities.CalculationComponent { Kind = ComponentKind.Earning, FieldKey = c.Name, Amount = c.Amount });
+        foreach (var c in r.Deductions)
+            calc.Components.Add(new Core.Entities.CalculationComponent { Kind = ComponentKind.Deduction, FieldKey = c.Name, Amount = c.Amount });
+
         calc.ParamsSnapshot = JsonSerializer.Serialize(r.ParamsSnapshot);
         calc.CalculatedAt = DateTime.UtcNow;
         calc.Status = CalculationStatus.Draft;
@@ -97,3 +170,8 @@ public class PayrollCalculationService(CalcInputBuilder builder, IPayrollCalcula
     private static decimal Amount(IReadOnlyList<CalcComponent> components, string name)
         => components.FirstOrDefault(c => c.Name == name)?.Amount ?? 0m;
 }
+
+/// <summary>
+/// Стан підпису місяця для UI: усього збережених розрахунків і скільки підписано.
+/// </summary>
+public record MonthSignStatus(int Total, int Signed);

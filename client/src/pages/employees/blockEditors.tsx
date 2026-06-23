@@ -131,6 +131,7 @@ export function WorkloadEditor({ employeeId, position, readOnly }: {
     inclusiveHours5To9: fmtNum(block?.inclusiveHours5To9 ?? 0),
     inclusiveHours10To11: fmtNum(block?.inclusiveHours10To11 ?? 0),
     notebookRateId: block?.notebookRateId ?? 0,
+    additionalHours: fmtNum(block?.additionalHours ?? 0),
   }))
 
   const { mutation, error, saved } = useBlockSave(employeeId, () =>
@@ -148,6 +149,7 @@ export function WorkloadEditor({ employeeId, position, readOnly }: {
       inclusiveHours5To9: num(form.inclusiveHours5To9),
       inclusiveHours10To11: num(form.inclusiveHours10To11),
       notebookRateId: form.notebookRateId || null,
+      additionalHours: num(form.additionalHours),
     }),
   )
 
@@ -208,6 +210,18 @@ export function WorkloadEditor({ employeeId, position, readOnly }: {
           ))}
         </tbody>
       </table>
+      <div className="mt8" style={{ maxWidth: 360 }}>
+        <Field label="Надтарифні години" hint="понад ставку — додаються до окладу">
+          <input
+            type="text"
+            className="cell-input"
+            style={{ width: 110 }}
+            value={form.additionalHours}
+            onChange={e => setForm(f => ({ ...f, additionalHours: e.target.value }))}
+            disabled={readOnly}
+          />
+        </Field>
+      </div>
       {hasNotebookHours && (
         <div className="mt8" style={{ maxWidth: 360 }}>
           <Field label="Предмет для % зошитів" hint="Відсоток оплати залежить від предмета">
@@ -456,11 +470,8 @@ export function NonPedagogicalEditor({ employeeId, position, readOnly }: {
     hasDisinfectants: block?.hasDisinfectants ?? false,
     hasNightShifts: block?.hasNightShifts ?? false,
     hasMentor: block?.hasMentor ?? false,
-    mentorAmount: fmtNum(block?.mentorAmount ?? 0),
     hasLibraryMgmt: block?.hasLibraryMgmt ?? false,
-    libraryMgmtAmount: fmtNum(block?.libraryMgmtAmount ?? 0),
     hasTextbooks: block?.hasTextbooks ?? false,
-    textbooksAmount: fmtNum(block?.textbooksAmount ?? 0),
   }))
 
   const { mutation, error, saved } = useBlockSave(employeeId, () =>
@@ -468,21 +479,23 @@ export function NonPedagogicalEditor({ employeeId, position, readOnly }: {
       hasDisinfectants: form.hasDisinfectants,
       hasNightShifts: form.hasNightShifts,
       hasMentor: form.hasMentor,
-      mentorAmount: form.hasMentor ? num(form.mentorAmount) : 0,
       hasLibraryMgmt: form.hasLibraryMgmt,
-      libraryMgmtAmount: form.hasLibraryMgmt ? num(form.libraryMgmtAmount) : 0,
       hasTextbooks: form.hasTextbooks,
-      textbooksAmount: form.hasTextbooks ? num(form.textbooksAmount) : 0,
+      // Суми рушій не читає — надбавки рахуються фіксованим % від окладу (наставництво 20%,
+      // бібліотека 50%, підручники 8%). Поля лишаємо в контракті нулями (бек поки не чіпаємо).
+      mentorAmount: 0,
+      libraryMgmtAmount: 0,
+      textbooksAmount: 0,
     }),
   )
 
-  const amountRow = (
+  // Надбавка = фіксований % від окладу (рушій рахує сам), тож лише прапорець без поля суми.
+  const checkRow = (
     checkKey: 'hasMentor' | 'hasLibraryMgmt' | 'hasTextbooks',
-    amountKey: 'mentorAmount' | 'libraryMgmtAmount' | 'textbooksAmount',
     label: string,
   ) => (
     <div className="row mt8">
-      <label className="check" style={{ minWidth: 260 }}>
+      <label className="check">
         <input
           type="checkbox"
           checked={form[checkKey]}
@@ -491,16 +504,6 @@ export function NonPedagogicalEditor({ employeeId, position, readOnly }: {
         />
         {label}
       </label>
-      {form[checkKey] && (
-        <input
-          type="text"
-          style={{ width: 140 }}
-          placeholder="Сума, грн"
-          value={form[amountKey]}
-          onChange={e => setForm(f => ({ ...f, [amountKey]: e.target.value }))}
-          disabled={readOnly}
-        />
-      )}
     </div>
   )
 
@@ -537,9 +540,9 @@ export function NonPedagogicalEditor({ employeeId, position, readOnly }: {
           Нічні зміни (+40% за нічні години)
         </label>
       </div>
-      {amountRow('hasMentor', 'mentorAmount', 'Наставництво')}
-      {amountRow('hasLibraryMgmt', 'libraryMgmtAmount', 'Завідування бібліотекою')}
-      {amountRow('hasTextbooks', 'textbooksAmount', 'Облік підручників')}
+      {checkRow('hasMentor', 'Наставництво (+20%)')}
+      {checkRow('hasLibraryMgmt', 'Завідування бібліотекою (+50%)')}
+      {checkRow('hasTextbooks', 'Облік підручників (+8%)')}
       <ErrorNote error={error} />
       {!readOnly && <SaveRow saved={saved} saving={mutation.isPending} onSave={() => mutation.mutate()} />}
     </BlockShell>

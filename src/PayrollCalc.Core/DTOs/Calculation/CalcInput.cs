@@ -28,6 +28,10 @@ public record CalcInput
     /// </summary>
     public decimal? SocialBenefitPct { get; init; }
     /// <summary>
+    /// Член профспілки — чи утримувати внесок 1%. false → внеску немає. За замовчуванням true.
+    /// </summary>
+    public bool IsUnionMember { get; init; } = true;
+    /// <summary>
     /// Ставки/посади працівника (1 Employee → N посад), кожна рахується окремо.
     /// </summary>
     public required IReadOnlyList<PositionCalcInput> Positions { get; init; }

@@ -26,4 +26,5 @@ public static class ComponentNames
     public const string Indexation = "Індексація";
     public const string Disinfectants = "Дезінфікуючі засоби";
     public const string NightShift = "Доплата за нічні";
+    public const string Unfavorable2600 = "Несприятливі умови (2600)";
 }

@@ -116,6 +116,7 @@ public class StaffParser
         var mentorAmount = ExcelFieldReader.GetOptionalDecimal(row, StaffColumnMap.ColMentorAmount, "MentorAmount", rowNumber, errors);
         var libraryMgmtAmount = ExcelFieldReader.GetOptionalDecimal(row, StaffColumnMap.ColLibraryMgmtAmount, "LibraryMgmtAmount", rowNumber, errors);
         var textbooksAmount = ExcelFieldReader.GetOptionalDecimal(row, StaffColumnMap.ColTextbooksAmount, "TextbooksAmount", rowNumber, errors);
+        var directorPct = ExcelFieldReader.GetOptionalDecimal(row, StaffColumnMap.ColDirectorPct, "DirectorPct", rowNumber, errors);
 
         return new StaffRowDto
         {
@@ -148,6 +149,7 @@ public class StaffParser
             TextbooksAmount = textbooksAmount,
             Disinfectants = disinfectants,
             NightShifts = nightShifts,
+            DirectorPct = directorPct,
         };
     }
 }

@@ -42,6 +42,10 @@ public class EmployeeDetailDto
     /// </summary>
     public decimal? HonoredAmount { get; set; }
     /// <summary>
+    /// Член профспілки — чи утримувати внесок 1%. Віддається у GET, бо PUT вимагає це поле.
+    /// </summary>
+    public bool IsUnionMember { get; set; }
+    /// <summary>
     /// Усі ставки працівника (активні та звільнені). Кожна несе власні блоки.
     /// </summary>
     public List<EmployeePositionDto> Positions { get; set; } = [];
@@ -69,6 +73,7 @@ public class EmployeeDetailDto
             SocialBenefitPct = e.SocialBenefitPct,
             IsHonored = e.IsHonored,
             HonoredAmount = e.HonoredAmount,
+            IsUnionMember = e.IsUnionMember,
             Positions = e.Positions.Select(EmployeePositionDto.FromEntity).ToList()
         };
     }

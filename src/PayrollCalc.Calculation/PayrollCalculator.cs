@@ -87,7 +87,7 @@ public sealed class PayrollCalculator : IPayrollCalculator
             AddIfAny(posList, LibraryHeadCalculator.Calc(pos, oklad.Amount));
             AddIfAny(posList, TextbooksCalculator.Calc(pos, oklad.Amount));
             AddIfAny(posList, MedicTenureCalculator.Calc(pos, oklad.Amount));
-            AddIfAny(posList, NightShiftCalculator.Calc(pos, input.Params.NightShifts));
+            AddIfAny(posList, NightShiftCalculator.Calc(pos, input.Params.NightShifts, input.NormDays));
 
             AddIfAny(posList, NotebookCalculator.Calc(pos, rate, input.NormDays, input.WorkedDays));
             AddIfAny(posList, Unfavorable2600Calculator.Calc(pos, input.Params.UnfavorableBase, input.NormDays, input.WorkedDays));

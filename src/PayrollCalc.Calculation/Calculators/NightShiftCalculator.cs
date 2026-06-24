@@ -4,24 +4,26 @@ using static PayrollCalc.Calculation.CalcFormat;
 namespace PayrollCalc.Calculation.Calculators;
 
 /// <summary>
-/// Доплата за нічні години (відомість AO, сторож) = тариф/176 × нічні_години × 40%.
-/// 176 — місячна норма годин (константа). Ставка 40% із SystemParams. 0 годин → немає.
+/// Доплата за нічні години (відомість AO, сторож) = тариф / місячна_норма × нічні_години × 40%.
+/// Місячна норма годин = норма_робочих_днів × 8 (8-годинна зміна). Ставка 40% із SystemParams. 0 годин → немає.
 /// </summary>
 public static class NightShiftCalculator
 {
     /// <summary>
-    /// Місячна норма годин — дільник погодинної ставки сторожа (з еталона `3782/176`).
+    /// Тривалість робочої зміни в годинах — множник норми днів для місячної норми годин.
     /// </summary>
-    private const int MonthlyHourNorm = 176;
+    private const int ShiftHours = 8;
 
     /// <param name="rate">Ставка нічних із SystemParams (0.40).</param>
-    public static CalcComponent? Calc(PositionCalcInput pos, decimal rate)
+    /// <param name="normDays">Норма робочих днів місяця — основа місячної норми годин (днів × 8).</param>
+    public static CalcComponent? Calc(PositionCalcInput pos, decimal rate, int normDays)
     {
-        if (pos.NightHours == 0)
+        if (pos.NightHours == 0 || normDays == 0)
             return null;
 
-        var amount = pos.Oklad / MonthlyHourNorm * pos.NightHours * rate;
-        var formula = $"={Num(pos.Oklad)}/{MonthlyHourNorm}*{Num(pos.NightHours)}*{Num(rate * 100)}%";
+        var monthlyHourNorm = normDays * ShiftHours;
+        var amount = pos.Oklad / monthlyHourNorm * pos.NightHours * rate;
+        var formula = $"={Num(pos.Oklad)}/{monthlyHourNorm}*{Num(pos.NightHours)}*{Num(rate * 100)}%";
         return new CalcComponent(ComponentNames.NightShift, amount, formula);
     }
 }

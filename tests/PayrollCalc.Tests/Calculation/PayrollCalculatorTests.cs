@@ -241,6 +241,18 @@ public class PayrollCalculatorTests
     }
 
     [Fact]
+    public void Guard_NightShift_DivisorTracksNorm()
+    {
+        // Дільник = норма_днів × 8, не константа 176: при 20 днях → 160 (=3782/160*122*40%).
+        var pos = Mop(oklad: 3782m) with { NightHours = 122m };
+        var result = new PayrollCalculator().Calculate(Input(20, 20, pos));
+
+        var night = result.Earnings.Single(e => e.Name == "Доплата за нічні");
+        night.Amount.Should().BeApproximately(1153.51m, 0.01m);   // 3782/160×122×40%
+        night.Formula.Should().Be("=3782/160*122*40%");
+    }
+
+    [Fact]
     public void Guard_Hourly_OkladAndMinimumByHours()
     {
         // Шамрай r76: погодинний сторож. J=3782/176×187, МЗП=8647/176×187, нічні=3782/176×126×40%.
